@@ -7,8 +7,8 @@
   },
 
   "javascript.validate.enable": false,
-  "javascript.format.enable": false,
-  "typescript.format.enable": false,
+  "javascript.format.enable": true,
+  "typescript.format.enable": true,
 
   "search.exclude": {
     ".git": true,
@@ -24,5 +24,6 @@
     "test/**/__snapshots__": true,
     "yarn.lock": true,
     "*.{css,sass,scss}.d.ts": true
-  }
+  },
+  "compile-hero.disable-compile-files-on-did-save-code": false
 }
