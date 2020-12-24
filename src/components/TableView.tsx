@@ -1,19 +1,69 @@
+/* eslint-disable jsx-a11y/click-events-have-key-events */
+/* eslint-disable jsx-a11y/interactive-supports-focus */
+/* eslint-disable react/display-name */
 /* eslint-disable react/jsx-key */
 /* eslint-disable react/jsx-props-no-spreading */
-import React, { useEffect, useMemo, useState } from 'react';
+/* eslint-disable react/prop-types */
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTable, useSortBy } from 'react-table';
-import PropTypes from 'prop-types';
-import Library from '../library';
-
-import { columnDefinition, hiddenColumns } from '../columnDefinition';
+import format from '../cellformatter';
+import Downloader from './Downloader';
 
 import './TableView.scss';
+
+const hiddenColumns = ['sourceurl'];
 
 const TableView = ({ library }) => {
   const [filesRequested, setFilesRequested] = useState(false);
   const [files, setFiles] = useState(null);
+  const [expandedFileid, setExpendedFileid] = useState(null);
+
   const data = useMemo(() => files || [], [files]);
-  const columns = useMemo(() => columnDefinition, []);
+  const columns = useMemo(
+    () => [
+      {
+        accessor: 'isactive',
+        Cell: format,
+      },
+      {
+        accessor: 'ispublic',
+        Cell: format,
+      },
+      {
+        accessor: 'storageservice',
+        Cell: format,
+      },
+      {
+        accessor: 'size',
+        Header: 'Size',
+        Cell: format,
+      },
+      {
+        accessor: 'lastupdated',
+        Header: 'Updated',
+        Cell: format,
+      },
+      {
+        accessor: 'filename',
+        Header: 'Filename',
+        id: 'filename',
+        Cell: (props) => {
+          const { row } = props;
+          const { original: file } = row;
+          const displayString = format(props);
+          return (
+            <span role="button" onClick={() => setExpendedFileid(file.fileid)}>
+              {displayString}
+            </span>
+          );
+        },
+      },
+      {
+        accessor: 'sourceurl',
+      },
+    ],
+    []
+  );
   const tableInstance = useTable({
     columns,
     data,
@@ -37,6 +87,11 @@ const TableView = ({ library }) => {
       setFilesRequested(true);
     }
   }, [files, filesRequested, library]);
+
+  const renderRowSubComponent = useCallback(({ row }) => {
+    const { original: file } = row;
+    return <Downloader file={file} />;
+  }, []);
 
   const getColumnHeaderProps = (column) => {
     try {
@@ -62,6 +117,7 @@ const TableView = ({ library }) => {
     headerGroups,
     rows,
     prepareRow,
+    visibleColumns,
   } = tableInstance;
 
   return (
@@ -91,26 +147,33 @@ const TableView = ({ library }) => {
       <tbody {...getTableBodyProps()}>
         {rows.map((row) => {
           prepareRow(row);
-          return (
-            <tr {...row.getRowProps()}>
-              {row.cells.map((cell) => {
-                const columnName = cell?.column?.id;
-                return (
-                  <td {...cell.getCellProps()} className={columnName}>
-                    {cell.render('Cell')}
-                  </td>
-                );
-              })}
+          const { original: file } = row;
+          const subcomponent = expandedFileid === file.fileid && (
+            <tr>
+              <td colSpan={visibleColumns.length}>
+                {renderRowSubComponent({ row })}
+              </td>
             </tr>
+          );
+          return (
+            <>
+              <tr {...row.getRowProps()}>
+                {row.cells.map((cell) => {
+                  const columnName = cell?.column?.id;
+                  return (
+                    <td {...cell.getCellProps()} className={columnName}>
+                      {cell.render('Cell')}
+                    </td>
+                  );
+                })}
+              </tr>
+              {subcomponent}
+            </>
           );
         })}
       </tbody>
     </table>
   );
-};
-
-TableView.propTypes = {
-  library: PropTypes.shape(Library).isRequired,
 };
 
 export default TableView;
