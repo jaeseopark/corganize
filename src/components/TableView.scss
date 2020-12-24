@@ -1,22 +1,24 @@
-th[role='columnheader'].lastupdated {
-  width: 110px;
-}
+:global {
+  th[role='columnheader'].lastupdated {
+    width: 110px;
+  }
 
-td[role='cell'] > .icon {
-  width: 18px;
-  height: 18px;
-  background-size: 18px 18px;
-  background-repeat: no-repeat;
-}
+  td[role='cell'] > .icon {
+    width: 18px;
+    height: 18px;
+    background-size: 18px 18px;
+    background-repeat: no-repeat;
+  }
 
-.storageservice[role='cell'] > .gdrive {
-  background-image: url('../../assets/gdrive.svg');
-}
+  .storageservice[role='cell'] > .gdrive {
+    background-image: url('../../assets/gdrive.svg');
+  }
 
-.ispublic[role='cell'] > .false {
-  background-image: url('../../assets/lock-svgrepo-com.svg');
-}
+  .ispublic[role='cell'] > .false {
+    background-image: url('../../assets/lock-svgrepo-com.svg');
+  }
 
-.isactive[role='cell'] > .true {
-  background-image: url('../../assets/iconmonstr-check-mark.svg');
+  .isactive[role='cell'] > .true {
+    background-image: url('../../assets/iconmonstr-check-mark.svg');
+  }
 }
