@@ -3,6 +3,10 @@
     width: 110px;
   }
 
+  th[role='columnheader'].size {
+    width: 80px;
+  }
+
   td[role='cell'] > .icon {
     width: 18px;
     height: 18px;

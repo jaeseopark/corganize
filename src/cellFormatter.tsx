@@ -12,7 +12,7 @@ export default function format(props) {
   const { value, column } = props;
   switch (column.id) {
     case 'size':
-      return <div className="size">{humanFileSize(value)}</div>;
+      return value ? <div className="size">{humanFileSize(value)}</div> : null;
     case 'lastupdated': {
       // const date = new Date(value * 1000);
       // const dateISO = date.toISOString().split('T')[0];
