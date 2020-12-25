@@ -64,12 +64,22 @@ const TableView = ({ library }) => {
     ],
     []
   );
-  const tableInstance = useTable({
-    columns,
-    data,
-    initialState: { hiddenColumns },
-    useSortBy,
-  });
+
+  const {
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    rows,
+    prepareRow,
+    visibleColumns,
+  } = useTable(
+    {
+      columns,
+      data,
+      initialState: { hiddenColumns },
+    },
+    useSortBy
+  );
 
   useEffect(() => {
     if (!files && !filesRequested) {
@@ -110,15 +120,6 @@ const TableView = ({ library }) => {
   if (!files) {
     return <h2 className="center">Loading...</h2>;
   }
-
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-    visibleColumns,
-  } = tableInstance;
 
   return (
     <table className="table" {...getTableProps()}>
