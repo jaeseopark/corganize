@@ -108,7 +108,7 @@ const TableView = ({ library }) => {
         });
       setFilesRequested(true);
     }
-  }, [files, filesRequested, library, expandedFileid]);
+  }, [files, filesRequested, library]);
 
   const renderRowSubComponent = useCallback(({ row }) => {
     const { original: file } = row;
