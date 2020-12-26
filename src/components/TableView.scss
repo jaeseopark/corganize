@@ -7,11 +7,21 @@
     width: 80px;
   }
 
+  .isactive[role='columnheader'],
+  .ispublic[role='columnheader'],
+  .storageservice[role='columnheader'] {
+    width: 18px;
+  }
+
   td[role='cell'] > .icon {
     width: 18px;
     height: 18px;
     background-size: 18px 18px;
     background-repeat: no-repeat;
+  }
+
+  .filename > span[role='button'] {
+    cursor: pointer;
   }
 
   .storageservice[role='cell'] > .gdrive {

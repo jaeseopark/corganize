@@ -1,3 +1,4 @@
+/* eslint-disable react/button-has-type */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/interactive-supports-focus */
 /* eslint-disable react/display-name */
@@ -5,9 +6,10 @@
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable react/prop-types */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useTable, useSortBy } from 'react-table';
+import { useTable, useSortBy, usePagination } from 'react-table';
 import format from '../cellformatter';
-import Downloader from './Downloader';
+import FileView from './FileView';
+import PageControl from './PageControl';
 
 import './TableView.scss';
 
@@ -52,7 +54,14 @@ const TableView = ({ library }) => {
           const { original: file } = row;
           const displayString = format(props);
           return (
-            <span role="button" onClick={() => setExpendedFileid(file.fileid)}>
+            <span
+              role="button"
+              onClick={() => {
+                setExpendedFileid(
+                  file.fileid === expandedFileid ? null : file.fileid
+                );
+              }}
+            >
               {displayString}
             </span>
           );
@@ -62,24 +71,27 @@ const TableView = ({ library }) => {
         accessor: 'sourceurl',
       },
     ],
-    []
+    [expandedFileid]
+  );
+
+  const tableInstance = useTable(
+    {
+      columns,
+      data,
+      initialState: { hiddenColumns },
+    },
+    useSortBy,
+    usePagination
   );
 
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
-    rows,
     prepareRow,
     visibleColumns,
-  } = useTable(
-    {
-      columns,
-      data,
-      initialState: { hiddenColumns },
-    },
-    useSortBy
-  );
+    page,
+  } = tableInstance;
 
   useEffect(() => {
     if (!files && !filesRequested) {
@@ -100,7 +112,7 @@ const TableView = ({ library }) => {
 
   const renderRowSubComponent = useCallback(({ row }) => {
     const { original: file } = row;
-    return <Downloader file={file} />;
+    return <FileView file={file} />;
   }, []);
 
   const getColumnHeaderProps = (column) => {
@@ -122,58 +134,61 @@ const TableView = ({ library }) => {
   }
 
   return (
-    <table className="table" {...getTableProps()}>
-      <thead>
-        {headerGroups.map((headerGroup) => (
-          <tr {...headerGroup.getHeaderGroupProps()}>
-            {headerGroup.headers.map((column) => {
-              let sortIndicator = '';
-              if (column.isSorted) {
-                sortIndicator = column.isSortedDesc ? ' 🔽' : ' 🔼';
-              }
-              return (
-                <th
-                  scope="col"
-                  {...getColumnHeaderProps(column)}
-                  className={column.id}
-                >
-                  {column.render('Header')}
-                  <span>{sortIndicator}</span>
-                </th>
-              );
-            })}
-          </tr>
-        ))}
-      </thead>
-      <tbody {...getTableBodyProps()}>
-        {rows.map((row) => {
-          prepareRow(row);
-          const { original: file } = row;
-          const subcomponent = expandedFileid === file.fileid && (
-            <tr>
-              <td colSpan={visibleColumns.length}>
-                {renderRowSubComponent({ row })}
-              </td>
+    <>
+      <table className="table" {...getTableProps()}>
+        <thead>
+          {headerGroups.map((headerGroup) => (
+            <tr {...headerGroup.getHeaderGroupProps()}>
+              {headerGroup.headers.map((column) => {
+                let sortIndicator = '';
+                if (column.isSorted) {
+                  sortIndicator = column.isSortedDesc ? ' 🔽' : ' 🔼';
+                }
+                return (
+                  <th
+                    scope="col"
+                    {...getColumnHeaderProps(column)}
+                    className={column.id}
+                  >
+                    {column.render('Header')}
+                    <span>{sortIndicator}</span>
+                  </th>
+                );
+              })}
             </tr>
-          );
-          return (
-            <>
-              <tr {...row.getRowProps()}>
-                {row.cells.map((cell) => {
-                  const columnName = cell?.column?.id;
-                  return (
-                    <td {...cell.getCellProps()} className={columnName}>
-                      {cell.render('Cell')}
-                    </td>
-                  );
-                })}
+          ))}
+        </thead>
+        <tbody {...getTableBodyProps()}>
+          {page.map((row) => {
+            prepareRow(row);
+            const { original: file } = row;
+            const subcomponent = expandedFileid === file.fileid && (
+              <tr>
+                <td colSpan={visibleColumns.length}>
+                  {renderRowSubComponent({ row })}
+                </td>
               </tr>
-              {subcomponent}
-            </>
-          );
-        })}
-      </tbody>
-    </table>
+            );
+            return (
+              <>
+                <tr {...row.getRowProps()}>
+                  {row.cells.map((cell) => {
+                    const columnName = cell?.column?.id;
+                    return (
+                      <td {...cell.getCellProps()} className={columnName}>
+                        {cell.render('Cell')}
+                      </td>
+                    );
+                  })}
+                </tr>
+                {subcomponent}
+              </>
+            );
+          })}
+        </tbody>
+      </table>
+      <PageControl {...tableInstance} />
+    </>
   );
 };
 
