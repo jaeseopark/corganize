@@ -1,14 +1,42 @@
 :global {
-  .pagecontrol {
-    margin-bottom: 10px;
-  }
+  .page-control {
+    .page-size {
+      float: left;
+      select {
+        margin-left: 5px;
+        margin-right: 5px;
+      }
+    }
 
-  Button {
-    margin-right: 5px;
-  }
+    .page-nav {
+      float: right;
 
-  .page-indicator {
-    margin-left: 15px;
-    margin-right: 15px;
+      .buttons {
+        float: right;
+        margin-top: -7px;
+
+        Button {
+          margin-right: 5px;
+        }
+      }
+
+      .page-indicator {
+        float: right;
+        margin-left: 15px;
+        margin-right: 15px;
+      }
+
+      .page-jump {
+        float: right;
+        margin-left: 10px;
+        margin-top: -3px;
+
+        .page-jump-field {
+          width: 80px;
+          margin-top: 1px;
+          margin-left: 5px;
+        }
+      }
+    }
   }
 }

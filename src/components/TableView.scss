@@ -7,6 +7,12 @@
     width: 80px;
   }
 
+  .isactive[role='columnheader'],
+  .ispublic[role='columnheader'],
+  .storageservice[role='columnheader'] {
+    width: 18px;
+  }
+
   td[role='cell'] > .icon {
     width: 18px;
     height: 18px;

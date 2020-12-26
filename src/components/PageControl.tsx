@@ -17,46 +17,63 @@ const PageControl = ({
 }) => {
   const { pageIndex, pageSize } = state;
   return (
-    <div className="pagecontrol">
-      <Button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
-        {'<<'}
-      </Button>
-      <Button onClick={() => previousPage()} disabled={!canPreviousPage}>
-        {'<'}
-      </Button>
-      <Button onClick={() => nextPage()} disabled={!canNextPage}>
-        {'>'}
-      </Button>
-      <Button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
-        {'>>'}
-      </Button>
-      <span className="page-indicator">
-        Page {pageIndex + 1} of {pageOptions.length}
-      </span>
-      {/* <span>
-        Go to page:
-        <input
-          type="number"
-          defaultValue={pageIndex + 1}
+    <div className="page-control">
+      <div className="page-size">
+        Show
+        <select
+          value={pageSize}
           onChange={(e) => {
-            const targetPage = e.target.value ? Number(e.target.value) - 1 : 0;
-            gotoPage(targetPage);
+            setPageSize(Number(e.target.value));
           }}
-          style={{ width: '100px' }}
-        />
-      </span> */}
-      <select
-        value={pageSize}
-        onChange={(e) => {
-          setPageSize(Number(e.target.value));
-        }}
-      >
-        {[10, 20, 30, 40, 50].map((itemsPerPage) => (
-          <option key={itemsPerPage} value={itemsPerPage}>
-            Show {itemsPerPage} per page
-          </option>
-        ))}
-      </select>
+        >
+          {[10, 20, 30, 40, 50].map((itemsPerPage) => (
+            <option key={itemsPerPage} value={itemsPerPage}>
+              {itemsPerPage}
+            </option>
+          ))}
+        </select>
+        items per page
+      </div>
+      <div className="page-nav">
+        <div className="buttons">
+          <Button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+            &lt;&lt;
+          </Button>
+          <Button onClick={() => previousPage()} disabled={!canPreviousPage}>
+            &lt;
+          </Button>
+          <Button onClick={() => nextPage()} disabled={!canNextPage}>
+            &gt;
+          </Button>
+          <Button
+            onClick={() => gotoPage(pageCount - 1)}
+            disabled={!canNextPage}
+          >
+            &gt;&gt;
+          </Button>
+        </div>
+        <div className="page-indicator">
+          <span>
+            Page {pageIndex + 1} of {pageOptions.length}
+          </span>
+        </div>
+        <div className="page-jump">
+          <span>
+            Go to page:
+            <input
+              className="page-jump-field"
+              type="number"
+              defaultValue={pageIndex + 1}
+              onChange={(e) => {
+                const targetPage = e.target.value
+                  ? Number(e.target.value) - 1
+                  : 0;
+                gotoPage(targetPage);
+              }}
+            />
+          </span>
+        </div>
+      </div>
     </div>
   );
 };
