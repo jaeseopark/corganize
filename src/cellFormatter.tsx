@@ -22,20 +22,6 @@ export default function format(props) {
         .trim();
       return relativeString;
     }
-    case 'filename': {
-      const sourceurl = props?.row?.values?.sourceurl;
-      if (sourceurl) {
-        return (
-          <>
-            {value}{' '}
-            <a href={sourceurl} target="_blank" rel="noreferrer">
-              source
-            </a>
-          </>
-        );
-      }
-      return value;
-    }
     case 'ispublic':
     case 'isactive': {
       const classNames = `${String(!!value)} icon`;

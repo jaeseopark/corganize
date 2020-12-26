@@ -14,6 +14,10 @@
     background-repeat: no-repeat;
   }
 
+  .filename > span[role='button'] {
+    cursor: pointer;
+  }
+
   .storageservice[role='cell'] > .gdrive {
     background-image: url('../../assets/gdrive.svg');
   }

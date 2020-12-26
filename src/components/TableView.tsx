@@ -8,7 +8,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTable, useSortBy, usePagination } from 'react-table';
 import format from '../cellformatter';
-import Downloader from './Downloader';
+import FileView from './FileView';
+import PageControl from './PageControl';
 
 import './TableView.scss';
 
@@ -53,7 +54,14 @@ const TableView = ({ library }) => {
           const { original: file } = row;
           const displayString = format(props);
           return (
-            <span role="button" onClick={() => setExpendedFileid(file.fileid)}>
+            <span
+              role="button"
+              onClick={() => {
+                setExpendedFileid(
+                  file.fileid === expandedFileid ? null : file.fileid
+                );
+              }}
+            >
               {displayString}
             </span>
           );
@@ -63,7 +71,17 @@ const TableView = ({ library }) => {
         accessor: 'sourceurl',
       },
     ],
-    []
+    [expandedFileid]
+  );
+
+  const tableInstance = useTable(
+    {
+      columns,
+      data,
+      initialState: { hiddenColumns },
+    },
+    useSortBy,
+    usePagination
   );
 
   const {
@@ -73,24 +91,7 @@ const TableView = ({ library }) => {
     prepareRow,
     visibleColumns,
     page,
-    canPreviousPage,
-    canNextPage,
-    pageOptions,
-    pageCount,
-    gotoPage,
-    nextPage,
-    previousPage,
-    setPageSize,
-    state: { pageIndex, pageSize },
-  } = useTable(
-    {
-      columns,
-      data,
-      initialState: { hiddenColumns },
-    },
-    useSortBy,
-    usePagination
-  );
+  } = tableInstance;
 
   useEffect(() => {
     if (!files && !filesRequested) {
@@ -107,11 +108,11 @@ const TableView = ({ library }) => {
         });
       setFilesRequested(true);
     }
-  }, [files, filesRequested, library]);
+  }, [files, filesRequested, library, expandedFileid]);
 
   const renderRowSubComponent = useCallback(({ row }) => {
     const { original: file } = row;
-    return <Downloader file={file} />;
+    return <FileView file={file} />;
   }, []);
 
   const getColumnHeaderProps = (column) => {
@@ -131,53 +132,6 @@ const TableView = ({ library }) => {
   if (!files) {
     return <h2 className="center">Loading...</h2>;
   }
-
-  const pagination = (
-    <div className="pagination">
-      <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
-        {'<<'}
-      </button>{' '}
-      <button onClick={() => previousPage()} disabled={!canPreviousPage}>
-        {'<'}
-      </button>{' '}
-      <button onClick={() => nextPage()} disabled={!canNextPage}>
-        {'>'}
-      </button>{' '}
-      <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
-        {'>>'}
-      </button>{' '}
-      <span>
-        Page{' '}
-        <strong>
-          {pageIndex + 1} of {pageOptions.length}
-        </strong>{' '}
-      </span>
-      <span>
-        | Go to page:{' '}
-        <input
-          type="number"
-          defaultValue={pageIndex + 1}
-          onChange={(e) => {
-            const targetPage = e.target.value ? Number(e.target.value) - 1 : 0;
-            gotoPage(targetPage);
-          }}
-          style={{ width: '100px' }}
-        />
-      </span>{' '}
-      <select
-        value={pageSize}
-        onChange={(e) => {
-          setPageSize(Number(e.target.value));
-        }}
-      >
-        {[10, 20, 30, 40, 50].map((itemsPerPage) => (
-          <option key={itemsPerPage} value={itemsPerPage}>
-            Show {itemsPerPage}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
 
   return (
     <>
@@ -233,7 +187,7 @@ const TableView = ({ library }) => {
           })}
         </tbody>
       </table>
-      {pagination}
+      <PageControl {...tableInstance} />
     </>
   );
 };
