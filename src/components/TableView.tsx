@@ -5,73 +5,81 @@
 /* eslint-disable react/jsx-key */
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable react/prop-types */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useTable, useSortBy, usePagination } from 'react-table';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  useTable,
+  useSortBy,
+  usePagination,
+  useGlobalFilter,
+} from 'react-table';
 import format from '../cellformatter';
 import FileView from './FileView';
 import PageControl from './PageControl';
+import TableHeaderGroup from './TableHeaderGroup';
+import TableRow from './TableRow';
 
 import './TableView.scss';
+import GlobalFilter from './GlobalFilter';
 
+const columnConfigs = [
+  'isactive',
+  'ispublic',
+  'storageservice',
+  'size',
+  'lastupdated',
+].map((accessor) => {
+  return {
+    accessor,
+    Header: accessor,
+    Cell: format,
+  };
+});
 const hiddenColumns = ['sourceurl'];
 
 const TableView = ({ library }) => {
   const [filesRequested, setFilesRequested] = useState(false);
   const [files, setFiles] = useState(null);
   const [expandedFileid, setExpendedFileid] = useState(null);
+  const [clipboardedFileid, setClipboardedFileId] = useState(null);
 
   const data = useMemo(() => files || [], [files]);
   const columns = useMemo(
-    () => [
-      {
-        accessor: 'isactive',
-        Cell: format,
-      },
-      {
-        accessor: 'ispublic',
-        Cell: format,
-      },
-      {
-        accessor: 'storageservice',
-        Cell: format,
-      },
-      {
-        accessor: 'size',
-        Header: 'Size',
-        Cell: format,
-      },
-      {
-        accessor: 'lastupdated',
-        Header: 'Updated',
-        Cell: format,
-      },
-      {
-        accessor: 'filename',
-        Header: 'Filename',
-        id: 'filename',
-        Cell: (props) => {
-          const { row } = props;
-          const { original: file } = row;
-          const displayString = format(props);
-          return (
-            <span
-              role="button"
-              onClick={() => {
-                setExpendedFileid(
-                  file.fileid === expandedFileid ? null : file.fileid
-                );
-              }}
-            >
-              {displayString}
-            </span>
-          );
+    () =>
+      columnConfigs.concat([
+        {
+          accessor: 'filename',
+          Header: 'filename',
+          id: 'filename',
+          Cell: (props) => {
+            const { row } = props;
+            const { original: file } = row;
+            const displayString = format(props);
+            const isExpanded = file.fileid === expandedFileid;
+            const isClipboarded = file.fileid === clipboardedFileid;
+            return (
+              <>
+                <span
+                  role="button"
+                  onClick={() => {
+                    setExpendedFileid(isExpanded ? null : file.fileid);
+                  }}
+                >
+                  {displayString}
+                </span>
+                <FileView
+                  file={file}
+                  isClipboarded={isClipboarded}
+                  onClipboard={setClipboardedFileId}
+                  onDownload={({ target }) => {
+                    library.downloadFile(target);
+                  }}
+                />
+              </>
+            );
+          },
         },
-      },
-      {
-        accessor: 'sourceurl',
-      },
-    ],
-    [expandedFileid]
+      ]),
+    [expandedFileid, clipboardedFileid, library]
   );
 
   const tableInstance = useTable(
@@ -80,6 +88,7 @@ const TableView = ({ library }) => {
       data,
       initialState: { hiddenColumns },
     },
+    useGlobalFilter,
     useSortBy,
     usePagination
   );
@@ -88,8 +97,6 @@ const TableView = ({ library }) => {
     getTableProps,
     getTableBodyProps,
     headerGroups,
-    prepareRow,
-    visibleColumns,
     page,
   } = tableInstance;
 
@@ -108,87 +115,33 @@ const TableView = ({ library }) => {
         });
       setFilesRequested(true);
     }
-  }, [files, filesRequested, library]);
-
-  const renderRowSubComponent = useCallback(({ row }) => {
-    const { original: file } = row;
-    return <FileView file={file} />;
-  }, []);
-
-  const getColumnHeaderProps = (column) => {
-    try {
-      const sortByToggleProps = column.getSortByToggleProps();
-      return column.getHeaderProps(sortByToggleProps);
-    } catch (error) {
-      const { message } = error;
-      if (message === 'column.getSortByToggleProps is not a function') {
-        return column.getHeaderProps();
-      }
-
-      throw error;
-    }
-  };
+  }, [files, filesRequested, library, expandedFileid]);
 
   if (!files) {
     return <h2 className="center">Loading...</h2>;
   }
 
   return (
-    <>
+    <div className="tableview">
+      <GlobalFilter {...tableInstance} />
       <table className="table" {...getTableProps()}>
         <thead>
           {headerGroups.map((headerGroup) => (
-            <tr {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map((column) => {
-                let sortIndicator = '';
-                if (column.isSorted) {
-                  sortIndicator = column.isSortedDesc ? ' 🔽' : ' 🔼';
-                }
-                return (
-                  <th
-                    scope="col"
-                    {...getColumnHeaderProps(column)}
-                    className={column.id}
-                  >
-                    {column.render('Header')}
-                    <span>{sortIndicator}</span>
-                  </th>
-                );
-              })}
-            </tr>
+            <TableHeaderGroup headerGroup={headerGroup} />
           ))}
         </thead>
         <tbody {...getTableBodyProps()}>
-          {page.map((row) => {
-            prepareRow(row);
-            const { original: file } = row;
-            const subcomponent = expandedFileid === file.fileid && (
-              <tr>
-                <td colSpan={visibleColumns.length}>
-                  {renderRowSubComponent({ row })}
-                </td>
-              </tr>
-            );
-            return (
-              <>
-                <tr {...row.getRowProps()}>
-                  {row.cells.map((cell) => {
-                    const columnName = cell?.column?.id;
-                    return (
-                      <td {...cell.getCellProps()} className={columnName}>
-                        {cell.render('Cell')}
-                      </td>
-                    );
-                  })}
-                </tr>
-                {subcomponent}
-              </>
-            );
-          })}
+          {page.map((row) => (
+            <TableRow
+              row={row}
+              expandedFileid={expandedFileid}
+              {...tableInstance}
+            />
+          ))}
         </tbody>
       </table>
       <PageControl {...tableInstance} />
-    </>
+    </div>
   );
 };
 

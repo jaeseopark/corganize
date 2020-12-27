@@ -1,2 +1,14 @@
 :global {
+  .fileview {
+    float: right;
+
+    .copy-to-clipboard {
+      float: left;
+      margin-right: 5px;
+    }
+
+    button {
+      float: right;
+    }
+  }
 }

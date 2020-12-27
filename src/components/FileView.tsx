@@ -1,36 +1,43 @@
 /* eslint-disable react/button-has-type */
 /* eslint-disable react/prop-types */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { copyTextToClipboard } from '../utils/dist/clipboardUtils';
+import Button from './Button';
 
 import './FileView.scss';
 
-const FileView = ({ file }) => {
-  const [copied, setCopied] = useState(false);
+const FileView = ({ file, isClipboarded, onClipboard, onDownload }) => {
   const { sourceurl } = file;
 
   const onSourceUrlCopy = () => {
     const copySuccess = copyTextToClipboard(sourceurl);
     if (copySuccess) {
-      setCopied(true);
+      onClipboard(file.fileid);
     }
   };
 
   return (
-    <span>
+    <div className="fileview">
       {sourceurl && (
         <div className="copy-to-clipboard">
           <button
             type="button"
-            className={copied ? 'btn btn-success' : 'btn btn-light'}
+            className={isClipboarded ? 'btn btn-success' : 'btn btn-light'}
             onClick={onSourceUrlCopy}
           >
-            {copied ? 'Copied' : 'Copy Source URL'}
+            {isClipboarded ? 'Copied' : 'Copy Source URL'}
           </button>
         </div>
       )}
-    </span>
+      <Button
+        onClick={() => {
+          onDownload({ target: file });
+        }}
+      >
+        Download
+      </Button>
+    </div>
   );
 };
 

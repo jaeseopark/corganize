@@ -2,6 +2,7 @@
   .page-control {
     .page-size {
       float: left;
+
       select {
         margin-left: 5px;
         margin-right: 5px;
@@ -13,7 +14,7 @@
 
       .buttons {
         float: right;
-        margin-top: -7px;
+        margin-top: -4px;
 
         Button {
           margin-right: 5px;
@@ -26,16 +27,16 @@
         margin-right: 15px;
       }
 
-      .page-jump {
-        float: right;
-        margin-left: 10px;
-        margin-top: -3px;
+      .page-jump-field {
+        width: 36px;
+        margin-top: 1px;
+        margin-left: 5px;
+      }
 
-        .page-jump-field {
-          width: 80px;
-          margin-top: 1px;
-          margin-left: 5px;
-        }
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
       }
     }
   }

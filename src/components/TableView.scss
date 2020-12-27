@@ -1,38 +1,59 @@
 :global {
-  th[role='columnheader'].lastupdated {
-    width: 110px;
-  }
+  .tableview {
+    .globalfilter {
+      float: right;
+      margin-bottom: 5px;
 
-  th[role='columnheader'].size {
-    width: 80px;
-  }
+      input {
+        width: 300px;
+        float: right;
+        margin-left: 5px;
+      }
+    }
 
-  .isactive[role='columnheader'],
-  .ispublic[role='columnheader'],
-  .storageservice[role='columnheader'] {
-    width: 18px;
-  }
+    .table {
+      td,
+      th {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+      }
 
-  td[role='cell'] > .icon {
-    width: 18px;
-    height: 18px;
-    background-size: 18px 18px;
-    background-repeat: no-repeat;
-  }
+      th[role='columnheader'].lastupdated {
+        width: 110px;
+      }
 
-  .filename > span[role='button'] {
-    cursor: pointer;
-  }
+      th[role='columnheader'].size {
+        width: 80px;
+      }
 
-  .storageservice[role='cell'] > .gdrive {
-    background-image: url('../../assets/gdrive.svg');
-  }
+      .isactive[role='columnheader'],
+      .ispublic[role='columnheader'],
+      .storageservice[role='columnheader'] {
+        width: 18px;
+      }
 
-  .ispublic[role='cell'] > .false {
-    background-image: url('../../assets/lock-svgrepo-com.svg');
-  }
+      td[role='cell'] > .icon {
+        width: 18px;
+        height: 18px;
+        background-size: 18px 18px;
+        background-repeat: no-repeat;
+      }
 
-  .isactive[role='cell'] > .true {
-    background-image: url('../../assets/iconmonstr-check-mark.svg');
+      .filename > span[role='button'] {
+        cursor: pointer;
+      }
+
+      .storageservice[role='cell'] > .gdrive {
+        background-image: url('../../assets/gdrive.svg');
+      }
+
+      .ispublic[role='cell'] > .false {
+        background-image: url('../../assets/lock-svgrepo-com.svg');
+      }
+
+      .isactive[role='cell'] > .true {
+        background-image: url('../../assets/iconmonstr-check-mark.svg');
+      }
+    }
   }
 }

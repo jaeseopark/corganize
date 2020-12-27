@@ -13,12 +13,14 @@ const Button = ({ className, ...props }) => {
   );
 };
 
-export const LightButton = (props) => (
-  <Button className="btn btn-light" {...props} />
-);
+export const LightButton = ({ className, ...props }) => {
+  const newClassName = `${className || ''} btn btn-light`;
+  return <Button {...props} className={newClassName} />;
+};
 
-export const SuccessButton = (props) => (
-  <Button className="btn btn-success" {...props} />
-);
+export const SuccessButton = ({ className, ...props }) => {
+  const newClassName = `${className || ''} btn btn-success`;
+  return <Button {...props} className={newClassName} />;
+};
 
 export default Button;
