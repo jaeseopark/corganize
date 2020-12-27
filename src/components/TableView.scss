@@ -19,27 +19,44 @@
       }
 
       thead {
-        .lastupdated {
-          width: 110px;
+        th {
+          padding-left: 0;
+          padding-right: 0;
+
+          &.lastupdated {
+            width: 135px;
+          }
+
+          &.size {
+            width: 80px;
+          }
+
+          &.isactive {
+            width: 80px;
+          }
+
+          &.ispublic {
+            width: 80px;
+          }
         }
 
-        .size {
-          width: 80px;
-        }
-
-        .isactive,
-        .ispublic,
-        .storageservice {
-          width: 18px;
+        span {
+          float: left;
         }
 
         .sorted {
+          width: 18px;
+          height: 18px;
+          background-size: 18px 18px;
+          background-repeat: no-repeat;
+          margin-top: 4px;
+
           &.desc {
-            background-color: pink;
+            background-image: url('../../assets/iconfinder_angle-down_1608507.svg');
           }
 
           &.asc {
-            background-color: yellowgreen;
+            background-image: url('../../assets/iconfinder_angle-up_1608510.svg');
           }
         }
       }
@@ -67,6 +84,10 @@
         .isactive > .true {
           background-image: url('../../assets/iconmonstr-check-mark.svg');
         }
+      }
+
+      .btn {
+        padding: 1px 6px;
       }
     }
   }

@@ -21,9 +21,10 @@ const TableHeaderGroup = ({ headerGroup }) => (
           {...columnHeaderProps}
           className={column.id}
         >
-          <span role="button" onClick={onClick} className={sortClassName}>
+          <span role="button" onClick={onClick}>
             {column.render('Header')}
           </span>
+          {sortClassName && <span className={sortClassName} />}
         </th>
       );
     })}
