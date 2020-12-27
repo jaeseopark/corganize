@@ -8,7 +8,7 @@ import Button from './Button';
 import './FileView.scss';
 
 const FileView = ({ file, isClipboarded, onClipboard, onDownload }) => {
-  const { sourceurl } = file;
+  const { sourceurl, storageservice } = file;
 
   const onSourceUrlCopy = () => {
     const copySuccess = copyTextToClipboard(sourceurl);
@@ -30,13 +30,15 @@ const FileView = ({ file, isClipboarded, onClipboard, onDownload }) => {
           </button>
         </div>
       )}
-      <Button
-        onClick={() => {
-          onDownload({ target: file });
-        }}
-      >
-        Download
-      </Button>
+      {storageservice && (
+        <Button
+          onClick={() => {
+            onDownload({ target: file });
+          }}
+        >
+          Download
+        </Button>
+      )}
     </div>
   );
 };

@@ -4,44 +4,30 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
 
-const TableHeaderGroup = ({ headerGroup }) => {
-  const getColumnHeaderProps = (column) => {
-    try {
-      const sortByToggleProps = column.getSortByToggleProps();
-      return column.getHeaderProps(sortByToggleProps);
-    } catch (error) {
-      const { message } = error;
-      if (message === 'column.getSortByToggleProps is not a function') {
-        return column.getHeaderProps();
+const TableHeaderGroup = ({ headerGroup }) => (
+  <tr {...headerGroup.getHeaderGroupProps()}>
+    {headerGroup.headers.map((column) => {
+      let sortClassName = null;
+      if (column.isSorted) {
+        sortClassName = column.isSortedDesc ? 'sorted desc' : 'sorted asc';
       }
-
-      throw error;
-    }
-  };
-
-  return (
-    <tr {...headerGroup.getHeaderGroupProps()}>
-      {headerGroup.headers.map((column) => {
-        let displayString = column.render('Header');
-        if (column.isSorted) {
-          displayString += column.isSortedDesc ? ' 🔽' : ' 🔼';
-        }
-        const { onClick, ...columnHeaderProps } = getColumnHeaderProps(column);
-        return (
-          <th
-            key={column.id}
-            scope="col"
-            {...columnHeaderProps}
-            className={column.id}
-          >
-            <span role="button" onClick={onClick}>
-              {displayString}
-            </span>
-          </th>
-        );
-      })}
-    </tr>
-  );
-};
+      const { onClick, ...columnHeaderProps } = column.getHeaderProps(
+        column.getSortByToggleProps()
+      );
+      return (
+        <th
+          key={column.id}
+          scope="col"
+          {...columnHeaderProps}
+          className={column.id}
+        >
+          <span role="button" onClick={onClick} className={sortClassName}>
+            {column.render('Header')}
+          </span>
+        </th>
+      );
+    })}
+  </tr>
+);
 
 export default TableHeaderGroup;

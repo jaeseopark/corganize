@@ -18,41 +18,55 @@
         padding-bottom: 0.5rem;
       }
 
-      th[role='columnheader'].lastupdated {
-        width: 110px;
+      thead {
+        .lastupdated {
+          width: 110px;
+        }
+
+        .size {
+          width: 80px;
+        }
+
+        .isactive,
+        .ispublic,
+        .storageservice {
+          width: 18px;
+        }
+
+        .sorted {
+          &.desc {
+            background-color: pink;
+          }
+
+          &.asc {
+            background-color: yellowgreen;
+          }
+        }
       }
 
-      th[role='columnheader'].size {
-        width: 80px;
-      }
+      tbody {
+        .icon {
+          width: 18px;
+          height: 18px;
+          background-size: 18px 18px;
+          background-repeat: no-repeat;
+        }
 
-      .isactive[role='columnheader'],
-      .ispublic[role='columnheader'],
-      .storageservice[role='columnheader'] {
-        width: 18px;
-      }
+        .filename > span[role='button'] {
+          cursor: pointer;
+        }
 
-      td[role='cell'] > .icon {
-        width: 18px;
-        height: 18px;
-        background-size: 18px 18px;
-        background-repeat: no-repeat;
-      }
+        .storageservice > .gdrive {
+          background-image: url('../../assets/gdrive.svg');
+        }
 
-      .filename > span[role='button'] {
-        cursor: pointer;
-      }
+        .ispublic > .false {
+          background-image: url('../../assets/lock-svgrepo-com.svg');
+        }
 
-      .storageservice[role='cell'] > .gdrive {
-        background-image: url('../../assets/gdrive.svg');
-      }
-
-      .ispublic[role='cell'] > .false {
-        background-image: url('../../assets/lock-svgrepo-com.svg');
-      }
-
-      .isactive[role='cell'] > .true {
-        background-image: url('../../assets/iconmonstr-check-mark.svg');
+        .isactive > .true {
+          background-image: url('../../assets/iconmonstr-check-mark.svg');
+        }
       }
     }
   }

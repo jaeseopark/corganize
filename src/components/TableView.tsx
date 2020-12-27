@@ -34,7 +34,7 @@ const columnConfigs = [
     Cell: format,
   };
 });
-const hiddenColumns = ['sourceurl'];
+const hiddenColumns = ['sourceurl', 'storageservice'];
 
 const TableView = ({ library }) => {
   const [filesRequested, setFilesRequested] = useState(false);
