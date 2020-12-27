@@ -13,14 +13,18 @@ const Button = ({ className, ...props }) => {
   );
 };
 
-export const LightButton = ({ className, ...props }) => {
-  const newClassName = `${className || ''} btn btn-light`;
-  return <Button {...props} className={newClassName} />;
+const ButtonClassOverride = (props, classOverride) => {
+  const { className, ...remainingProps } = props;
+  const newClassName = `${className || ''} ${classOverride}`;
+  return <Button {...remainingProps} className={newClassName} />;
 };
 
-export const SuccessButton = ({ className, ...props }) => {
-  const newClassName = `${className || ''} btn btn-success`;
-  return <Button {...props} className={newClassName} />;
-};
+export const LightButton = (props) => (
+  <ButtonClassOverride props={props} classOverride="btn btn-light" />
+);
+
+export const SuccessButton = (props) => (
+  <ButtonClassOverride props={props} classOverride="btn btn-success" />
+);
 
 export default Button;
