@@ -13,7 +13,7 @@ const Button = ({ className, ...props }) => {
   );
 };
 
-const ButtonClassOverride = (props, classOverride) => {
+const ButtonClassOverride = ({ props, classOverride }) => {
   const { className, ...remainingProps } = props;
   const newClassName = `${className || ''} ${classOverride}`;
   return <Button {...remainingProps} className={newClassName} />;

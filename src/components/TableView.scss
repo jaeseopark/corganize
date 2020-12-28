@@ -84,10 +84,20 @@
         .isactive > .true {
           background-image: url('../../assets/iconmonstr-check-mark.svg');
         }
-      }
 
-      .btn {
-        padding: 1px 6px;
+        .fileview {
+          float: right;
+
+          .copy-to-clipboard {
+            float: left;
+            margin-right: 5px;
+          }
+
+          .btn {
+            float: right;
+            padding: 1px 6px;
+          }
+        }
       }
     }
   }

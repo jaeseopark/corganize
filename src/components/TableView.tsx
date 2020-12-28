@@ -1,4 +1,3 @@
-/* eslint-disable react/button-has-type */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/interactive-supports-focus */
 /* eslint-disable react/display-name */
@@ -12,14 +11,17 @@ import {
   usePagination,
   useGlobalFilter,
 } from 'react-table';
+import fs from 'fs';
 import format from '../cellformatter';
-import FileView from './FileView';
 import PageControl from './PageControl';
 import TableHeaderGroup from './TableHeaderGroup';
 import TableRow from './TableRow';
+import { copyTextToClipboard } from '../utils/dist/clipboardUtils';
 
 import './TableView.scss';
 import GlobalFilter from './GlobalFilter';
+import CorganizeClient from '../client/corganize';
+import Button from './Button';
 
 const columnConfigs = [
   'isactive',
@@ -36,11 +38,53 @@ const columnConfigs = [
 });
 const hiddenColumns = ['sourceurl', 'storageservice'];
 
+const LOCAL_FILE_STATUS = {
+  DOWNLOADING: 'downloading',
+  DOWNLOADED: 'downloaded',
+  DECRYPTING: 'decrypting',
+  DECRYPTED: 'decrypted',
+};
+
+const isOpenableStatus = (status) => {
+  return (
+    status === LOCAL_FILE_STATUS.DOWNLOADED ||
+    status === LOCAL_FILE_STATUS.DECRYPTED
+  );
+};
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 const TableView = ({ library }) => {
   const [filesRequested, setFilesRequested] = useState(false);
   const [files, setFiles] = useState(null);
   const [expandedFileid, setExpendedFileid] = useState(null);
   const [clipboardedFileid, setClipboardedFileId] = useState(null);
+  const [localFileStatusMap] = useState({});
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [localFileLastUpdated, setLocalFileLastUpdated] = useState(0);
+
+  const updateLocalFileStatus = (fileid, status) => {
+    localFileStatusMap[fileid] = status;
+    setLocalFileLastUpdated(Date.now());
+  };
+
+  async function downloadFile(file) {
+    // TODO: Improve with a proper Worker Queue design
+    updateLocalFileStatus(file.fileid, LOCAL_FILE_STATUS.DOWNLOADING);
+    await sleep(2500);
+    updateLocalFileStatus(file.fileid, LOCAL_FILE_STATUS.DOWNLOADED);
+  }
+
+  const doesFileExistLocally = (fileid) => {
+    const path = `/tmp/corganize/${fileid}.enc`;
+    try {
+      return fs.existsSync(path);
+    } catch {
+      return null;
+    }
+  };
 
   const data = useMemo(() => files || [], [files]);
   const columns = useMemo(
@@ -53,9 +97,26 @@ const TableView = ({ library }) => {
           Cell: (props) => {
             const { row } = props;
             const { original: file } = row;
+            const { fileid, sourceurl, storageservice } = file;
+
             const displayString = format(props);
             const isExpanded = file.fileid === expandedFileid;
             const isClipboarded = file.fileid === clipboardedFileid;
+
+            const onOpen = () => {
+              if (localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADED) {
+                updateLocalFileStatus(
+                  file.fileid,
+                  LOCAL_FILE_STATUS.DECRYPTING
+                );
+                sleep(1500);
+                // TODO: decrypt
+                updateLocalFileStatus(file.fileid, LOCAL_FILE_STATUS.DECRYPTED);
+              }
+
+              // TODO: open decrypted file
+            };
+
             return (
               <>
                 <span
@@ -66,20 +127,55 @@ const TableView = ({ library }) => {
                 >
                   {displayString}
                 </span>
-                <FileView
-                  file={file}
-                  isClipboarded={isClipboarded}
-                  onClipboard={setClipboardedFileId}
-                  onDownload={({ target }) => {
-                    library.downloadFile(target);
-                  }}
-                />
+                <div className="fileview">
+                  {sourceurl && (
+                    <div className="copy-to-clipboard">
+                      <button
+                        type="button"
+                        className={
+                          isClipboarded ? 'btn btn-success' : 'btn btn-light'
+                        }
+                        onClick={() => {
+                          const copySuccess = copyTextToClipboard(sourceurl);
+                          if (copySuccess) {
+                            setClipboardedFileId(file.fileid);
+                          }
+                        }}
+                      >
+                        {isClipboarded ? 'Copied' : 'Copy Source URL'}
+                      </button>
+                    </div>
+                  )}
+                  {storageservice &&
+                    !localFileStatusMap[fileid] &&
+                    !doesFileExistLocally(fileid) && (
+                      <Button
+                        onClick={() => {
+                          downloadFile(file);
+                        }}
+                      >
+                        Download
+                      </Button>
+                    )}
+                  {localFileStatusMap[fileid] ===
+                    LOCAL_FILE_STATUS.DOWNLOADING && (
+                    <Button disabled>Downloading...</Button>
+                  )}
+                  {isOpenableStatus(localFileStatusMap[fileid]) && (
+                    <Button onClick={onOpen}>Open</Button>
+                  )}
+                  {localFileStatusMap[fileid] ===
+                    LOCAL_FILE_STATUS.DECRYPTING && (
+                    <Button disabled>Opening...</Button>
+                  )}
+                </div>
               </>
             );
           },
         },
       ]),
-    [expandedFileid, clipboardedFileid, library]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [expandedFileid, clipboardedFileid]
   );
 
   const tableInstance = useTable(
@@ -102,7 +198,7 @@ const TableView = ({ library }) => {
 
   useEffect(() => {
     if (!files && !filesRequested) {
-      const { corganizeClient } = library;
+      const corganizeClient = new CorganizeClient(library.config.server);
       const promise = corganizeClient.getFiles();
       // eslint-disable-next-line promise/catch-or-return
       promise
