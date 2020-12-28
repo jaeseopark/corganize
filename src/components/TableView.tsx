@@ -23,12 +23,13 @@ import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 import Button from './Button';
 
-const columnConfigs = [
+const regularColumns = [
   'isactive',
   'ispublic',
   'storageservice',
   'size',
   'lastupdated',
+  'sourceurl',
 ].map((accessor) => {
   return {
     accessor,
@@ -43,13 +44,6 @@ const LOCAL_FILE_STATUS = {
   DOWNLOADED: 'downloaded',
   DECRYPTING: 'decrypting',
   DECRYPTED: 'decrypted',
-};
-
-const isOpenableStatus = (status) => {
-  return (
-    status === LOCAL_FILE_STATUS.DOWNLOADED ||
-    status === LOCAL_FILE_STATUS.DECRYPTED
-  );
 };
 
 function sleep(ms) {
@@ -86,94 +80,104 @@ const TableView = ({ library }) => {
     }
   };
 
+  const renderFilename = (props) => {
+    const { row } = props;
+    const { original: file } = row;
+
+    const displayString = format(props);
+    const isExpanded = file.fileid === expandedFileid;
+
+    return (
+      <textarea
+        readOnly
+        tabIndex="-1"
+        role="button"
+        onClick={() => {
+          setExpendedFileid(isExpanded ? null : file.fileid);
+        }}
+      >
+        {displayString}
+      </textarea>
+    );
+  };
+
+  const renderActions = (props) => {
+    const { row } = props;
+    const { original: file } = row;
+    const { fileid, sourceurl, storageservice } = file;
+    const isClipboarded = fileid === clipboardedFileid;
+
+    const onOpen = () => {
+      if (localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADED) {
+        updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTING);
+        sleep(1500);
+        // TODO: decrypt
+        updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTED);
+      }
+
+      // TODO: open decrypted file
+    };
+
+    return (
+      <div className="fileview">
+        {sourceurl && (
+          <div className="copy-to-clipboard">
+            <button
+              type="button"
+              className={isClipboarded ? 'btn btn-success' : 'btn btn-light'}
+              onClick={() => {
+                const copySuccess = copyTextToClipboard(sourceurl);
+                if (copySuccess) {
+                  setClipboardedFileId(fileid);
+                }
+              }}
+            >
+              {isClipboarded ? 'Copied' : 'Copy Source URL'}
+            </button>
+          </div>
+        )}
+        {storageservice &&
+          !localFileStatusMap[fileid] &&
+          !doesFileExistLocally(fileid) && (
+            <Button
+              onClick={() => {
+                downloadFile(file);
+              }}
+            >
+              Download
+            </Button>
+          )}
+        {localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADING && (
+          <Button disabled>Downloading...</Button>
+        )}
+        {(localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADED ||
+          localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DECRYPTED) && (
+          <Button onClick={onOpen}>Open</Button>
+        )}
+        {localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DECRYPTING && (
+          <Button disabled>Opening...</Button>
+        )}
+      </div>
+    );
+  };
+
   const data = useMemo(() => files || [], [files]);
   const columns = useMemo(
-    () =>
-      columnConfigs.concat([
+    () => {
+      const computedColumns = [
         {
           accessor: 'filename',
           Header: 'filename',
           id: 'filename',
-          Cell: (props) => {
-            const { row } = props;
-            const { original: file } = row;
-            const { fileid, sourceurl, storageservice } = file;
-
-            const displayString = format(props);
-            const isExpanded = file.fileid === expandedFileid;
-            const isClipboarded = file.fileid === clipboardedFileid;
-
-            const onOpen = () => {
-              if (localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADED) {
-                updateLocalFileStatus(
-                  file.fileid,
-                  LOCAL_FILE_STATUS.DECRYPTING
-                );
-                sleep(1500);
-                // TODO: decrypt
-                updateLocalFileStatus(file.fileid, LOCAL_FILE_STATUS.DECRYPTED);
-              }
-
-              // TODO: open decrypted file
-            };
-
-            return (
-              <>
-                <span
-                  role="button"
-                  onClick={() => {
-                    setExpendedFileid(isExpanded ? null : file.fileid);
-                  }}
-                >
-                  {displayString}
-                </span>
-                <div className="fileview">
-                  {sourceurl && (
-                    <div className="copy-to-clipboard">
-                      <button
-                        type="button"
-                        className={
-                          isClipboarded ? 'btn btn-success' : 'btn btn-light'
-                        }
-                        onClick={() => {
-                          const copySuccess = copyTextToClipboard(sourceurl);
-                          if (copySuccess) {
-                            setClipboardedFileId(file.fileid);
-                          }
-                        }}
-                      >
-                        {isClipboarded ? 'Copied' : 'Copy Source URL'}
-                      </button>
-                    </div>
-                  )}
-                  {storageservice &&
-                    !localFileStatusMap[fileid] &&
-                    !doesFileExistLocally(fileid) && (
-                      <Button
-                        onClick={() => {
-                          downloadFile(file);
-                        }}
-                      >
-                        Download
-                      </Button>
-                    )}
-                  {localFileStatusMap[fileid] ===
-                    LOCAL_FILE_STATUS.DOWNLOADING && (
-                    <Button disabled>Downloading...</Button>
-                  )}
-                  {isOpenableStatus(localFileStatusMap[fileid]) && (
-                    <Button onClick={onOpen}>Open</Button>
-                  )}
-                  {localFileStatusMap[fileid] ===
-                    LOCAL_FILE_STATUS.DECRYPTING && (
-                    <Button disabled>Opening...</Button>
-                  )}
-                </div>
-              </>
-            );
-          },
+          Cell: renderFilename,
         },
-      ]),
+        {
+          id: 'actions',
+          Cell: renderActions,
+        },
+      ];
+      return regularColumns.concat(computedColumns);
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [expandedFileid, clipboardedFileid]
   );
