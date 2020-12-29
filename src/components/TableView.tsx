@@ -12,6 +12,7 @@ import {
   useGlobalFilter,
 } from 'react-table';
 import fs from 'fs';
+import { pathToFileURL } from 'url';
 import format from '../cellformatter';
 import PageControl from './PageControl';
 import TableHeaderGroup from './TableHeaderGroup';
@@ -59,22 +60,37 @@ const TableView = ({ library }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [localFileLastUpdated, setLocalFileLastUpdated] = useState(0);
 
-  const updateLocalFileStatus = (fileid, status) => {
+  const { gdriveClient } = library;
+
+  const updateLocalFileStatus = (fileid: string, status: string | null) => {
     localFileStatusMap[fileid] = status;
     setLocalFileLastUpdated(Date.now());
   };
 
+  /**
+   * TODO: Improve with a proper Worker Queue design
+   * @param fileid
+   */
   async function downloadFile(file) {
-    // TODO: Improve with a proper Worker Queue design
-    updateLocalFileStatus(file.fileid, LOCAL_FILE_STATUS.DOWNLOADING);
-    await sleep(2500);
-    updateLocalFileStatus(file.fileid, LOCAL_FILE_STATUS.DOWNLOADED);
+    const { fileid, locationref } = file;
+
+    updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DOWNLOADING);
+    gdriveClient
+      .downloadFileAsync(locationref, library.getEncryptedPath(fileid))
+      .then(() => {
+        console.log('download success');
+        updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DOWNLOADED);
+        return fileid;
+      })
+      .catch((error) => {
+        console.error('download failed', error);
+        updateLocalFileStatus(fileid, null);
+      });
   }
 
-  const doesFileExistLocally = (fileid) => {
-    const path = `/tmp/corganize/${fileid}.enc`;
+  const doesFileExistLocally = (fileid: string) => {
     try {
-      return fs.existsSync(path);
+      return fs.existsSync(library.getEncryptedPath(fileid));
     } catch {
       return null;
     }
@@ -95,16 +111,15 @@ const TableView = ({ library }) => {
         onClick={() => {
           setExpendedFileid(isExpanded ? null : file.fileid);
         }}
-      >
-        {displayString}
-      </textarea>
+        value={displayString}
+      />
     );
   };
 
   const renderActions = (props) => {
     const { row } = props;
     const { original: file } = row;
-    const { fileid, sourceurl, storageservice } = file;
+    const { fileid, sourceurl, locationref } = file;
     const isClipboarded = fileid === clipboardedFileid;
 
     const onOpen = () => {
@@ -136,7 +151,7 @@ const TableView = ({ library }) => {
             </button>
           </div>
         )}
-        {storageservice &&
+        {locationref &&
           !localFileStatusMap[fileid] &&
           !doesFileExistLocally(fileid) && (
             <Button

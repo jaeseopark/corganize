@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import TableView from './components/TableView';
 import LibrarySelector from './components/LibrarySelector';
@@ -12,8 +12,7 @@ const Corganize = () => {
     return <LibrarySelector onLibraryChange={setLibrary} />;
   }
 
-  const tableView = <TableView library={library} />;
-  return tableView;
+  return <TableView library={library} />;
 };
 
 export default function App() {

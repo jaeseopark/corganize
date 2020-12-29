@@ -1,8 +1,20 @@
 import PropTypes from 'prop-types';
 
+const fs = require('fs');
+const path = require('path');
+
 class Library {
   constructor(config) {
     this.config = config;
+    this.gdriveClient = null;
+
+    if (!fs.existsSync(config.local.path)) {
+      fs.mkdirSync(config.local.path);
+    }
+  }
+
+  getEncryptedPath(fileId) {
+    return path.join(this.config.local.path, `${fileId}.enc`);
   }
 }
 
@@ -18,6 +30,9 @@ Library.propTypes = {
           path: PropTypes.string,
         }),
       }),
+    }),
+    local: PropTypes.shape({
+      path: PropTypes.string,
     }),
   }).isRequired,
 };
