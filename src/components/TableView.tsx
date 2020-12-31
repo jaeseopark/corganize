@@ -12,7 +12,6 @@ import {
   useGlobalFilter,
 } from 'react-table';
 import fs from 'fs';
-import { pathToFileURL } from 'url';
 import format from '../cellformatter';
 import PageControl from './PageControl';
 import TableHeaderGroup from './TableHeaderGroup';

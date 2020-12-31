@@ -62,37 +62,16 @@ class GdriveClient {
     });
   }
 
-  async downloadFileAsync(fileId: string, localPath: string, progressCallback) {
+  async downloadFileAsync(fileId: string, localPath: string) {
     google.options({ auth: this.getOAuthClient() });
-    const tmpLocalPath = `${localPath}.download`;
-    let progress = 0;
 
-    const res = await drive.files.get(
-      { fileId, alt: 'media' },
-      { responseType: 'stream' }
-    );
+    const res = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' });
 
     return new Promise((resolve, reject) => {
-      const { data, headers } = res;
-      const contentLength = headers['content-length'];
-
-      data
-        .on('end', () => {
-          fs.rename(tmpLocalPath, localPath);
-          resolve(localPath);
-        })
-        .on('error', (err) => {
-          reject(err);
-        })
-        .on('data', (d) => {
-          progress += d.length;
-          if (progressCallback) {
-            progressCallback({
-              percentage: progress / contentLength,
-            });
-          }
-        })
-        .pipe(fs.createWriteStream(tmpLocalPath));
+      fs.writeFile(localPath, res.data, 'binary', function (err) {
+        if (err) reject(err);
+      });
+      resolve(localPath);
     });
   }
 }
