@@ -38,6 +38,7 @@ class GdriveClient {
   getOAuthClient() {
     if (!this.oAuthClient) {
       const credentials = JSON.parse(fs.readFileSync(this.config.creds.path));
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       const { client_secret, client_id, redirect_uris } = credentials.installed;
       const client = new google.auth.OAuth2(
         client_id,
@@ -65,10 +66,13 @@ class GdriveClient {
   async downloadFileAsync(fileId: string, localPath: string) {
     google.options({ auth: this.getOAuthClient() });
 
-    const res = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' });
+    const res = await drive.files.get(
+      { fileId, alt: 'media' },
+      { responseType: 'stream' }
+    );
 
     return new Promise((resolve, reject) => {
-      fs.writeFile(localPath, res.data, 'binary', function (err) {
+      fs.writeFile(localPath, res.data, 'binary', (err) => {
         if (err) reject(err);
       });
       resolve(localPath);

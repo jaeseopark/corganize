@@ -57,13 +57,13 @@ const TableView = ({ library }) => {
   const [clipboardedFileid, setClipboardedFileId] = useState(null);
   const [localFileStatusMap] = useState({});
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [localFileLastUpdated, setLocalFileLastUpdated] = useState(0);
+  const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
 
   const { gdriveClient } = library;
 
   const updateLocalFileStatus = (fileid: string, status: string | null) => {
     localFileStatusMap[fileid] = status;
-    setLocalFileLastUpdated(Date.now());
+    setRerenderTimestamp(Date.now());
   };
 
   /**
@@ -77,12 +77,12 @@ const TableView = ({ library }) => {
     gdriveClient
       .downloadFileAsync(locationref, library.getEncryptedPath(fileid))
       .then(() => {
-        console.log('download success');
         updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DOWNLOADED);
         return fileid;
       })
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .catch((error) => {
-        console.error('download failed', error);
+        // TODO: handle error
         updateLocalFileStatus(fileid, null);
       });
   }

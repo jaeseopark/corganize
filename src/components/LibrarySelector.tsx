@@ -4,15 +4,12 @@ import fs from 'fs';
 import Library from '../library';
 import GdriveClient from '../client/gdrive';
 import Button from './Button';
-import { gdrive, true } from './TableView.scss';
 
 const LibrarySelector = ({ onLibraryChange }) => {
   const hiddenFileInput = useRef(null);
   const authCodeTextarea = useRef(null);
-  const [needsOAuth, setNeedsOAuth] = useState(false);
   const [library, setLibrary] = useState(null);
   const [gdriveClient, setGdriveClient] = useState(null);
-  const [errorToDisplay, setErrorToDisplay] = useState(null);
 
   const onChangeFile = (event) => {
     const path = event?.target?.files[0].path;
@@ -37,23 +34,17 @@ const LibrarySelector = ({ onLibraryChange }) => {
     }
   };
 
-  if (errorToDisplay) {
-    return (
-      <>
-        <div className="gdrive-auth-error">
-          <div>Error</div>
-          <pre>{JSON.stringify(errorToDisplay)}</pre>
-        </div>
-      </>
-    );
-  }
-
   if (library && gdriveClient) {
+    // TODO handle oauth behind the scenes
     const authUrl = gdriveClient.getAuthUrl();
     return (
       <div className="google-oauth">
         <div>
-          Corganize uses Google Drive to host the files. <a href={authUrl} target="_blank">Log in</a> to Google and paste the Authentication Code below:
+          Corganize uses Google Drive to host the files.{' '}
+          <a href={authUrl} target="_blank" rel="noreferrer">
+            Log in
+          </a>{' '}
+          to Google and paste the Authentication Code below:
         </div>
         <div>
           <textarea

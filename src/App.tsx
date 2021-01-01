@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import TableView from './components/TableView';
 import LibrarySelector from './components/LibrarySelector';
