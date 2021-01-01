@@ -23,6 +23,16 @@ import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 import Button from './Button';
 
+const { exec } = require('child_process');
+
+const SUPPORTED_IN_APP_FILE_TYPE = ['mp4'];
+const LOCAL_FILE_STATUS = {
+  DOWNLOADING: 'downloading',
+  DOWNLOADED: 'downloaded',
+  DECRYPTING: 'decrypting',
+  DECRYPTED: 'decrypted',
+};
+
 const regularColumns = [
   'isactive',
   'ispublic',
@@ -39,16 +49,16 @@ const regularColumns = [
 });
 const hiddenColumns = ['sourceurl', 'storageservice'];
 
-const LOCAL_FILE_STATUS = {
-  DOWNLOADING: 'downloading',
-  DOWNLOADED: 'downloaded',
-  DECRYPTING: 'decrypting',
-  DECRYPTED: 'decrypted',
-};
-
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+const isSupportedInAppFileType = (file) => {
+  // TODO: evaluate the file header, look at mimeType, etc.
+  // For now use the file extension
+  const ext = 'mp4';
+  return SUPPORTED_IN_APP_FILE_TYPE.includes(ext);
+};
 
 const TableView = ({ library }) => {
   const [filesRequested, setFilesRequested] = useState(false);
@@ -120,8 +130,9 @@ const TableView = ({ library }) => {
     const { original: file } = row;
     const { fileid, sourceurl, locationref } = file;
     const isClipboarded = fileid === clipboardedFileid;
+    const encryptedPath = library.getEncryptedPath(fileid);
 
-    const onOpen = () => {
+    const onOpen = (openInApp: boolean) => {
       if (localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADED) {
         updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTING);
         sleep(1500);
@@ -129,7 +140,17 @@ const TableView = ({ library }) => {
         updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTED);
       }
 
-      // TODO: open decrypted file
+      if (openInApp) {
+        if (isSupportedInAppFileType(file)) {
+          // TODO open in app
+          throw new Error('Not Implemented');
+        }
+        throw new Error('Unsupported file type');
+      } else if (process.platform === 'win32') {
+        exec(`explorer /select,${encryptedPath}`);
+      } else {
+        throw new Error('OS not supported', process.platform);
+      }
     };
 
     return (
