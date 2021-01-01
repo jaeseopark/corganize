@@ -8,14 +8,16 @@ const relativeTime = require('dayjs/plugin/relativeTime');
 
 dayjs.extend(relativeTime);
 
+const htmlDecode = (input) => {
+  return new DOMParser().parseFromString(input, 'text/html').body.textContent;
+};
+
 export default function format(props) {
   const { value, column } = props;
   switch (column.id) {
     case 'size':
       return value ? <div className="size">{humanFileSize(value)}</div> : null;
     case 'lastupdated': {
-      // const date = new Date(value * 1000);
-      // const dateISO = date.toISOString().split('T')[0];
       const relativeString = dayjs()
         .to(dayjs.unix(value))
         .split('ago')[0]
@@ -32,6 +34,6 @@ export default function format(props) {
       return <div className={classNames} />;
     }
     default:
-      return String(value);
+      return htmlDecode(String(value));
   }
 }

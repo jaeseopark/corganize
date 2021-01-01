@@ -1,38 +1,114 @@
 :global {
-  th[role='columnheader'].lastupdated {
-    width: 110px;
-  }
+  .tableview {
+    .globalfilter {
+      float: right;
+      margin-bottom: 5px;
 
-  th[role='columnheader'].size {
-    width: 80px;
-  }
+      input {
+        width: 300px;
+        float: right;
+        margin-left: 5px;
+      }
+    }
 
-  .isactive[role='columnheader'],
-  .ispublic[role='columnheader'],
-  .storageservice[role='columnheader'] {
-    width: 18px;
-  }
+    .table {
+      td,
+      th {
+        padding: 0.5rem 0;
+      }
 
-  td[role='cell'] > .icon {
-    width: 18px;
-    height: 18px;
-    background-size: 18px 18px;
-    background-repeat: no-repeat;
-  }
+      thead {
+        th {
+          padding-left: 0;
+          padding-right: 0;
 
-  .filename > span[role='button'] {
-    cursor: pointer;
-  }
+          &.lastupdated {
+            width: 135px;
+          }
 
-  .storageservice[role='cell'] > .gdrive {
-    background-image: url('../../assets/gdrive.svg');
-  }
+          &.size {
+            width: 80px;
+          }
 
-  .ispublic[role='cell'] > .false {
-    background-image: url('../../assets/lock-svgrepo-com.svg');
-  }
+          &.isactive {
+            width: 80px;
+          }
 
-  .isactive[role='cell'] > .true {
-    background-image: url('../../assets/iconmonstr-check-mark.svg');
+          &.ispublic {
+            width: 80px;
+          }
+
+          &.actions {
+            width: 265px;
+          }
+        }
+
+        span {
+          float: left;
+        }
+
+        .sorted {
+          width: 18px;
+          height: 18px;
+          background-size: 18px 18px;
+          background-repeat: no-repeat;
+          margin-top: 4px;
+
+          &.desc {
+            background-image: url('../../assets/iconfinder_angle-down_1608507.svg');
+          }
+
+          &.asc {
+            background-image: url('../../assets/iconfinder_angle-up_1608510.svg');
+          }
+        }
+      }
+
+      tbody {
+        .icon {
+          width: 18px;
+          height: 18px;
+          background-size: 18px 18px;
+          background-repeat: no-repeat;
+        }
+
+        .filename > textarea[role='button'] {
+          cursor: pointer;
+          margin: 0;
+          padding: 0;
+          border: 0;
+          overflow: hidden;
+          resize: none;
+          width: 100%;
+          height: 22px;
+        }
+
+        .storageservice > .gdrive {
+          background-image: url('../../assets/gdrive.svg');
+        }
+
+        .ispublic > .false {
+          background-image: url('../../assets/lock-svgrepo-com.svg');
+        }
+
+        .isactive > .true {
+          background-image: url('../../assets/iconmonstr-check-mark.svg');
+        }
+
+        .fileview {
+          float: right;
+
+          .copy-to-clipboard {
+            float: left;
+            margin-right: 5px;
+          }
+
+          .btn {
+            float: right;
+            padding: 1px 6px;
+          }
+        }
+      }
+    }
   }
 }

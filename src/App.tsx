@@ -12,8 +12,7 @@ const Corganize = () => {
     return <LibrarySelector onLibraryChange={setLibrary} />;
   }
 
-  const tableView = <TableView library={library} />;
-  return tableView;
+  return <TableView library={library} />;
 };
 
 export default function App() {

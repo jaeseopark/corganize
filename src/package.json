@@ -14,5 +14,7 @@
     "postinstall": "yarn electron-rebuild"
   },
   "license": "MIT",
-  "dependencies": {}
+  "devDependencies": {
+    "@types/react-table": "^7.0.26"
+  }
 }

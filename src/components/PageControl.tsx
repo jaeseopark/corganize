@@ -54,23 +54,19 @@ const PageControl = ({
         </div>
         <div className="page-indicator">
           <span>
-            Page {pageIndex + 1} of {pageOptions.length}
-          </span>
-        </div>
-        <div className="page-jump">
-          <span>
-            Go to page:
+            Page{' '}
             <input
               className="page-jump-field"
               type="number"
-              defaultValue={pageIndex + 1}
+              value={pageIndex + 1}
               onChange={(e) => {
                 const targetPage = e.target.value
                   ? Number(e.target.value) - 1
                   : 0;
                 gotoPage(targetPage);
               }}
-            />
+            />{' '}
+            of {pageOptions.length}
           </span>
         </div>
       </div>

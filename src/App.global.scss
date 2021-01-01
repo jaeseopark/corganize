@@ -1,0 +1,26 @@
+#root {
+  margin: 0px 10px;
+}
+
+h2.center {
+  text-align: center;
+}
+
+.library-selection {
+  margin: 50px;
+}
+
+.google-oauth {
+  margin: 50px;
+
+  textarea {
+    margin: 15px 0;
+    width: 600px;
+    height: 30px;
+    resize: none;
+  }
+}
+
+.gdrive-auth-error {
+  margin: 50px;
+}

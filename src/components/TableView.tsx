@@ -1,77 +1,199 @@
-/* eslint-disable react/button-has-type */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/interactive-supports-focus */
 /* eslint-disable react/display-name */
 /* eslint-disable react/jsx-key */
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable react/prop-types */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useTable, useSortBy, usePagination } from 'react-table';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  useTable,
+  useSortBy,
+  usePagination,
+  useGlobalFilter,
+} from 'react-table';
+import fs from 'fs';
 import format from '../cellformatter';
-import FileView from './FileView';
 import PageControl from './PageControl';
+import TableHeaderGroup from './TableHeaderGroup';
+import TableRow from './TableRow';
+import { copyTextToClipboard } from '../utils/dist/clipboardUtils';
 
 import './TableView.scss';
+import GlobalFilter from './GlobalFilter';
+import CorganizeClient from '../client/corganize';
+import Button from './Button';
 
-const hiddenColumns = ['sourceurl'];
+const regularColumns = [
+  'isactive',
+  'ispublic',
+  'storageservice',
+  'size',
+  'lastupdated',
+  'sourceurl',
+].map((accessor) => {
+  return {
+    accessor,
+    Header: accessor,
+    Cell: format,
+  };
+});
+const hiddenColumns = ['sourceurl', 'storageservice'];
+
+const LOCAL_FILE_STATUS = {
+  DOWNLOADING: 'downloading',
+  DOWNLOADED: 'downloaded',
+  DECRYPTING: 'decrypting',
+  DECRYPTED: 'decrypted',
+};
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 const TableView = ({ library }) => {
   const [filesRequested, setFilesRequested] = useState(false);
   const [files, setFiles] = useState(null);
   const [expandedFileid, setExpendedFileid] = useState(null);
+  const [clipboardedFileid, setClipboardedFileId] = useState(null);
+  const [localFileStatusMap] = useState({});
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
+
+  const { gdriveClient } = library;
+
+  const updateLocalFileStatus = (fileid: string, status: string | null) => {
+    localFileStatusMap[fileid] = status;
+    setRerenderTimestamp(Date.now());
+  };
+
+  /**
+   * TODO: Improve with a proper Worker Queue design
+   * @param fileid
+   */
+  async function downloadFile(file) {
+    const { fileid, locationref } = file;
+
+    updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DOWNLOADING);
+    gdriveClient
+      .downloadFileAsync(locationref, library.getEncryptedPath(fileid))
+      .then(() => {
+        updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DOWNLOADED);
+        return fileid;
+      })
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .catch((error) => {
+        // TODO: handle error
+        updateLocalFileStatus(fileid, null);
+      });
+  }
+
+  const doesFileExistLocally = (fileid: string) => {
+    try {
+      return fs.existsSync(library.getEncryptedPath(fileid));
+    } catch {
+      return null;
+    }
+  };
+
+  const renderFilename = (props) => {
+    const { row } = props;
+    const { original: file } = row;
+
+    const displayString = format(props);
+    const isExpanded = file.fileid === expandedFileid;
+
+    return (
+      <textarea
+        readOnly
+        tabIndex="-1"
+        role="button"
+        onClick={() => {
+          setExpendedFileid(isExpanded ? null : file.fileid);
+        }}
+        value={displayString}
+      />
+    );
+  };
+
+  const renderActions = (props) => {
+    const { row } = props;
+    const { original: file } = row;
+    const { fileid, sourceurl, locationref } = file;
+    const isClipboarded = fileid === clipboardedFileid;
+
+    const onOpen = () => {
+      if (localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADED) {
+        updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTING);
+        sleep(1500);
+        // TODO: decrypt
+        updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTED);
+      }
+
+      // TODO: open decrypted file
+    };
+
+    return (
+      <div className="fileview">
+        {sourceurl && (
+          <div className="copy-to-clipboard">
+            <button
+              type="button"
+              className={isClipboarded ? 'btn btn-success' : 'btn btn-light'}
+              onClick={() => {
+                const copySuccess = copyTextToClipboard(sourceurl);
+                if (copySuccess) {
+                  setClipboardedFileId(fileid);
+                }
+              }}
+            >
+              {isClipboarded ? 'Copied' : 'Copy Source URL'}
+            </button>
+          </div>
+        )}
+        {locationref &&
+          !localFileStatusMap[fileid] &&
+          !doesFileExistLocally(fileid) && (
+            <Button
+              onClick={() => {
+                downloadFile(file);
+              }}
+            >
+              Download
+            </Button>
+          )}
+        {localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADING && (
+          <Button disabled>Downloading...</Button>
+        )}
+        {(localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADED ||
+          localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DECRYPTED) && (
+          <Button onClick={onOpen}>Open</Button>
+        )}
+        {localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DECRYPTING && (
+          <Button disabled>Opening...</Button>
+        )}
+      </div>
+    );
+  };
 
   const data = useMemo(() => files || [], [files]);
   const columns = useMemo(
-    () => [
-      {
-        accessor: 'isactive',
-        Cell: format,
-      },
-      {
-        accessor: 'ispublic',
-        Cell: format,
-      },
-      {
-        accessor: 'storageservice',
-        Cell: format,
-      },
-      {
-        accessor: 'size',
-        Header: 'Size',
-        Cell: format,
-      },
-      {
-        accessor: 'lastupdated',
-        Header: 'Updated',
-        Cell: format,
-      },
-      {
-        accessor: 'filename',
-        Header: 'Filename',
-        id: 'filename',
-        Cell: (props) => {
-          const { row } = props;
-          const { original: file } = row;
-          const displayString = format(props);
-          return (
-            <span
-              role="button"
-              onClick={() => {
-                setExpendedFileid(
-                  file.fileid === expandedFileid ? null : file.fileid
-                );
-              }}
-            >
-              {displayString}
-            </span>
-          );
+    () => {
+      const computedColumns = [
+        {
+          accessor: 'filename',
+          Header: 'filename',
+          id: 'filename',
+          Cell: renderFilename,
         },
-      },
-      {
-        accessor: 'sourceurl',
-      },
-    ],
-    [expandedFileid]
+        {
+          id: 'actions',
+          Cell: renderActions,
+        },
+      ];
+      return regularColumns.concat(computedColumns);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [expandedFileid, clipboardedFileid]
   );
 
   const tableInstance = useTable(
@@ -80,6 +202,7 @@ const TableView = ({ library }) => {
       data,
       initialState: { hiddenColumns },
     },
+    useGlobalFilter,
     useSortBy,
     usePagination
   );
@@ -88,14 +211,12 @@ const TableView = ({ library }) => {
     getTableProps,
     getTableBodyProps,
     headerGroups,
-    prepareRow,
-    visibleColumns,
     page,
   } = tableInstance;
 
   useEffect(() => {
     if (!files && !filesRequested) {
-      const { corganizeClient } = library;
+      const corganizeClient = new CorganizeClient(library.config.server);
       const promise = corganizeClient.getFiles();
       // eslint-disable-next-line promise/catch-or-return
       promise
@@ -108,87 +229,33 @@ const TableView = ({ library }) => {
         });
       setFilesRequested(true);
     }
-  }, [files, filesRequested, library]);
-
-  const renderRowSubComponent = useCallback(({ row }) => {
-    const { original: file } = row;
-    return <FileView file={file} />;
-  }, []);
-
-  const getColumnHeaderProps = (column) => {
-    try {
-      const sortByToggleProps = column.getSortByToggleProps();
-      return column.getHeaderProps(sortByToggleProps);
-    } catch (error) {
-      const { message } = error;
-      if (message === 'column.getSortByToggleProps is not a function') {
-        return column.getHeaderProps();
-      }
-
-      throw error;
-    }
-  };
+  }, [files, filesRequested, library, expandedFileid]);
 
   if (!files) {
     return <h2 className="center">Loading...</h2>;
   }
 
   return (
-    <>
+    <div className="tableview">
+      <GlobalFilter {...tableInstance} />
       <table className="table" {...getTableProps()}>
         <thead>
           {headerGroups.map((headerGroup) => (
-            <tr {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map((column) => {
-                let sortIndicator = '';
-                if (column.isSorted) {
-                  sortIndicator = column.isSortedDesc ? ' 🔽' : ' 🔼';
-                }
-                return (
-                  <th
-                    scope="col"
-                    {...getColumnHeaderProps(column)}
-                    className={column.id}
-                  >
-                    {column.render('Header')}
-                    <span>{sortIndicator}</span>
-                  </th>
-                );
-              })}
-            </tr>
+            <TableHeaderGroup headerGroup={headerGroup} />
           ))}
         </thead>
         <tbody {...getTableBodyProps()}>
-          {page.map((row) => {
-            prepareRow(row);
-            const { original: file } = row;
-            const subcomponent = expandedFileid === file.fileid && (
-              <tr>
-                <td colSpan={visibleColumns.length}>
-                  {renderRowSubComponent({ row })}
-                </td>
-              </tr>
-            );
-            return (
-              <>
-                <tr {...row.getRowProps()}>
-                  {row.cells.map((cell) => {
-                    const columnName = cell?.column?.id;
-                    return (
-                      <td {...cell.getCellProps()} className={columnName}>
-                        {cell.render('Cell')}
-                      </td>
-                    );
-                  })}
-                </tr>
-                {subcomponent}
-              </>
-            );
-          })}
+          {page.map((row) => (
+            <TableRow
+              row={row}
+              expandedFileid={expandedFileid}
+              {...tableInstance}
+            />
+          ))}
         </tbody>
       </table>
       <PageControl {...tableInstance} />
-    </>
+    </div>
   );
 };
 
