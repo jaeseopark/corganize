@@ -72,15 +72,11 @@ const FileView = ({
     actionButton = <Button disabled>Downloading...</Button>;
   } else if (existsSync(encryptedPath)) {
     switch (localFileStatus) {
-      case LOCAL_FILE_STATUS.DOWNLOADED:
-      case LOCAL_FILE_STATUS.DECRYPTED:
-        actionButton = <Button onClick={onOpenInApp}>Open</Button>;
-        break;
       case LOCAL_FILE_STATUS.DECRYPTING:
         actionButton = <Button disabled>Opening...</Button>;
         break;
       default:
-        actionButton = <Button disabled>Unknwon State</Button>;
+        actionButton = <Button onClick={onOpenInApp}>Open</Button>;
         break;
     }
   } else if (locationref) {
