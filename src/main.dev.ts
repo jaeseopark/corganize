@@ -141,7 +141,10 @@ ipcMain.handle(
   async (event, { fileid, storageservice, locationref }) => {
     console.log('download event');
     const localPath = library.getEncryptedPath(fileid);
-    return gdriveClient.downloadFileAsync(locationref, localPath);
+    if (storageservice === 'gdrive') {
+      return gdriveClient.downloadFileAsync(locationref, localPath);
+    }
+    throw new Error(`Unsupported storageservice: ${storageservice}`);
   }
 );
 
