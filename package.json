@@ -254,6 +254,7 @@
     "electron-updater": "^4.3.4",
     "googleapis": "^66.0.0",
     "history": "^5.0.0",
+    "node-aescrypt": "1.0.3",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-router-dom": "^5.2.0",

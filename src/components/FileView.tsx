@@ -1,5 +1,4 @@
 /* eslint-disable react/prop-types */
-/* eslint-disable react/react-in-jsx-scope */
 import { ipcRenderer } from 'electron';
 import { createWriteStream, createReadStream, existsSync } from 'fs';
 import React from 'react';
@@ -7,7 +6,7 @@ import { copyTextToClipboard } from '../utils/clipboardUtils';
 
 import { decryptAes256Cbc } from '../utils/cryptoUtils';
 import {
-  getExtnameFromFile,
+  getExtnameWithoutDot,
   isSupportedInAppFileType,
 } from '../utils/fileUtils';
 import Button from './Button';
@@ -27,30 +26,46 @@ const FileView = ({
   updateLocalFileStatus,
   setClipboardedFileId,
   localFileStatus,
+  aespassword,
 }) => {
   const { fileid, sourceurl, filename, locationref } = file;
+  const ext = getExtnameWithoutDot(filename, defaultExtname);
 
-  const decrypt = (streamIn, streamOut) => {
-    updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTING);
-    return (
-      decryptAes256Cbc(streamIn, streamOut, library.config.local.aes.password)
+  const openInApp = () => {
+    if (isSupportedInAppFileType(ext)) {
+      return fileid;
+    }
+    throw new Error('Unsupported file type');
+  };
+
+  const onOpenInApp = async () => {
+    const decryptedPath = `${encryptedPath}.${ext}`;
+    if (
+      existsSync(decryptedPath) ||
+      localFileStatus === LOCAL_FILE_STATUS.DECRYPTED
+    ) {
+      openInApp();
+    } else if (localFileStatus === LOCAL_FILE_STATUS.DOWNLOADED) {
+      const streamIn = createReadStream(encryptedPath);
+      const streamOut = createWriteStream(decryptedPath); // TODO: replace with a buffer
+
+      updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTING);
+      // eslint-disable-next-line promise/catch-or-return
+      decryptAes256Cbc(streamIn, streamOut, aespassword)
         // eslint-disable-next-line promise/always-return
         .then(() => {
           updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTED);
         })
-    );
-  };
-
-  const onOpenInApp = () => {
-    const streamIn = createReadStream(encryptedPath);
-    const streamOut = createWriteStream();
-
-    const ext = getExtnameFromFile(filename, defaultExtname);
-    if (isSupportedInAppFileType(ext)) {
-      // TODO open in app
-      throw new Error('Not Implemented');
+        .then(openInApp)
+        .catch((error) => {
+          alert(error);
+          updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DOWNLOADED);
+        })
+        .finally(() => {
+          streamIn.close();
+          streamOut.close();
+        });
     }
-    throw new Error('Unsupported file type');
   };
 
   function downloadViaIpc() {
@@ -74,7 +89,7 @@ const FileView = ({
   } else if (existsSync(encryptedPath)) {
     switch (localFileStatus) {
       case LOCAL_FILE_STATUS.DECRYPTING:
-        actionButton = <Button disabled>Opening...</Button>;
+        actionButton = <Button disabled>Decrypting...</Button>;
         break;
       default:
         actionButton = <Button onClick={onOpenInApp}>Open</Button>;

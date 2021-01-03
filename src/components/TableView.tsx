@@ -75,15 +75,16 @@ const TableView = ({ library }) => {
   const renderActions = ({ row }) => {
     const file = row.original;
     const { fileid } = file;
-    const localFileStatus = localFileStatusMap[fileid];
     return (
       <FileView
         file={file}
         isClipboarded={fileid === clipboardedFileid}
         encryptedPath={library.getEncryptedPath(fileid)}
+        localFileStatus={localFileStatusMap[fileid]}
+        aespassword={library.config.local.aes.password}
+        defaultExtname={library.config.local.defaultExtname}
         updateLocalFileStatus={updateLocalFileStatus}
         setClipboardedFileId={setClipboardedFileId}
-        localFileStatus={localFileStatus}
       />
     );
   };

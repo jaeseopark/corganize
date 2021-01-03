@@ -1,16 +1,17 @@
 /* eslint-disable import/prefer-default-export */
-// import { Encrypt } from 'node-aescrypt';
-
-// import { createReadStream, createWriteStream } from 'fs';
+import { Decrypt } from 'node-aescrypt';
 
 export async function decryptAes256Cbc(streamIn, streamOut, password: string) {
-  // const through = new Encrypt(password);
-
   return new Promise((resolve, reject) => {
+    const through = new Decrypt(password);
     streamIn
-      // .pipe(through)
+      .pipe(through)
       .pipe(streamOut)
-      .on('error', (error) => reject(error))
-      .on('finish', () => resolve(streamOut));
+      .on('error', (error) => {
+        throw error;
+      })
+      .on('finish', () => {
+        resolve(null);
+      });
   });
 }
