@@ -11,28 +11,16 @@ import {
   usePagination,
   useGlobalFilter,
 } from 'react-table';
-import fs from 'fs';
-import { ipcRenderer } from 'electron';
 import format from '../cellformatter';
 import PageControl from './PageControl';
 import TableHeaderGroup from './TableHeaderGroup';
 import TableRow from './TableRow';
-import { copyTextToClipboard } from '../utils/dist/clipboardUtils';
 
 import './TableView.scss';
 import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
-import Button from './Button';
 
-const { exec } = require('child_process');
-
-const SUPPORTED_IN_APP_FILE_TYPE = ['mp4'];
-const LOCAL_FILE_STATUS = {
-  DOWNLOADING: 'downloading',
-  DOWNLOADED: 'downloaded',
-  DECRYPTING: 'decrypting',
-  DECRYPTED: 'decrypted',
-};
+import FileView from './FileView';
 
 const regularColumns = [
   'isactive',
@@ -50,17 +38,6 @@ const regularColumns = [
 });
 const hiddenColumns = ['sourceurl', 'storageservice'];
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-const isSupportedInAppFileType = (file) => {
-  // TODO: evaluate the file header, look at mimeType, etc.
-  // For now use the file extension
-  const ext = 'mp4';
-  return SUPPORTED_IN_APP_FILE_TYPE.includes(ext);
-};
-
 const TableView = ({ library }) => {
   const [filesRequested, setFilesRequested] = useState(false);
   const [files, setFiles] = useState(null);
@@ -68,34 +45,11 @@ const TableView = ({ library }) => {
   const [clipboardedFileid, setClipboardedFileId] = useState(null);
   const [localFileStatusMap] = useState({});
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
+  const [, setRerenderTimestamp] = useState(0);
 
   const updateLocalFileStatus = (fileid: string, status: string | null) => {
     localFileStatusMap[fileid] = status;
     setRerenderTimestamp(Date.now());
-  };
-
-  function downloadViaIpc(file: any) {
-    updateLocalFileStatus(file.fileid, LOCAL_FILE_STATUS.DOWNLOADING);
-    ipcRenderer
-      .invoke('download', file)
-      // eslint-disable-next-line promise/always-return
-      .then(() => {
-        updateLocalFileStatus(file.fileid, LOCAL_FILE_STATUS.DOWNLOADED);
-      })
-      .catch((error) => {
-        // eslint-disable-next-line no-alert
-        alert(error);
-        updateLocalFileStatus(file.fileid, null);
-      });
-  }
-
-  const doesFileExistLocally = (fileid: string) => {
-    try {
-      return fs.existsSync(library.getEncryptedPath(fileid));
-    } catch {
-      return null;
-    }
   };
 
   const renderFilename = (props) => {
@@ -118,74 +72,19 @@ const TableView = ({ library }) => {
     );
   };
 
-  const renderActions = (props) => {
-    const { row } = props;
-    const { original: file } = row;
-    const { fileid, sourceurl, locationref } = file;
-    const isClipboarded = fileid === clipboardedFileid;
-    const encryptedPath = library.getEncryptedPath(fileid);
-
-    const onOpen = (openInApp: boolean) => {
-      if (localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADED) {
-        updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTING);
-        sleep(1500);
-        // TODO: decrypt
-        updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTED);
-      }
-
-      if (openInApp) {
-        if (isSupportedInAppFileType(file)) {
-          // TODO open in app
-          throw new Error('Not Implemented');
-        }
-        throw new Error('Unsupported file type');
-      } else if (process.platform === 'win32') {
-        exec(`explorer /select,${encryptedPath}`);
-      } else {
-        throw new Error('OS not supported', process.platform);
-      }
-    };
-
+  const renderActions = ({ row }) => {
+    const file = row.original;
+    const { fileid } = file;
+    const localFileStatus = localFileStatusMap[fileid];
     return (
-      <div className="fileview">
-        {sourceurl && (
-          <div className="copy-to-clipboard">
-            <button
-              type="button"
-              className={isClipboarded ? 'btn btn-success' : 'btn btn-light'}
-              onClick={() => {
-                const copySuccess = copyTextToClipboard(sourceurl);
-                if (copySuccess) {
-                  setClipboardedFileId(fileid);
-                }
-              }}
-            >
-              {isClipboarded ? 'Copied' : 'Copy Source URL'}
-            </button>
-          </div>
-        )}
-        {locationref &&
-          !localFileStatusMap[fileid] &&
-          !doesFileExistLocally(fileid) && (
-            <Button
-              onClick={() => {
-                downloadViaIpc(file);
-              }}
-            >
-              Download
-            </Button>
-          )}
-        {localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADING && (
-          <Button disabled>Downloading...</Button>
-        )}
-        {(localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADED ||
-          localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DECRYPTED) && (
-          <Button onClick={onOpen}>Open</Button>
-        )}
-        {localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DECRYPTING && (
-          <Button disabled>Opening...</Button>
-        )}
-      </div>
+      <FileView
+        file={file}
+        isClipboarded={fileid === clipboardedFileid}
+        encryptedPath={library.getEncryptedPath(fileid)}
+        updateLocalFileStatus={updateLocalFileStatus}
+        setClipboardedFileId={setClipboardedFileId}
+        localFileStatus={localFileStatus}
+      />
     );
   };
 

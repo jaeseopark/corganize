@@ -139,7 +139,7 @@ app.on('activate', () => {
 ipcMain.handle(
   'download',
   async (event, { fileid, storageservice, locationref }) => {
-    console.log('download event');
+    console.log('Download event received');
     const localPath = library.getEncryptedPath(fileid);
     if (storageservice === 'gdrive') {
       return gdriveClient.downloadFileAsync(locationref, localPath);
