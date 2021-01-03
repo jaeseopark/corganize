@@ -20,7 +20,7 @@ import './TableView.scss';
 import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 
-import FileView from './FileView';
+import FileActions from './FileActions';
 
 const regularColumns = [
   'isactive',
@@ -44,8 +44,8 @@ const TableView = ({ library }) => {
   const [expandedFileid, setExpendedFileid] = useState(null);
   const [clipboardedFileid, setClipboardedFileId] = useState(null);
   const [localFileStatusMap] = useState({});
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [, setRerenderTimestamp] = useState(0);
+  const [fileViewModal, setFileViewModal] = useState(null);
 
   const updateLocalFileStatus = (fileid: string, status: string | null) => {
     localFileStatusMap[fileid] = status;
@@ -76,7 +76,7 @@ const TableView = ({ library }) => {
     const file = row.original;
     const { fileid } = file;
     return (
-      <FileView
+      <FileActions
         file={file}
         isClipboarded={fileid === clipboardedFileid}
         encryptedPath={library.getEncryptedPath(fileid)}
@@ -150,26 +150,29 @@ const TableView = ({ library }) => {
   }
 
   return (
-    <div className="tableview">
-      <GlobalFilter {...tableInstance} />
-      <table className="table" {...getTableProps()}>
-        <thead>
-          {headerGroups.map((headerGroup) => (
-            <TableHeaderGroup headerGroup={headerGroup} />
-          ))}
-        </thead>
-        <tbody {...getTableBodyProps()}>
-          {page.map((row) => (
-            <TableRow
-              row={row}
-              expandedFileid={expandedFileid}
-              {...tableInstance}
-            />
-          ))}
-        </tbody>
-      </table>
-      <PageControl {...tableInstance} />
-    </div>
+    <>
+      {fileViewModal}
+      <div className="tableview">
+        <GlobalFilter {...tableInstance} />
+        <table className="table" {...getTableProps()}>
+          <thead>
+            {headerGroups.map((headerGroup) => (
+              <TableHeaderGroup headerGroup={headerGroup} />
+            ))}
+          </thead>
+          <tbody {...getTableBodyProps()}>
+            {page.map((row) => (
+              <TableRow
+                row={row}
+                expandedFileid={expandedFileid}
+                {...tableInstance}
+              />
+            ))}
+          </tbody>
+        </table>
+        <PageControl {...tableInstance} />
+      </div>
+    </>
   );
 };
 

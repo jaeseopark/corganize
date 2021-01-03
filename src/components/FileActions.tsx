@@ -18,7 +18,7 @@ const LOCAL_FILE_STATUS = {
   DECRYPTED: 'decrypted',
 };
 
-const FileView = ({
+const FileActions = ({
   file,
   isClipboarded,
   encryptedPath,
@@ -100,7 +100,7 @@ const FileView = ({
   }
 
   return (
-    <div className="fileview">
+    <div className="fileactions">
       {sourceurl && (
         <div className="copy-to-clipboard">
           <button
@@ -122,4 +122,4 @@ const FileView = ({
   );
 };
 
-export default FileView;
+export default FileActions;
