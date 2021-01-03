@@ -6,7 +6,7 @@ import React from 'react';
 import { copyTextToClipboard } from '../utils/clipboardUtils';
 
 import {
-  getExtnameWithoutDot,
+  getExtnameWithoutDotOrDefault,
   isSupportedInAppFileType,
 } from '../utils/fileUtils';
 import Button from './Button';
@@ -31,7 +31,7 @@ const FileActions = ({
   aespassword,
 }) => {
   const { fileid, sourceurl, filename, locationref } = file;
-  const ext = getExtnameWithoutDot(filename, defaultExtname);
+  const ext = getExtnameWithoutDotOrDefault(filename, defaultExtname);
   const decryptedPath = `${encryptedPath}.${ext}`;
 
   const openInApp = () => {
