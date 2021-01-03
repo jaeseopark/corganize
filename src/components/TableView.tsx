@@ -21,6 +21,7 @@ import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 
 import FileActions from './FileActions';
+import FileViewModal from './FileViewModal';
 
 const regularColumns = [
   'isactive',
@@ -85,6 +86,7 @@ const TableView = ({ library }) => {
         defaultExtname={library.config.local.defaultExtname}
         updateLocalFileStatus={updateLocalFileStatus}
         setClipboardedFileId={setClipboardedFileId}
+        setFileViewModal={setFileViewModal}
       />
     );
   };

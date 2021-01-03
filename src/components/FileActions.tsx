@@ -10,6 +10,7 @@ import {
   isSupportedInAppFileType,
 } from '../utils/fileUtils';
 import Button from './Button';
+import FileViewModal from './FileViewModal';
 
 const LOCAL_FILE_STATUS = {
   DOWNLOADING: 'downloading',
@@ -25,21 +26,32 @@ const FileActions = ({
   defaultExtname,
   updateLocalFileStatus,
   setClipboardedFileId,
+  setFileViewModal,
   localFileStatus,
   aespassword,
 }) => {
   const { fileid, sourceurl, filename, locationref } = file;
   const ext = getExtnameWithoutDot(filename, defaultExtname);
+  const decryptedPath = `${encryptedPath}.${ext}`;
 
   const openInApp = () => {
-    if (isSupportedInAppFileType(ext)) {
-      return fileid;
+    if (!isSupportedInAppFileType(ext)) {
+      throw new Error(`Unsupported ext: ${ext}`);
     }
-    throw new Error('Unsupported file type');
+
+    setFileViewModal(
+      <FileViewModal
+        file={file}
+        ext={ext}
+        onClose={() => setFileViewModal(null)}
+        encryptedPath={encryptedPath}
+        decryptedPath={decryptedPath}
+        mediamStream={null}
+      />
+    );
   };
 
   const onOpenInApp = async () => {
-    const decryptedPath = `${encryptedPath}.${ext}`;
     if (
       existsSync(decryptedPath) ||
       localFileStatus === LOCAL_FILE_STATUS.DECRYPTED
