@@ -14,9 +14,11 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import { createWriteStream, createReadStream } from 'fs';
 import MenuBuilder from './menu';
 import GdriveClient from './client/gdrive';
 import Library from './library';
+import { decryptAes256Cbc } from './utils/cryptoUtils';
 
 export default class AppUpdater {
   constructor() {
@@ -145,6 +147,18 @@ ipcMain.handle(
       return gdriveClient.downloadFileAsync(locationref, localPath);
     }
     throw new Error(`Unsupported storageservice: ${storageservice}`);
+  }
+);
+
+ipcMain.handle(
+  'decrypt',
+  async (event, { encryptedPath, decryptedPath, aespassword }) => {
+    const streamIn = createReadStream(encryptedPath);
+    const streamOut = createWriteStream(decryptedPath);
+    return decryptAes256Cbc(streamIn, streamOut, aespassword).then(() => {
+      streamIn.close();
+      streamOut.close();
+    });
   }
 );
 

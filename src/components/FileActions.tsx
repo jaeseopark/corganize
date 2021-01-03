@@ -1,10 +1,10 @@
+/* eslint-disable promise/always-return */
 /* eslint-disable react/prop-types */
 import { ipcRenderer } from 'electron';
-import { createWriteStream, createReadStream, existsSync } from 'fs';
+import { existsSync } from 'fs';
 import React from 'react';
 import { copyTextToClipboard } from '../utils/clipboardUtils';
 
-import { decryptAes256Cbc } from '../utils/cryptoUtils';
 import {
   getExtnameWithoutDot,
   isSupportedInAppFileType,
@@ -58,13 +58,9 @@ const FileActions = ({
     ) {
       openInApp();
     } else if (localFileStatus === LOCAL_FILE_STATUS.DOWNLOADED) {
-      const streamIn = createReadStream(encryptedPath);
-      const streamOut = createWriteStream(decryptedPath); // TODO: replace with a buffer
-
       updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTING);
-      // eslint-disable-next-line promise/catch-or-return
-      decryptAes256Cbc(streamIn, streamOut, aespassword)
-        // eslint-disable-next-line promise/always-return
+      ipcRenderer
+        .invoke('decrypt', { encryptedPath, decryptedPath, aespassword })
         .then(() => {
           updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTED);
         })
@@ -72,10 +68,6 @@ const FileActions = ({
         .catch((error) => {
           alert(error);
           updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DOWNLOADED);
-        })
-        .finally(() => {
-          streamIn.close();
-          streamOut.close();
         });
     }
   };
