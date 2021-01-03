@@ -10,6 +10,7 @@ import {
   isSupportedInAppFileType,
 } from '../utils/fileUtils';
 import Button from './Button';
+import DownloadProgressBar from './DownloadProgressBar';
 import FileViewModal from './FileViewModal';
 
 const LOCAL_FILE_STATUS = {
@@ -30,7 +31,7 @@ const FileActions = ({
   localFileStatus,
   aespassword,
 }) => {
-  const { fileid, sourceurl, filename, locationref } = file;
+  const { fileid, sourceurl, filename, locationref, size } = file;
   const ext = getExtnameWithoutDotOrDefault(filename, defaultExtname);
   const decryptedPath = `${encryptedPath}.${ext}`;
 
@@ -52,13 +53,9 @@ const FileActions = ({
   };
 
   const onOpenInApp = async () => {
-    if (
-      existsSync(decryptedPath) ||
-      localFileStatus === LOCAL_FILE_STATUS.DECRYPTED
-    ) {
+    if (existsSync(decryptedPath)) {
       openInApp();
-    } else if (localFileStatus === LOCAL_FILE_STATUS.DOWNLOADED) {
-      updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTING);
+    } else {
       ipcRenderer
         .invoke('decrypt', { encryptedPath, decryptedPath, aespassword })
         .then(() => {
@@ -89,7 +86,7 @@ const FileActions = ({
 
   let actionButton = null;
   if (localFileStatus === LOCAL_FILE_STATUS.DOWNLOADING) {
-    actionButton = <Button disabled>Downloading...</Button>;
+    actionButton = <DownloadProgressBar fileid={fileid} size={size} />;
   } else if (existsSync(encryptedPath)) {
     switch (localFileStatus) {
       case LOCAL_FILE_STATUS.DECRYPTING:
