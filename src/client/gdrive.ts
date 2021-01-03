@@ -1,5 +1,4 @@
 /* eslint-disable import/prefer-default-export */
-
 const fs = require('fs');
 const { google } = require('googleapis');
 
@@ -50,6 +49,7 @@ class GdriveClient {
         const token = fs.readFileSync(this.getTokenPath());
         client.setCredentials(JSON.parse(token));
       }
+
       this.oAuthClient = client;
     }
 
@@ -63,19 +63,44 @@ class GdriveClient {
     });
   }
 
-  async downloadFileAsync(fileId: string, localPath: string) {
+  downloadFileSync(fileId: string, localPath: string, progressCallback = null) {
+    const wrapper = async () => {
+      // eslint-disable-next-line no-return-await
+      return await this.downloadFileAsync(fileId, localPath, progressCallback);
+    };
+    return wrapper();
+  }
+
+  async downloadFileAsync(fileId: string, localPath: string, progressCallback) {
     google.options({ auth: this.getOAuthClient() });
 
     const res = await drive.files.get(
       { fileId, alt: 'media' },
       { responseType: 'stream' }
     );
-
     return new Promise((resolve, reject) => {
-      fs.writeFile(localPath, res.data, 'binary', (err) => {
-        if (err) reject(err);
-      });
-      resolve(localPath);
+      const contentLength = res.headers['content-legnth'];
+      const dest = fs.createWriteStream(localPath);
+      const { data } = res;
+
+      try {
+        data.on('error', (error) => {
+          throw error;
+        });
+        data.on('data', (d) => {
+          if (progressCallback) {
+            totalBytesReceived += d;
+            progressCallback(totalBytesReceived / contentLength);
+          }
+        });
+        data.on('finish', () => {
+          // dest.close();
+          resolve(localPath);
+        });
+        data.pipe(dest);
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 }

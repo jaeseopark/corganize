@@ -12,6 +12,7 @@ import {
   useGlobalFilter,
 } from 'react-table';
 import fs from 'fs';
+import { ipcRenderer } from 'electron';
 import format from '../cellformatter';
 import PageControl from './PageControl';
 import TableHeaderGroup from './TableHeaderGroup';
@@ -69,31 +70,23 @@ const TableView = ({ library }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
 
-  const { gdriveClient } = library;
-
   const updateLocalFileStatus = (fileid: string, status: string | null) => {
     localFileStatusMap[fileid] = status;
     setRerenderTimestamp(Date.now());
   };
 
-  /**
-   * TODO: Improve with a proper Worker Queue design
-   * @param fileid
-   */
-  async function downloadFile(file) {
-    const { fileid, locationref } = file;
-
-    updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DOWNLOADING);
-    gdriveClient
-      .downloadFileAsync(locationref, library.getEncryptedPath(fileid))
+  function downloadViaIpc(file: any) {
+    updateLocalFileStatus(file.fileid, LOCAL_FILE_STATUS.DOWNLOADING);
+    ipcRenderer
+      .invoke('download', file)
+      // eslint-disable-next-line promise/always-return
       .then(() => {
-        updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DOWNLOADED);
-        return fileid;
+        updateLocalFileStatus(file.fileid, LOCAL_FILE_STATUS.DOWNLOADED);
       })
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .catch((error) => {
-        // TODO: handle error
-        updateLocalFileStatus(fileid, null);
+        // eslint-disable-next-line no-alert
+        alert(error);
+        updateLocalFileStatus(file.fileid, null);
       });
   }
 
@@ -176,7 +169,7 @@ const TableView = ({ library }) => {
           !doesFileExistLocally(fileid) && (
             <Button
               onClick={() => {
-                downloadFile(file);
+                downloadViaIpc(file);
               }}
             >
               Download
