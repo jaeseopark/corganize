@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react/react-in-jsx-scope */
 import { ipcRenderer } from 'electron';
 import { createWriteStream, createReadStream, existsSync } from 'fs';

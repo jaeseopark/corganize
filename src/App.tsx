@@ -9,9 +9,9 @@ const Corganize = () => {
 
   useEffect(() => {}, [library]);
 
-  const onLibraryChange = (library) => {
-    ipcRenderer.send('changeLibraryConfig', library.config);
-    setLibrary(library);
+  const onLibraryChange = (lib) => {
+    ipcRenderer.send('changeLibraryConfig', lib.config);
+    setLibrary(lib);
   };
 
   if (!library) {
