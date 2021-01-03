@@ -6,15 +6,14 @@ const path = require('path');
 class Library {
   constructor(config) {
     this.config = config;
-    this.gdriveClient = null;
 
     if (!fs.existsSync(config.local.path)) {
       fs.mkdirSync(config.local.path);
     }
   }
 
-  getEncryptedPath(fileId) {
-    return path.join(this.config.local.path, `${fileId}.enc`);
+  getEncryptedPath(fileid) {
+    return path.join(this.config.local.path, `${fileid}.aes`);
   }
 }
 

@@ -11,10 +11,12 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import path from 'path';
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
+import GdriveClient from './client/gdrive';
+import Library from './library';
 
 export default class AppUpdater {
   constructor() {
@@ -25,6 +27,9 @@ export default class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null;
+
+let library = null;
+let gdriveClient = null;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -129,4 +134,21 @@ app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) createWindow();
+});
+
+ipcMain.handle(
+  'download',
+  async (event, { fileid, storageservice, locationref }) => {
+    console.log('Download event received');
+    const localPath = library.getEncryptedPath(fileid);
+    if (storageservice === 'gdrive') {
+      return gdriveClient.downloadFileAsync(locationref, localPath);
+    }
+    throw new Error(`Unsupported storageservice: ${storageservice}`);
+  }
+);
+
+ipcMain.on('changeLibraryConfig', (event, libraryConfig) => {
+  library = new Library(libraryConfig);
+  gdriveClient = new GdriveClient(library.config.storageservice.gdrive);
 });

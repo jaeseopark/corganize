@@ -11,17 +11,17 @@ import {
   usePagination,
   useGlobalFilter,
 } from 'react-table';
-import fs from 'fs';
 import format from '../cellformatter';
 import PageControl from './PageControl';
 import TableHeaderGroup from './TableHeaderGroup';
 import TableRow from './TableRow';
-import { copyTextToClipboard } from '../utils/dist/clipboardUtils';
 
 import './TableView.scss';
 import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
-import Button from './Button';
+
+import FileActions from './FileActions';
+import FileViewModal from './FileViewModal';
 
 const regularColumns = [
   'isactive',
@@ -39,60 +39,18 @@ const regularColumns = [
 });
 const hiddenColumns = ['sourceurl', 'storageservice'];
 
-const LOCAL_FILE_STATUS = {
-  DOWNLOADING: 'downloading',
-  DOWNLOADED: 'downloaded',
-  DECRYPTING: 'decrypting',
-  DECRYPTED: 'decrypted',
-};
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 const TableView = ({ library }) => {
   const [filesRequested, setFilesRequested] = useState(false);
   const [files, setFiles] = useState(null);
   const [expandedFileid, setExpendedFileid] = useState(null);
   const [clipboardedFileid, setClipboardedFileId] = useState(null);
   const [localFileStatusMap] = useState({});
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
-
-  const { gdriveClient } = library;
+  const [, setRerenderTimestamp] = useState(0);
+  const [fileViewModal, setFileViewModal] = useState(null);
 
   const updateLocalFileStatus = (fileid: string, status: string | null) => {
     localFileStatusMap[fileid] = status;
     setRerenderTimestamp(Date.now());
-  };
-
-  /**
-   * TODO: Improve with a proper Worker Queue design
-   * @param fileid
-   */
-  async function downloadFile(file) {
-    const { fileid, locationref } = file;
-
-    updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DOWNLOADING);
-    gdriveClient
-      .downloadFileAsync(locationref, library.getEncryptedPath(fileid))
-      .then(() => {
-        updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DOWNLOADED);
-        return fileid;
-      })
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .catch((error) => {
-        // TODO: handle error
-        updateLocalFileStatus(fileid, null);
-      });
-  }
-
-  const doesFileExistLocally = (fileid: string) => {
-    try {
-      return fs.existsSync(library.getEncryptedPath(fileid));
-    } catch {
-      return null;
-    }
   };
 
   const renderFilename = (props) => {
@@ -115,63 +73,21 @@ const TableView = ({ library }) => {
     );
   };
 
-  const renderActions = (props) => {
-    const { row } = props;
-    const { original: file } = row;
-    const { fileid, sourceurl, locationref } = file;
-    const isClipboarded = fileid === clipboardedFileid;
-
-    const onOpen = () => {
-      if (localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADED) {
-        updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTING);
-        sleep(1500);
-        // TODO: decrypt
-        updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DECRYPTED);
-      }
-
-      // TODO: open decrypted file
-    };
-
+  const renderActions = ({ row }) => {
+    const file = row.original;
+    const { fileid } = file;
     return (
-      <div className="fileview">
-        {sourceurl && (
-          <div className="copy-to-clipboard">
-            <button
-              type="button"
-              className={isClipboarded ? 'btn btn-success' : 'btn btn-light'}
-              onClick={() => {
-                const copySuccess = copyTextToClipboard(sourceurl);
-                if (copySuccess) {
-                  setClipboardedFileId(fileid);
-                }
-              }}
-            >
-              {isClipboarded ? 'Copied' : 'Copy Source URL'}
-            </button>
-          </div>
-        )}
-        {locationref &&
-          !localFileStatusMap[fileid] &&
-          !doesFileExistLocally(fileid) && (
-            <Button
-              onClick={() => {
-                downloadFile(file);
-              }}
-            >
-              Download
-            </Button>
-          )}
-        {localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADING && (
-          <Button disabled>Downloading...</Button>
-        )}
-        {(localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DOWNLOADED ||
-          localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DECRYPTED) && (
-          <Button onClick={onOpen}>Open</Button>
-        )}
-        {localFileStatusMap[fileid] === LOCAL_FILE_STATUS.DECRYPTING && (
-          <Button disabled>Opening...</Button>
-        )}
-      </div>
+      <FileActions
+        file={file}
+        isClipboarded={fileid === clipboardedFileid}
+        encryptedPath={library.getEncryptedPath(fileid)}
+        localFileStatus={localFileStatusMap[fileid]}
+        aespassword={library.config.local.aes.password}
+        defaultExtname={library.config.local.defaultExtname}
+        updateLocalFileStatus={updateLocalFileStatus}
+        setClipboardedFileId={setClipboardedFileId}
+        setFileViewModal={setFileViewModal}
+      />
     );
   };
 
@@ -236,26 +152,29 @@ const TableView = ({ library }) => {
   }
 
   return (
-    <div className="tableview">
-      <GlobalFilter {...tableInstance} />
-      <table className="table" {...getTableProps()}>
-        <thead>
-          {headerGroups.map((headerGroup) => (
-            <TableHeaderGroup headerGroup={headerGroup} />
-          ))}
-        </thead>
-        <tbody {...getTableBodyProps()}>
-          {page.map((row) => (
-            <TableRow
-              row={row}
-              expandedFileid={expandedFileid}
-              {...tableInstance}
-            />
-          ))}
-        </tbody>
-      </table>
-      <PageControl {...tableInstance} />
-    </div>
+    <>
+      {fileViewModal}
+      <div className="tableview">
+        <GlobalFilter {...tableInstance} />
+        <table className="table" {...getTableProps()}>
+          <thead>
+            {headerGroups.map((headerGroup) => (
+              <TableHeaderGroup headerGroup={headerGroup} />
+            ))}
+          </thead>
+          <tbody {...getTableBodyProps()}>
+            {page.map((row) => (
+              <TableRow
+                row={row}
+                expandedFileid={expandedFileid}
+                {...tableInstance}
+              />
+            ))}
+          </tbody>
+        </table>
+        <PageControl {...tableInstance} />
+      </div>
+    </>
   );
 };
 

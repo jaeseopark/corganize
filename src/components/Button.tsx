@@ -3,20 +3,14 @@
 
 import React from 'react';
 
-const Button = ({ className, ...props }) => {
-  return (
-    <button
-      type="button"
-      className={className || 'btn btn-primary'}
-      {...props}
-    />
-  );
-};
-
 const ButtonClassOverride = ({ props, classOverride }) => {
   const { className, ...remainingProps } = props;
   const newClassName = `${className || ''} ${classOverride}`;
-  return <Button {...remainingProps} className={newClassName} />;
+  return <button type="button" className={newClassName} {...remainingProps} />;
+};
+
+const Button = (props) => {
+  return <ButtonClassOverride props={props} classOverride="btn btn-primary" />;
 };
 
 export const LightButton = (props) => (
