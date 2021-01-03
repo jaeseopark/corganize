@@ -78,11 +78,11 @@ class GdriveClient {
       { fileId, alt: 'media' },
       { responseType: 'stream' }
     );
+
     return new Promise((resolve, reject) => {
-      const contentLength = res.headers['content-legnth'];
       const dest = fs.createWriteStream(localPath);
       const { data } = res;
-      let totalBytesReceived = 0;
+      let downloadedBytes = 0;
 
       try {
         data.on('error', (error) => {
@@ -90,12 +90,10 @@ class GdriveClient {
         });
         data.on('data', (d) => {
           if (progressCallback) {
-            totalBytesReceived += d;
+            downloadedBytes += d.length;
             progressCallback({
               fileId,
-              totalBytesReceived,
-              contentLength,
-              percentage: totalBytesReceived / contentLength,
+              downloadedBytes,
             });
           }
         });
