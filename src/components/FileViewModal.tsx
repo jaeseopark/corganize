@@ -45,7 +45,7 @@ const FileViewModal = ({ file, ext, onClose, encryptedPath, aespassword }) => {
             case 'mp4':
               return <ReactPlayer url={decryptedPath} controls muted playing />;
             default:
-              return null;
+              return 'Unsupported File Type';
           }
         })
         .then((value) => setContent(value));
