@@ -21,7 +21,6 @@ import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 
 import FileActions from './FileActions';
-import FileViewModal from './FileViewModal';
 
 const regularColumns = [
   'isactive',
@@ -37,7 +36,7 @@ const regularColumns = [
     Cell: format,
   };
 });
-const hiddenColumns = ['sourceurl', 'storageservice'];
+const hiddenColumns = ['sourceurl', 'storageservice', 'ispublic'];
 
 const TableView = ({ library }) => {
   const [filesRequested, setFilesRequested] = useState(false);

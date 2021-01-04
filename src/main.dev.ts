@@ -32,6 +32,7 @@ let mainWindow: BrowserWindow | null = null;
 
 let library = null;
 let gdriveClient = null;
+const downloadProgress = {};
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -76,8 +77,8 @@ const createWindow = async () => {
 
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1700,
-    height: 900,
+    width: 1150,
+    height: 650,
     icon: getAssetPath('icon.png'),
     webPreferences: {
       nodeIntegration: true,
@@ -142,12 +143,23 @@ ipcMain.handle(
   'download',
   async (event, { fileid, storageservice, locationref }) => {
     console.log('Download event received');
+    downloadProgress[fileid] = 0;
     const localPath = library.getEncryptedPath(fileid);
     if (storageservice === 'gdrive') {
-      return gdriveClient.downloadFileAsync(locationref, localPath);
+      return gdriveClient.downloadFileAsync(
+        locationref,
+        localPath,
+        ({ downloadedBytes }) => {
+          downloadProgress[fileid] = downloadedBytes;
+        }
+      );
     }
     throw new Error(`Unsupported storageservice: ${storageservice}`);
   }
+);
+
+ipcMain.handle('downloadProgress', async (event, { fileid }) =>
+  Promise.resolve(downloadProgress[fileid])
 );
 
 ipcMain.handle(
