@@ -14,7 +14,7 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import { createWriteStream, createReadStream } from 'fs';
+import { createWriteStream, createReadStream, readdirSync, unlink } from 'fs';
 import MenuBuilder from './menu';
 import GdriveClient from './client/gdrive';
 import Library from './library';
@@ -57,6 +57,26 @@ const installExtensions = async () => {
       forceDownload
     )
     .catch(console.log);
+};
+
+const purgeDecryptedFiles = () => {
+  console.log('Purging decrypted files...');
+  const dir = library.config.local.path;
+  const filenames = readdirSync(dir).filter((f) => !f.endsWith('.aes'));
+  // eslint-disable-next-line promise/catch-or-return
+  return Promise.all(
+    filenames.map(
+      (filename) =>
+        new Promise((resolve) => {
+          const fullPath = path.join(dir, filename);
+          unlink(fullPath, (err) => {
+            if (err) throw err;
+            console.log('Deleted: ', fullPath);
+            resolve(fullPath);
+          });
+        })
+    )
+  );
 };
 
 const createWindow = async () => {
@@ -127,7 +147,8 @@ app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
   // after all windows have been closed
   if (process.platform !== 'darwin') {
-    app.quit();
+    // eslint-disable-next-line promise/catch-or-return
+    purgeDecryptedFiles().finally(app.quit);
   }
 });
 
