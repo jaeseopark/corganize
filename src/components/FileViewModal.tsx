@@ -1,11 +1,22 @@
+import { exec } from 'child_process';
 import React from 'react';
 import ReactPlayer from 'react-player';
-import { isMac } from '../utils/browserUtils';
+import os from 'os';
 import Button from './Button';
 
 import './FileViewModal.scss';
 
-const finderLabel = () => (isMac() ? 'Finder' : 'Explorer');
+const getFileManagerAppName = () => {
+  switch (os.platform()) {
+    case 'win32':
+      return 'Explorer';
+    case 'darwin':
+      return 'Finder';
+    default:
+      // For all unknown systems
+      return 'File Manager';
+  }
+};
 
 const FileViewModal = ({
   file,
@@ -16,13 +27,6 @@ const FileViewModal = ({
   mediamStream,
 }) => {
   const { filename } = file;
-
-  const onKeyUp = (event) => {
-    const { key, keyCode } = event;
-    if ((key || keyCode) === 'Escape') {
-      onClose();
-    }
-  };
 
   let fileView = null;
   switch (ext) {
@@ -38,7 +42,13 @@ const FileViewModal = ({
   }
 
   const onClickReveal = () => {
-    throw new Error('Not Implemented');
+    switch (os.platform()) {
+      case 'win32':
+        exec(`explorer /select,${encryptedPath}`);
+        break;
+      default:
+        throw new Error('Not Implemented');
+    }
   };
 
   return (
@@ -59,8 +69,8 @@ const FileViewModal = ({
           </div>
           <div className="modal-body">{fileView}</div>
           <div className="modal-footer">
-            <Button type="button" className="btn btn-primary">
-              Reveal in {finderLabel()}
+            <Button onClick={onClickReveal}>
+              {`Reveal in ${getFileManagerAppName()}`}
             </Button>
           </div>
         </div>

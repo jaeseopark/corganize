@@ -63,14 +63,6 @@ class GdriveClient {
     });
   }
 
-  downloadFileSync(fileId: string, localPath: string, progressCallback = null) {
-    const wrapper = async () => {
-      // eslint-disable-next-line no-return-await
-      return await this.downloadFileAsync(fileId, localPath, progressCallback);
-    };
-    return wrapper();
-  }
-
   async downloadFileAsync(fileId: string, localPath: string, progressCallback) {
     google.options({ auth: this.getOAuthClient() });
 

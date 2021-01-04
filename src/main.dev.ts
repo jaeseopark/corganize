@@ -141,7 +141,7 @@ app.on('activate', () => {
 
 ipcMain.handle(
   'download',
-  async (event, { fileid, storageservice, locationref }) => {
+  async (_event, { fileid, storageservice, locationref }) => {
     console.log('Download event received');
     downloadProgress[fileid] = 0;
     const localPath = library.getEncryptedPath(fileid);
@@ -158,13 +158,13 @@ ipcMain.handle(
   }
 );
 
-ipcMain.handle('downloadProgress', async (event, { fileid }) =>
+ipcMain.handle('downloadProgress', async (_event, { fileid }) =>
   Promise.resolve(downloadProgress[fileid])
 );
 
 ipcMain.handle(
   'decrypt',
-  async (event, { encryptedPath, decryptedPath, aespassword }) => {
+  async (_event, { encryptedPath, decryptedPath, aespassword }) => {
     const streamIn = createReadStream(encryptedPath);
     const streamOut = createWriteStream(decryptedPath);
     return decryptAes256Cbc(streamIn, streamOut, aespassword).then(() => {
@@ -174,7 +174,7 @@ ipcMain.handle(
   }
 );
 
-ipcMain.on('changeLibraryConfig', (event, libraryConfig) => {
+ipcMain.on('changeLibraryConfig', (_event, libraryConfig) => {
   library = new Library(libraryConfig);
   gdriveClient = new GdriveClient(library.config.storageservice.gdrive);
 });
