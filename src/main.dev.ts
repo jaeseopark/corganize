@@ -63,16 +63,14 @@ const purgeDecryptedFiles = () => {
   console.log('Purging decrypted files...');
   const dir = library.config.local.path;
   const filenames = readdirSync(dir).filter((f) => !f.endsWith('.aes'));
-  // eslint-disable-next-line promise/catch-or-return
   return Promise.all(
     filenames.map(
       (filename) =>
         new Promise((resolve) => {
-          const fullPath = path.join(dir, filename);
-          unlink(fullPath, (err) => {
+          unlink(path.join(dir, filename), (err) => {
             if (err) throw err;
-            console.log('Deleted: ', fullPath);
-            resolve(fullPath);
+            console.log('Deleted: ', filename);
+            resolve(filename);
           });
         })
     )
