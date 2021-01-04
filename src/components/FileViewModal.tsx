@@ -1,6 +1,9 @@
+/* eslint-disable react/prop-types */
 import { exec } from 'child_process';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactPlayer from 'react-player';
+import { existsSync } from 'fs';
+import { ipcRenderer } from 'electron';
 import os from 'os';
 import Button from './Button';
 
@@ -18,28 +21,36 @@ const getFileManagerAppName = () => {
   }
 };
 
-const FileViewModal = ({
-  file,
-  ext,
-  onClose,
-  encryptedPath,
-  decryptedPath,
-  mediamStream,
-}) => {
+const FileViewModal = ({ file, ext, onClose, encryptedPath, aespassword }) => {
   const { filename } = file;
+  const decryptedPath = `${encryptedPath}.${ext}`;
+  const [content, setContent] = useState(null);
 
-  let fileView = null;
-  switch (ext) {
-    case 'mp4':
-      if (!decryptedPath && mediamStream) {
-        throw new Error('Not implemented');
+  useEffect(() => {
+    if (!content) {
+      let decryptPromise = null;
+      if (existsSync(decryptedPath)) {
+        decryptPromise = Promise.resolve();
       } else {
-        fileView = <ReactPlayer url={decryptedPath} controls muted playing />;
+        decryptPromise = ipcRenderer.invoke('decrypt', {
+          encryptedPath,
+          decryptedPath,
+          aespassword,
+        });
       }
-      break;
-    default:
-      break;
-  }
+      // eslint-disable-next-line promise/catch-or-return
+      decryptPromise
+        .then(() => {
+          switch (ext) {
+            case 'mp4':
+              return <ReactPlayer url={decryptedPath} controls muted playing />;
+            default:
+              return 'Unsupported File Type';
+          }
+        })
+        .then((value) => setContent(value));
+    }
+  }, [content]);
 
   const onClickReveal = () => {
     switch (os.platform()) {
@@ -51,23 +62,27 @@ const FileViewModal = ({
     }
   };
 
+  const closeButton = (
+    <button
+      type="button"
+      className="close"
+      data-dismiss="modal"
+      aria-label="Close"
+      onClick={onClose}
+    >
+      <span aria-hidden="true">&times;</span>
+    </button>
+  );
+
   return (
     <div className="modal fileviewmodal" tabIndex="-1" role="dialog">
       <div className="modal-dialog" role="document">
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">{filename}</h5>
-            <button
-              type="button"
-              className="close"
-              data-dismiss="modal"
-              aria-label="Close"
-              onClick={onClose}
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
+            {content && closeButton}
           </div>
-          <div className="modal-body">{fileView}</div>
+          <div className="modal-body">{content || 'Decrypting...'}</div>
           <div className="modal-footer">
             <Button onClick={onClickReveal}>
               {`Reveal in ${getFileManagerAppName()}`}
