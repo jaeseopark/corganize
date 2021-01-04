@@ -14,11 +14,12 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import { createWriteStream, createReadStream, readdirSync, unlink } from 'fs';
+import { createWriteStream, createReadStream } from 'fs';
 import MenuBuilder from './menu';
 import GdriveClient from './client/gdrive';
 import Library from './library';
 import { decryptAes256Cbc } from './utils/cryptoUtils';
+import { purgeDecryptedFiles } from './utils/fileUtils';
 
 export default class AppUpdater {
   constructor() {
@@ -59,22 +60,12 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
-const purgeDecryptedFiles = () => {
-  console.log('Purging decrypted files...');
-  const dir = library.config.local.path;
-  const filenames = readdirSync(dir).filter((f) => !f.endsWith('.aes'));
-  return Promise.all(
-    filenames.map(
-      (filename) =>
-        new Promise((resolve) => {
-          unlink(path.join(dir, filename), (err) => {
-            if (err) throw err;
-            console.log('Deleted: ', filename);
-            resolve(filename);
-          });
-        })
-    )
-  );
+const appQuitWrapper = () => {
+  // Respect the OSX convention of having the application in memory even
+  // after all windows have been closed
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 };
 
 const createWindow = async () => {
@@ -143,12 +134,14 @@ const createWindow = async () => {
  */
 
 app.on('window-all-closed', () => {
-  // Respect the OSX convention of having the application in memory even
-  // after all windows have been closed
-  if (process.platform !== 'darwin') {
-    // eslint-disable-next-line promise/catch-or-return
-    purgeDecryptedFiles().finally(app.quit);
-  }
+  // Wait 3 seconds for files to close gracefully, delete the files and then call .appQuitWrapper().
+  setTimeout(
+    () =>
+      purgeDecryptedFiles(library.config.local.path)
+        .then((results) => results.forEach((result) => console.log(result)))
+        .finally(appQuitWrapper),
+    3000
+  );
 });
 
 app.whenReady().then(createWindow).catch(console.log);
