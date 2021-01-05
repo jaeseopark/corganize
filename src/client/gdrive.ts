@@ -1,3 +1,5 @@
+import { renameSync } from "fs";
+
 /* eslint-disable import/prefer-default-export */
 const fs = require('fs');
 const { google } = require('googleapis');
@@ -72,7 +74,8 @@ class GdriveClient {
     );
 
     return new Promise((resolve, reject) => {
-      const dest = fs.createWriteStream(localPath);
+      const tmpLocalPath = `${localPath}.download`;
+      const dest = fs.createWriteStream(tmpLocalPath);
       const { data } = res;
       let downloadedBytes = 0;
 
@@ -90,8 +93,11 @@ class GdriveClient {
           }
         });
         data.on('finish', () => {
-          // dest.close();
-          resolve(localPath);
+          setTimeout(() => {
+            // wait 1.5s before removing the .download extension so the file pointer is properly closed, etc.
+            renameSync(tmpLocalPath, localPath);
+            resolve(localPath);
+          }, 1500);
         });
         data.pipe(dest);
       } catch (error) {
