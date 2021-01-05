@@ -2,7 +2,7 @@
 import { exec } from 'child_process';
 import React, { useEffect, useState } from 'react';
 import ReactPlayer from 'react-player';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { ipcRenderer } from 'electron';
 import os from 'os';
 import Button from './Button';
@@ -44,6 +44,8 @@ const FileViewModal = ({ file, ext, onClose, encryptedPath, aespassword }) => {
           switch (ext) {
             case 'mp4':
               return <ReactPlayer url={decryptedPath} controls muted playing />;
+            case 'txt':
+              return <pre>{readFileSync(decryptedPath)}</pre>;
             default:
               return 'Unsupported File Type';
           }
