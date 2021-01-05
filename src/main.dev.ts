@@ -134,13 +134,13 @@ const createWindow = async () => {
  */
 
 app.on('window-all-closed', () => {
-  // Wait 3 seconds for files to close gracefully, delete the files and then call .appQuitWrapper().
+  // Wait 1.5 seconds for files to close gracefully, delete the files and then call .appQuitWrapper().
   setTimeout(
     () =>
       purgeDecryptedFiles(library.config.local.path)
         .then((results) => results.forEach((result) => console.log(result)))
         .finally(appQuitWrapper),
-    3000
+    1500
   );
 });
 
