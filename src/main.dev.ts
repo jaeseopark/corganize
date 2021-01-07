@@ -134,9 +134,14 @@ const createWindow = async () => {
  */
 
 app.on('window-all-closed', () => {
-  // Wait 1.5 seconds for files to close gracefully, delete the files and then call .appQuitWrapper().
+  if (!library) {
+    appQuitWrapper();
+    return;
+  }
+
   setTimeout(
     () =>
+      // Wait 1.5 seconds for files to close gracefully, delete the files and then call .appQuitWrapper().
       purgeDecryptedFiles(library.config.local.path)
         .then((results) => results.forEach((result) => console.log(result)))
         .finally(appQuitWrapper),
