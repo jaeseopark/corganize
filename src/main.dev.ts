@@ -159,7 +159,7 @@ app.on('activate', () => {
 
 ipcMain.handle(
   'download',
-  async (_event, { fileid, storageservice, locationref }) => {
+  async (_event, { fileid, storageservice, locationref, size }) => {
     console.log('Download event received');
     downloadProgress[fileid] = 0;
     const localPath = library.getEncryptedPath(fileid);
@@ -168,12 +168,16 @@ ipcMain.handle(
         locationref,
         localPath,
         ({ downloadedBytes }) => {
-          downloadProgress[fileid] = downloadedBytes;
+          downloadProgress[fileid] = Math.floor((downloadedBytes * 100) / size);
         }
       );
     }
     throw new Error(`Unsupported storageservice: ${storageservice}`);
   }
+);
+
+ipcMain.handle('downloadProgressAll', async () =>
+  Promise.resolve(downloadProgress)
 );
 
 ipcMain.handle('downloadProgress', async (_event, { fileid }) =>

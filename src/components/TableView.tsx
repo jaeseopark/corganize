@@ -21,6 +21,7 @@ import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 
 import FileActions from './FileActions';
+import DownloadCenter from './DownloadCenter';
 
 const regularColumns = [
   'isactive',
@@ -154,6 +155,7 @@ const TableView = ({ library }) => {
     <>
       {fileViewModal}
       <div className="tableview">
+        <DownloadCenter />;
         <GlobalFilter {...tableInstance} />
         <table className="table" {...getTableProps()}>
           <thead>

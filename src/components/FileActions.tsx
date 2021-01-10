@@ -65,7 +65,7 @@ const FileActions = ({
 
   let actionButton = null;
   if (localFileStatus === LOCAL_FILE_STATUS.DOWNLOADING) {
-    actionButton = <DownloadProgressBar fileid={fileid} size={size} />;
+    actionButton = <DownloadProgressBar fileid={fileid} />;
   } else if (existsSync(encryptedPath)) {
     actionButton = <Button onClick={openInApp}>Open</Button>;
   } else if (locationref) {
