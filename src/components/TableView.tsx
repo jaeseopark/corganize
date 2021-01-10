@@ -155,8 +155,8 @@ const TableView = ({ library }) => {
     <>
       {fileViewModal}
       <div className="tableview">
-        <DownloadCenter />
         <GlobalFilter {...tableInstance} />
+        <DownloadCenter />
         <table className="table" {...getTableProps()}>
           <thead>
             {headerGroups.map((headerGroup) => (
