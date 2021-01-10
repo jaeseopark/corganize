@@ -1,0 +1,36 @@
+:global {
+  .download-center {
+    float: right;
+    margin-right: 3px;
+
+    &.zero {
+      opacity: 35%;
+    }
+
+    .download-center-icon {
+      width: 28px;
+      height: 28px;
+      background-size: 28px 28px;
+      background-repeat: no-repeat;
+      background-image: url('../../assets/cloud-download.svg');
+    }
+
+    .active-download-count-badge {
+      width: 16px;
+      height: 16px;
+      position: relative;
+      top: -30px;
+      right: -15px;
+      border-radius: 100%;
+      background-color: red;
+      color: white;
+
+      .active-download-count-text {
+        position: relative;
+        top: -2px;
+        text-align: center;
+        font-size: small;
+      }
+    }
+  }
+}

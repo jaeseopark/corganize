@@ -4,13 +4,13 @@ import React, { useEffect, useState } from 'react';
 
 import Button from './Button';
 
-const DownloadProgressBar = ({ fileid, size }) => {
-  const [downloadedBytes, setDownloadedBytes] = useState(0);
+const DownloadProgressBar = ({ fileid }) => {
+  const [percentage, setPercentage] = useState(0);
 
   const intervalId = setInterval(() => {
     ipcRenderer
       .invoke('downloadProgress', { fileid })
-      .then((value) => setDownloadedBytes(value));
+      .then((value) => setPercentage(value));
   }, 500);
 
   useEffect(() => {
@@ -20,7 +20,7 @@ const DownloadProgressBar = ({ fileid, size }) => {
     };
   });
 
-  const label = `${Math.round((downloadedBytes * 100) / size)}%`;
+  const label = `${percentage}%`;
   return <Button disabled>{label}</Button>;
 };
 
