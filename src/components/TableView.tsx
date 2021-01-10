@@ -1,3 +1,5 @@
+/* eslint-disable promise/always-return */
+/* eslint-disable promise/catch-or-return */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/interactive-supports-focus */
 /* eslint-disable react/display-name */
@@ -133,13 +135,11 @@ const TableView = ({ library }) => {
   useEffect(() => {
     if (!files && !filesRequested) {
       const corganizeClient = new CorganizeClient(library.config.server);
-      const promise = corganizeClient.getFiles();
-      // eslint-disable-next-line promise/catch-or-return
+      const promise = corganizeClient.getActiveFiles();
       promise
         .then((r) => {
           return r.json();
         })
-        // eslint-disable-next-line promise/always-return
         .then((responseBody) => {
           setFiles(responseBody.files);
         });
