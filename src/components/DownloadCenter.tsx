@@ -2,17 +2,18 @@ import { ipcRenderer } from 'electron';
 import React, { useEffect, useState } from 'react';
 
 const DownloadCenter = () => {
-  const [activeDownloads, setActiveDownloads] = useState([]);
+  const [activeDownloadCount, setActiveDownloadCount] = useState(0);
   const [intervalId, setIntervalId] = useState(null);
 
   const createIntervalId = () => {
     return setInterval(() => {
-      const allDownloads = ipcRenderer.invoke('downloadProgressAll');
-      setActiveDownloads(
-        Object.keys(allDownloads)
-          .filter((key) => allDownloads[key] < 100)
-          .map((key) => allDownloads[key])
-      );
+      ipcRenderer.invoke('downloadProgressAll').then((allDownloads) => {
+        if (allDownloads) {
+          setActiveDownloadCount(
+            Object.values(allDownloads).filter((value) => value < 100).length
+          );
+        }
+      });
     }, 500);
   };
 
@@ -22,7 +23,7 @@ const DownloadCenter = () => {
     }
   }, []);
 
-  return <div>Active Downloads: {activeDownloads.length}</div>;
+  return <div>Active Downloads: {activeDownloadCount}</div>;
 };
 
 export default DownloadCenter;
