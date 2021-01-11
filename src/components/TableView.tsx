@@ -85,7 +85,6 @@ const TableView = ({ library }) => {
         encryptedPath={library.getEncryptedPath(fileid)}
         localFileStatus={localFileStatusMap[fileid]}
         aespassword={library.config.local.aes.password}
-        defaultExtname={library.config.local.defaultExtname}
         updateLocalFileStatus={updateLocalFileStatus}
         setClipboardedFileId={setClipboardedFileId}
         setFileViewModal={setFileViewModal}
