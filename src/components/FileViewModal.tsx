@@ -9,6 +9,8 @@ import Button from './Button';
 
 import './FileViewModal.scss';
 
+const FileType = require('file-type');
+
 const getFileManagerAppName = () => {
   switch (os.platform()) {
     case 'win32':
@@ -21,9 +23,9 @@ const getFileManagerAppName = () => {
   }
 };
 
-const FileViewModal = ({ file, ext, onClose, encryptedPath, aespassword }) => {
+const FileViewModal = ({ file, onClose, encryptedPath, aespassword }) => {
   const { filename } = file;
-  const decryptedPath = `${encryptedPath}.${ext}`;
+  const decryptedPath = `${encryptedPath}.dec`;
   const [content, setContent] = useState(null);
 
   useEffect(() => {
@@ -40,14 +42,15 @@ const FileViewModal = ({ file, ext, onClose, encryptedPath, aespassword }) => {
       }
       // eslint-disable-next-line promise/catch-or-return
       decryptPromise
-        .then(() => {
-          switch (ext) {
-            case 'mp4':
+        .then(() => FileType.fromFile(decryptedPath))
+        .then(({ mime }) => {
+          switch (mime) {
+            case 'video/mp4':
               return <ReactPlayer url={decryptedPath} controls muted playing />;
-            case 'txt':
+            case 'text/plain':
               return <pre>{readFileSync(decryptedPath)}</pre>;
             default:
-              return 'Unsupported File Type';
+              return `Unsupported: ${mime}`;
           }
         })
         .then((value) => setContent(value));

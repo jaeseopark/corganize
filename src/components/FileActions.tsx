@@ -5,10 +5,6 @@ import { existsSync } from 'fs';
 import React from 'react';
 import { copyTextToClipboard } from '../utils/clipboardUtils';
 
-import {
-  getExtnameWithoutDotOrDefault,
-  isSupportedInAppFileType,
-} from '../utils/fileUtils';
 import Button from './Button';
 import DownloadProgressBar from './DownloadProgressBar';
 import FileViewModal from './FileViewModal';
@@ -22,25 +18,18 @@ const FileActions = ({
   file,
   isClipboarded,
   encryptedPath,
-  defaultExtname,
   updateLocalFileStatus,
   setClipboardedFileId,
   setFileViewModal,
   localFileStatus,
   aespassword,
 }) => {
-  const { fileid, sourceurl, filename, locationref, size } = file;
-  const ext = getExtnameWithoutDotOrDefault(filename, defaultExtname);
+  const { fileid, sourceurl, locationref } = file;
 
   const openInApp = () => {
-    if (!isSupportedInAppFileType(ext)) {
-      throw new Error(`Unsupported ext: ${ext}`);
-    }
-
     setFileViewModal(
       <FileViewModal
         file={file}
-        ext={ext}
         onClose={() => setFileViewModal(null)}
         encryptedPath={encryptedPath}
         aespassword={aespassword}

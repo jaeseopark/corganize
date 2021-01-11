@@ -1,3 +1,5 @@
+/* eslint-disable promise/always-return */
+/* eslint-disable promise/catch-or-return */
 import { ipcRenderer } from 'electron';
 import React, { useEffect, useState } from 'react';
 
