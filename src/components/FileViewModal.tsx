@@ -5,7 +5,7 @@ import ReactPlayer from 'react-player';
 import { existsSync, readFileSync } from 'fs';
 import { ipcRenderer } from 'electron';
 import os from 'os';
-import { Document } from 'react-pdf';
+import { Document, Page } from 'react-pdf';
 import Button from './Button';
 
 import './FileViewModal.scss';
@@ -50,8 +50,12 @@ const FileViewModal = ({ file, onClose, encryptedPath, aespassword }) => {
               return <ReactPlayer url={decryptedPath} controls muted playing />;
             case 'text/plain':
               return <pre>{readFileSync(decryptedPath)}</pre>;
-            case 'pdf':
-              return <Document file={decryptedPath} />;
+            case 'application/pdf':
+              return (
+                <Document file={decryptedPath}>
+                  <Page pageNumber={1} />
+                </Document>
+              );
             default:
               return `Unsupported: ${response?.mime}`;
           }
