@@ -5,6 +5,7 @@ import ReactPlayer from 'react-player';
 import { existsSync, readFileSync } from 'fs';
 import { ipcRenderer } from 'electron';
 import os from 'os';
+import { Document } from 'react-pdf';
 import Button from './Button';
 
 import './FileViewModal.scss';
@@ -43,14 +44,16 @@ const FileViewModal = ({ file, onClose, encryptedPath, aespassword }) => {
       // eslint-disable-next-line promise/catch-or-return
       decryptPromise
         .then(() => FileType.fromFile(decryptedPath))
-        .then(({ mime }) => {
-          switch (mime) {
+        .then((response) => {
+          switch (response?.mime) {
             case 'video/mp4':
               return <ReactPlayer url={decryptedPath} controls muted playing />;
             case 'text/plain':
               return <pre>{readFileSync(decryptedPath)}</pre>;
+            case 'pdf':
+              return <Document file={decryptedPath} />;
             default:
-              return `Unsupported: ${mime}`;
+              return `Unsupported: ${response?.mime}`;
           }
         })
         .then((value) => setContent(value));
