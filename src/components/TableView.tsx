@@ -51,6 +51,8 @@ const TableView = ({ library }) => {
   const [, setRerenderTimestamp] = useState(0);
   const [fileViewModal, setFileViewModal] = useState(null);
 
+  const corganizeClient = new CorganizeClient(library.config.server);
+
   const updateLocalFileStatus = (fileid: string, status: string | null) => {
     localFileStatusMap[fileid] = status;
     setRerenderTimestamp(Date.now());
@@ -93,6 +95,16 @@ const TableView = ({ library }) => {
     );
   };
 
+  const fav = ({ value, row }) => {
+    const onClick = () => {
+      const { fileid, dateactivated } = row.original;
+      CorganizeClient.updateFav(fileid, !dateactivated);
+    };
+
+    const classNames = `${String(!!value)} icon`;
+    return <div onClick={onClick} className={classNames} />;
+  };
+
   const data = useMemo(() => files || [], [files]);
   const columns = useMemo(
     () => {
@@ -110,8 +122,8 @@ const TableView = ({ library }) => {
         {
           id: 'dateactivated',
           accessor: 'dateactivated',
-          Header: 'act',
-          Cell: format,
+          Header: 'fav',
+          Cell: fav,
         },
       ];
       return regularColumns.concat(computedColumns);
@@ -141,7 +153,6 @@ const TableView = ({ library }) => {
 
   useEffect(() => {
     if (!files && !filesRequested) {
-      const corganizeClient = new CorganizeClient(library.config.server);
       const promise = corganizeClient.getActiveFiles();
       promise
         .then((r) => {

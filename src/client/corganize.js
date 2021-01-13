@@ -12,6 +12,10 @@ class CorganizeClient {
       },
     });
   }
+
+  updateFav(fileid, newValue) {
+    // TODO: make a new endpoint on the server side.
+  }
 }
 
 export default CorganizeClient;
