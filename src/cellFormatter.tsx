@@ -24,6 +24,7 @@ export default function format(props) {
         .trim();
       return relativeString;
     }
+    case 'dateactivated':
     case 'ispublic':
     case 'isactive': {
       const classNames = `${String(!!value)} icon`;
