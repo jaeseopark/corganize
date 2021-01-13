@@ -12,6 +12,7 @@ import {
   useSortBy,
   usePagination,
   useGlobalFilter,
+  useColumnOrder,
 } from 'react-table';
 import format from '../cellformatter';
 import PageControl from './PageControl';
@@ -26,16 +27,16 @@ import FileActions from './FileActions';
 import DownloadCenter from './DownloadCenter';
 
 const regularColumns = [
-  'isactive',
   'ispublic',
   'storageservice',
   'size',
   'lastupdated',
   'sourceurl',
-].map((accessor) => {
+].map((id) => {
   return {
-    accessor,
-    Header: accessor,
+    id,
+    accessor: id,
+    Header: id,
     Cell: format,
   };
 });
@@ -97,14 +98,20 @@ const TableView = ({ library }) => {
     () => {
       const computedColumns = [
         {
+          id: 'filename',
           accessor: 'filename',
           Header: 'filename',
-          id: 'filename',
           Cell: renderFilename,
         },
         {
           id: 'actions',
           Cell: renderActions,
+        },
+        {
+          id: 'dateactivated',
+          accessor: 'dateactivated',
+          Header: 'act',
+          Cell: format,
         },
       ];
       return regularColumns.concat(computedColumns);
@@ -117,10 +124,11 @@ const TableView = ({ library }) => {
     {
       columns,
       data,
-      initialState: { hiddenColumns },
+      initialState: { hiddenColumns, columnOrder: ['dateactivated'] },
     },
     useGlobalFilter,
     useSortBy,
+    useColumnOrder,
     usePagination
   );
 

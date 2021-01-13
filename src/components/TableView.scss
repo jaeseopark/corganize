@@ -30,7 +30,7 @@
             width: 80px;
           }
 
-          &.isactive {
+          &.dateactivated {
             width: 80px;
           }
 
@@ -91,7 +91,7 @@
           background-image: url('../../assets/lock-svgrepo-com.svg');
         }
 
-        .isactive > .true {
+        .dateactivated > .true {
           background-image: url('../../assets/iconmonstr-check-mark.svg');
         }
 
