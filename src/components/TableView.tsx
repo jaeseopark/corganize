@@ -95,12 +95,13 @@ const TableView = ({ library }) => {
     );
   };
 
-  const fav = ({ value, row }) => {
+  const renderFav = ({ value, row }) => {
     const onClick = () => {
       const { original: file } = row;
       const { fileid, dateactivated } = file;
       corganizeClient.updateFav(fileid, !dateactivated).then(() => {
         delete file.dateactivated;
+        // TODO: How do I force the cell to show the new value?
       });
     };
 
@@ -126,7 +127,7 @@ const TableView = ({ library }) => {
           id: 'dateactivated',
           accessor: 'dateactivated',
           Header: 'fav',
-          Cell: fav,
+          Cell: renderFav,
         },
       ];
       return regularColumns.concat(computedColumns);
