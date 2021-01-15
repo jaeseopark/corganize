@@ -4,10 +4,15 @@ import Button from './Button';
 
 import './PageControl.scss';
 
+function randomIntFromInterval(min, max) {
+  // https://stackoverflow.com/a/7228322
+  // min and max included
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
 const PageControl = ({
   canPreviousPage,
   canNextPage,
-  pageOptions,
   pageCount,
   gotoPage,
   nextPage,
@@ -36,6 +41,13 @@ const PageControl = ({
       </div>
       <div className="page-nav">
         <div className="buttons">
+          <Button
+            onClick={() =>
+              gotoPage(randomIntFromInterval(1, pageCount) - 1)
+            }
+          >
+            Random
+          </Button>
           <Button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
             &lt;&lt;
           </Button>
@@ -66,7 +78,7 @@ const PageControl = ({
                 gotoPage(targetPage);
               }}
             />{' '}
-            of {pageOptions.length}
+            of {pageCount}
           </span>
         </div>
       </div>
