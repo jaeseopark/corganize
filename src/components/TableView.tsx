@@ -97,8 +97,11 @@ const TableView = ({ library }) => {
 
   const fav = ({ value, row }) => {
     const onClick = () => {
-      const { fileid, dateactivated } = row.original;
-      CorganizeClient.updateFav(fileid, !dateactivated);
+      const { original: file } = row;
+      const { fileid, dateactivated } = file;
+      corganizeClient.updateFav(fileid, !dateactivated).then(() => {
+        delete file.dateactivated;
+      });
     };
 
     const classNames = `${String(!!value)} icon`;

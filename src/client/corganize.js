@@ -1,3 +1,5 @@
+const fetch = require('node-fetch');
+
 class CorganizeClient {
   constructor({ host, apikey }) {
     this.host = host;
@@ -14,7 +16,23 @@ class CorganizeClient {
   }
 
   updateFav(fileid, newValue) {
-    // TODO: make a new endpoint on the server side.
+    const url = new URL('/Prod/files/upsert', this.host);
+    const body = {
+      files: [
+        {
+          fileid,
+          isactive: newValue,
+        },
+      ],
+    };
+    return fetch(url, {
+      method: 'post',
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: this.apikey,
+      },
+    }).then((res) => res.json());
   }
 }
 
