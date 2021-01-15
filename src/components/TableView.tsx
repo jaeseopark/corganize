@@ -51,6 +51,8 @@ const TableView = ({ library }) => {
   const [, setRerenderTimestamp] = useState(0);
   const [fileViewModal, setFileViewModal] = useState(null);
 
+  const corganizeClient = new CorganizeClient(library.config.server);
+
   const updateLocalFileStatus = (fileid: string, status: string | null) => {
     localFileStatusMap[fileid] = status;
     setRerenderTimestamp(Date.now());
@@ -93,6 +95,20 @@ const TableView = ({ library }) => {
     );
   };
 
+  const renderFav = ({ value, row }) => {
+    const onClick = () => {
+      const { original: file } = row;
+      const { fileid, dateactivated } = file;
+      corganizeClient.updateFav(fileid, !dateactivated).then(() => {
+        delete file.dateactivated;
+        // TODO: How do I force the cell to show the new value?
+      });
+    };
+
+    const classNames = `${String(!!value)} icon`;
+    return <div onClick={onClick} className={classNames} />;
+  };
+
   const data = useMemo(() => files || [], [files]);
   const columns = useMemo(
     () => {
@@ -110,8 +126,8 @@ const TableView = ({ library }) => {
         {
           id: 'dateactivated',
           accessor: 'dateactivated',
-          Header: 'act',
-          Cell: format,
+          Header: 'fav',
+          Cell: renderFav,
         },
       ];
       return regularColumns.concat(computedColumns);
@@ -141,7 +157,6 @@ const TableView = ({ library }) => {
 
   useEffect(() => {
     if (!files && !filesRequested) {
-      const corganizeClient = new CorganizeClient(library.config.server);
       const promise = corganizeClient.getActiveFiles();
       promise
         .then((r) => {
