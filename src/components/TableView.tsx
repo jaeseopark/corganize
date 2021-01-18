@@ -102,6 +102,7 @@ const TableView = ({ library }) => {
       corganizeClient.updateFav(fileid, !dateactivated).then(() => {
         delete file.dateactivated;
         // TODO: How do I force the cell to show the new value?
+        // https://github.com/tannerlinsley/react-table/discussions/2340
       });
     };
 

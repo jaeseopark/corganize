@@ -9,6 +9,7 @@ import { Document, Page } from 'react-pdf';
 import Button from './Button';
 
 import './FileViewModal.scss';
+import ZipViewer from './ZipViewer';
 
 const FileType = require('file-type');
 
@@ -56,6 +57,8 @@ const FileViewModal = ({ file, onClose, encryptedPath, aespassword }) => {
                   <Page pageNumber={1} />
                 </Document>
               );
+            case 'application/zip':
+              return <ZipViewer path={decryptedPath} />;
             default:
               return `Unsupported: ${response?.mime}`;
           }
