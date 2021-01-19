@@ -1,6 +1,7 @@
 :global {
-  .zip-viewer {
-    height: 320px;
-    overflow: scroll;
+  .fullscreen {
+    img {
+      max-height: calc(100vh);
+    }
   }
 }
