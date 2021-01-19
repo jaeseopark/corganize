@@ -81,12 +81,20 @@ const ZipViewer = ({ path }) => {
     }
   };
 
+  const trackProps = {
+    onViewChange: (newIndex) => setCurrentIndex(newIndex),
+  };
+
   return (
     <div className="zip-viewer" onKeyUp={onKeyUp}>
       <ModalGateway>
         {modalIsOpen && (
           <Modal onClose={() => setModalIsOpen(!modalIsOpen)}>
-            <Carousel views={images} currentIndex={currentIndex} />
+            <Carousel
+              views={images}
+              currentIndex={currentIndex}
+              trackProps={trackProps}
+            />
           </Modal>
         )}
       </ModalGateway>
