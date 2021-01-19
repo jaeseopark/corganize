@@ -42,9 +42,7 @@ const PageControl = ({
       <div className="page-nav">
         <div className="buttons">
           <Button
-            onClick={() =>
-              gotoPage(randomIntFromInterval(1, pageCount) - 1)
-            }
+            onClick={() => gotoPage(randomIntFromInterval(1, pageCount) - 1)}
           >
             Random
           </Button>
