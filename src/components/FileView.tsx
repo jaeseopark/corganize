@@ -8,6 +8,8 @@ import os from 'os';
 import { Document, Page } from 'react-pdf';
 import Button from './Button';
 
+import './FileView.scss';
+
 import ZipViewer from './ZipViewer';
 
 const FileType = require('file-type');
@@ -78,9 +80,11 @@ const FileView = ({ encryptedPath, aespassword }) => {
   return (
     <div>
       {content || 'Decrypting...'}
-      <Button onClick={onClickReveal}>
-        {`Reveal in ${getFileManagerAppName()}`}
-      </Button>
+      <div className="footer">
+        <Button onClick={onClickReveal}>
+          {`Reveal in ${getFileManagerAppName()}`}
+        </Button>
+      </div>
     </div>
   );
 };
