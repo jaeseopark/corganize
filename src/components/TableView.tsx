@@ -25,6 +25,7 @@ import CorganizeClient from '../client/corganize';
 
 import FileActions from './FileActions';
 import DownloadCenter from './DownloadCenter';
+import FullscreenView from './FullscreenView';
 
 const regularColumns = [
   'ispublic',
@@ -49,7 +50,7 @@ const TableView = ({ library }) => {
   const [clipboardedFileid, setClipboardedFileId] = useState(null);
   const [localFileStatusMap] = useState({});
   const [, setRerenderTimestamp] = useState(0);
-  const [fileViewModal, setFileViewModal] = useState(null);
+  const [fullscreenComponent, setFullscreenComponent] = useState(null);
 
   const corganizeClient = new CorganizeClient(library.config.server);
 
@@ -90,7 +91,7 @@ const TableView = ({ library }) => {
         aespassword={library.config.local.aes.password}
         updateLocalFileStatus={updateLocalFileStatus}
         setClipboardedFileId={setClipboardedFileId}
-        setFileViewModal={setFileViewModal}
+        setFullscreenComponent={setFullscreenComponent}
       />
     );
   };
@@ -102,6 +103,7 @@ const TableView = ({ library }) => {
       corganizeClient.updateFav(fileid, !dateactivated).then(() => {
         delete file.dateactivated;
         // TODO: How do I force the cell to show the new value?
+        // https://github.com/tannerlinsley/react-table/discussions/2340
       });
     };
 
@@ -173,31 +175,38 @@ const TableView = ({ library }) => {
     return <h2 className="center">Loading...</h2>;
   }
 
+  if (fullscreenComponent) {
+    return (
+      <FullscreenView
+        title={fullscreenComponent.title}
+        content={fullscreenComponent.body}
+        onClose={() => setFullscreenComponent(null)}
+      />
+    );
+  }
+
   return (
-    <>
-      {fileViewModal}
-      <div className="tableview">
-        <GlobalFilter {...tableInstance} />
-        <DownloadCenter />
-        <table className="table" {...getTableProps()}>
-          <thead>
-            {headerGroups.map((headerGroup) => (
-              <TableHeaderGroup headerGroup={headerGroup} />
-            ))}
-          </thead>
-          <tbody {...getTableBodyProps()}>
-            {page.map((row) => (
-              <TableRow
-                row={row}
-                expandedFileid={expandedFileid}
-                {...tableInstance}
-              />
-            ))}
-          </tbody>
-        </table>
-        <PageControl {...tableInstance} />
-      </div>
-    </>
+    <div className="tableview">
+      <GlobalFilter {...tableInstance} />
+      <DownloadCenter />
+      <table className="table" {...getTableProps()}>
+        <thead>
+          {headerGroups.map((headerGroup) => (
+            <TableHeaderGroup headerGroup={headerGroup} />
+          ))}
+        </thead>
+        <tbody {...getTableBodyProps()}>
+          {page.map((row) => (
+            <TableRow
+              row={row}
+              expandedFileid={expandedFileid}
+              {...tableInstance}
+            />
+          ))}
+        </tbody>
+      </table>
+      <PageControl {...tableInstance} />
+    </div>
   );
 };
 
