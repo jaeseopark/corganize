@@ -46,7 +46,6 @@ const hiddenColumns = ['sourceurl', 'storageservice', 'ispublic'];
 const TableView = ({ library }) => {
   const [filesRequested, setFilesRequested] = useState(false);
   const [files, setFiles] = useState(null);
-  const [expandedFileid, setExpendedFileid] = useState(null);
   const [clipboardedFileid, setClipboardedFileId] = useState(null);
   const [localFileStatusMap] = useState({});
   const [, setRerenderTimestamp] = useState(0);
@@ -64,7 +63,6 @@ const TableView = ({ library }) => {
     const { original: file } = row;
 
     const displayString = format(props);
-    const isExpanded = file.fileid === expandedFileid;
 
     return (
       <textarea
@@ -72,7 +70,10 @@ const TableView = ({ library }) => {
         tabIndex="-1"
         role="button"
         onClick={() => {
-          setExpendedFileid(isExpanded ? null : file.fileid);
+          setFullscreenComponent({
+            title: file.filename,
+            body: <pre>{JSON.stringify(file, null, 2)}</pre>,
+          });
         }}
         value={displayString}
       />
@@ -135,7 +136,7 @@ const TableView = ({ library }) => {
       return regularColumns.concat(computedColumns);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [expandedFileid, clipboardedFileid]
+    [clipboardedFileid]
   );
 
   const tableInstance = useTable(
@@ -169,7 +170,7 @@ const TableView = ({ library }) => {
         });
       setFilesRequested(true);
     }
-  }, [files, filesRequested, library, expandedFileid]);
+  }, [files, filesRequested, library]);
 
   if (!files) {
     return <h2 className="center">Loading...</h2>;
@@ -199,7 +200,6 @@ const TableView = ({ library }) => {
           {page.map((row) => (
             <TableRow
               row={row}
-              expandedFileid={expandedFileid}
               {...tableInstance}
             />
           ))}

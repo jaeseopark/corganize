@@ -4,16 +4,8 @@
 
 import React from 'react';
 
-const TableRow = ({ row, prepareRow, expandedFileid, visibleColumns }) => {
-  const { original: file } = row;
+const TableRow = ({ row, prepareRow }) => {
   prepareRow(row);
-  const subcomponent = expandedFileid === file.fileid && (
-    <tr>
-      <td colSpan={visibleColumns.length}>
-        <pre>{JSON.stringify(file, null, 2)}</pre>
-      </td>
-    </tr>
-  );
   return (
     <>
       <tr {...row.getRowProps()}>
@@ -26,7 +18,6 @@ const TableRow = ({ row, prepareRow, expandedFileid, visibleColumns }) => {
           );
         })}
       </tr>
-      {subcomponent}
     </>
   );
 };
