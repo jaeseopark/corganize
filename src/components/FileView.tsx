@@ -8,7 +8,6 @@ import os from 'os';
 import { Document, Page } from 'react-pdf';
 import Button from './Button';
 
-import './FileViewModal.scss';
 import ZipViewer from './ZipViewer';
 
 const FileType = require('file-type');
@@ -25,8 +24,7 @@ const getFileManagerAppName = () => {
   }
 };
 
-const FileViewModal = ({ file, onClose, encryptedPath, aespassword }) => {
-  const { filename } = file;
+const FileView = ({ encryptedPath, aespassword }) => {
   const decryptedPath = `${encryptedPath}.dec`;
   const [content, setContent] = useState(null);
 
@@ -77,36 +75,14 @@ const FileViewModal = ({ file, onClose, encryptedPath, aespassword }) => {
     }
   };
 
-  const closeButton = (
-    <button
-      type="button"
-      className="close"
-      data-dismiss="modal"
-      aria-label="Close"
-      onClick={onClose}
-    >
-      <span aria-hidden="true">&times;</span>
-    </button>
-  );
-
   return (
-    <div className="modal fileviewmodal" tabIndex="-1" role="dialog">
-      <div className="modal-dialog" role="document">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">{filename}</h5>
-            {content && closeButton}
-          </div>
-          <div className="modal-body">{content || 'Decrypting...'}</div>
-          <div className="modal-footer">
-            <Button onClick={onClickReveal}>
-              {`Reveal in ${getFileManagerAppName()}`}
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div>
+      {content || 'Decrypting...'}
+      <Button onClick={onClickReveal}>
+        {`Reveal in ${getFileManagerAppName()}`}
+      </Button>
     </div>
   );
 };
 
-export default FileViewModal;
+export default FileView;

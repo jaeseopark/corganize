@@ -7,7 +7,7 @@ import { copyTextToClipboard } from '../utils/clipboardUtils';
 
 import Button from './Button';
 import DownloadProgressBar from './DownloadProgressBar';
-import FileViewModal from './FileViewModal';
+import FileView from './FileView';
 
 const LOCAL_FILE_STATUS = {
   DOWNLOADING: 'downloading',
@@ -20,21 +20,17 @@ const FileActions = ({
   encryptedPath,
   updateLocalFileStatus,
   setClipboardedFileId,
-  setFileViewModal,
+  setFullscreenComponent,
   localFileStatus,
   aespassword,
 }) => {
-  const { fileid, sourceurl, locationref } = file;
+  const { fileid, sourceurl, locationref, filename } = file;
 
   const openInApp = () => {
-    setFileViewModal(
-      <FileViewModal
-        file={file}
-        onClose={() => setFileViewModal(null)}
-        encryptedPath={encryptedPath}
-        aespassword={aespassword}
-      />
-    );
+    setFullscreenComponent({
+      title: filename,
+      body: <FileView encryptedPath={encryptedPath} aespassword={aespassword} />
+    });
   };
 
   function downloadViaIpc() {
