@@ -4,4 +4,19 @@
       max-height: calc(100vh);
     }
   }
+
+  .helper {
+    margin-top: 10px;
+    font-size: small;
+
+    td.key {
+      width: 40px;
+    }
+
+    code {
+      border-radius: 25%;
+      background-color: gainsboro;
+      padding: 4px;
+    }
+  }
 }
