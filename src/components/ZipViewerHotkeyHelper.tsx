@@ -1,10 +1,10 @@
 import React from 'react';
 
 const keyAssignment = {
-  z: '-5 files',
-  x: '-1 file',
-  c: '+1 file',
-  v: '+5 files',
+  'z/v': '±10 files',
+  'x/c': '±5 file',
+  arrows: '±1 file',
+  space: '+1 file',
   '[': 'start',
   ']': 'end',
   esc: 'quit',

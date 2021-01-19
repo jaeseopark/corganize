@@ -59,16 +59,16 @@ const ZipViewer = ({ path }) => {
   const onKeyUp = ({ key }) => {
     switch (key) {
       case 'z':
-        setCurrentIndexWithBounds(currentIndex - 5);
+        setCurrentIndexWithBounds(currentIndex - 10);
         break;
       case 'x':
-        setCurrentIndexWithBounds(currentIndex - 1);
+        setCurrentIndexWithBounds(currentIndex - 5);
         break;
       case 'c':
-        setCurrentIndexWithBounds(currentIndex + 1);
+        setCurrentIndexWithBounds(currentIndex + 5);
         break;
       case 'v':
-        setCurrentIndexWithBounds(currentIndex + 5);
+        setCurrentIndexWithBounds(currentIndex + 10);
         break;
       case '[':
         setCurrentIndex(0);
