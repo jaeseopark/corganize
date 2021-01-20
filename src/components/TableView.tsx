@@ -50,6 +50,8 @@ const TableView = ({ library }) => {
   const [localFileStatusMap] = useState({});
   const [, setRerenderTimestamp] = useState(0);
   const [fullscreenComponent, setFullscreenComponent] = useState(null);
+  const [highlightedFileid, setHighlightedFileid] = useState(null);
+  const [alertContent, setAlertContent] = useState(null);
 
   const corganizeClient = new CorganizeClient(library.config.server);
 
@@ -80,6 +82,13 @@ const TableView = ({ library }) => {
     );
   };
 
+  const showAlert = (el, timeout = 2000) => {
+    setTimeout(() => {
+      setAlertContent(null);
+    }, timeout);
+    setAlertContent(el);
+  };
+
   const renderActions = ({ row }) => {
     const file = row.original;
     const { fileid } = file;
@@ -103,6 +112,9 @@ const TableView = ({ library }) => {
       const { fileid, dateactivated } = file;
       corganizeClient.updateFav(fileid, !dateactivated).then(() => {
         delete file.dateactivated;
+        showAlert(
+          `The file has been ${dateactivated ? 'favorited' : 'unfavorited'}`
+        );
         // TODO: How do I force the cell to show the new value?
         // https://github.com/tannerlinsley/react-table/discussions/2340
       });
@@ -187,26 +199,34 @@ const TableView = ({ library }) => {
   }
 
   return (
-    <div className="tableview">
-      <GlobalFilter {...tableInstance} />
-      <DownloadCenter />
-      <table className="table" {...getTableProps()}>
-        <thead>
-          {headerGroups.map((headerGroup) => (
-            <TableHeaderGroup headerGroup={headerGroup} />
-          ))}
-        </thead>
-        <tbody {...getTableBodyProps()}>
-          {page.map((row) => (
-            <TableRow
-              row={row}
-              {...tableInstance}
-            />
-          ))}
-        </tbody>
-      </table>
-      <PageControl {...tableInstance} />
-    </div>
+    <>
+      {alertContent && (
+        <div className="alert alert-light" role="alert">
+          {alertContent}
+        </div>
+      )}
+      <div className="tableview">
+        <GlobalFilter {...tableInstance} />
+        <DownloadCenter />
+        <table className="table" {...getTableProps()}>
+          <thead>
+            {headerGroups.map((headerGroup) => (
+              <TableHeaderGroup headerGroup={headerGroup} />
+            ))}
+          </thead>
+          <tbody {...getTableBodyProps()}>
+            {page.map((row) => (
+              <TableRow
+                row={row}
+                isHighlighted={highlightedFileid === row.original.fileid}
+                {...tableInstance}
+              />
+            ))}
+          </tbody>
+        </table>
+        <PageControl {...tableInstance} />
+      </div>
+    </>
   );
 };
 

@@ -12,6 +12,7 @@
     }
 
     .table {
+
       td,
       th {
         padding: 0.5rem 0;
@@ -72,7 +73,7 @@
           background-repeat: no-repeat;
         }
 
-        .filename > textarea[role='button'] {
+        .filename>textarea[role='button'] {
           cursor: pointer;
           margin: 0;
           padding: 0;
@@ -81,17 +82,18 @@
           resize: none;
           width: 100%;
           height: 22px;
+          background-color: transparent;
         }
 
-        .storageservice > .gdrive {
+        .storageservice>.gdrive {
           background-image: url('../../assets/gdrive.svg');
         }
 
-        .ispublic > .false {
+        .ispublic>.false {
           background-image: url('../../assets/lock-svgrepo-com.svg');
         }
 
-        .dateactivated > .true {
+        .dateactivated>.true {
           background-image: url('../../assets/iconmonstr-check-mark.svg');
           cursor: pointer;
           margin-top: 5px;
@@ -111,6 +113,8 @@
             padding: 1px 6px;
           }
         }
+
+        .highlighted {}
       }
     }
   }

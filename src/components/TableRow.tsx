@@ -4,11 +4,11 @@
 
 import React from 'react';
 
-const TableRow = ({ row, prepareRow }) => {
+const TableRow = ({ row, isHighlighted, prepareRow }) => {
   prepareRow(row);
   return (
     <>
-      <tr {...row.getRowProps()}>
+      <tr {...row.getRowProps()} className={isHighlighted && 'highlighted'}>
         {row.cells.map((cell) => {
           const columnName = cell?.column?.id;
           return (
