@@ -43,8 +43,12 @@ const regularColumns = [
 });
 const hiddenColumns = ['sourceurl', 'storageservice', 'ispublic'];
 
+// TableView.state.files will grow in size as the data is retrieved via server side pagination.
+// Unfortunately, updating a state value within a React component can be slow at times; causing some chunks to be skipped, etc.
+// This array acts as the buffer so the UI can render reliably.
+let filesRenderBuffer = [];
+
 const TableView = ({ library }) => {
-  const [filesRequested, setFilesRequested] = useState(false);
   const [files, setFiles] = useState(null);
   const [clipboardedFileid, setClipboardedFileId] = useState(null);
   const [localFileStatusMap] = useState({});
@@ -52,20 +56,16 @@ const TableView = ({ library }) => {
   const [fullscreenComponent, setFullscreenComponent] = useState(null);
   const [highlightedFileid, setHighlightedFileid] = useState(null);
   const [alertContent, setAlertContent] = useState(null);
-
-  const corganizeClient = new CorganizeClient(library.config.server);
+  const [corganizeClient] = useState(
+    new CorganizeClient(library.config.server)
+  );
 
   const updateLocalFileStatus = (fileid: string, status: string | null) => {
     localFileStatusMap[fileid] = status;
     setRerenderTimestamp(Date.now());
   };
 
-  const renderFilename = (props) => {
-    const { row } = props;
-    const { original: file } = row;
-
-    const displayString = format(props);
-
+  const renderFilename = ({ row, column, value }) => {
     return (
       <textarea
         readOnly
@@ -73,11 +73,11 @@ const TableView = ({ library }) => {
         role="button"
         onClick={() => {
           setFullscreenComponent({
-            title: file.filename,
-            body: <pre>{JSON.stringify(file, null, 2)}</pre>,
+            title: row.original.filename,
+            body: <pre>{JSON.stringify(row.original, null, 2)}</pre>,
           });
         }}
-        value={displayString}
+        value={format({ column, value })}
       />
     );
   };
@@ -111,10 +111,11 @@ const TableView = ({ library }) => {
       const { original: file } = row;
       const { fileid, dateactivated } = file;
       corganizeClient.updateFav(fileid, !dateactivated).then(() => {
-        delete file.dateactivated;
-        showAlert(
-          `The file has been ${dateactivated ? 'favorited' : 'unfavorited'}`
-        );
+        if (dateactivated) {
+          delete file.dateactivated;
+        }
+        const newStateStr = dateactivated ? 'unfavorited' : 'favorited';
+        showAlert(`The file has been ${newStateStr}`);
         // TODO: How do I force the cell to show the new value?
         // https://github.com/tannerlinsley/react-table/discussions/2340
       });
@@ -155,7 +156,11 @@ const TableView = ({ library }) => {
     {
       columns,
       data,
-      initialState: { hiddenColumns, columnOrder: ['dateactivated'] },
+      initialState: {
+        hiddenColumns,
+        columnOrder: ['dateactivated'],
+      },
+      autoResetPage: false,
     },
     useGlobalFilter,
     useSortBy,
@@ -171,18 +176,18 @@ const TableView = ({ library }) => {
   } = tableInstance;
 
   useEffect(() => {
-    if (!files && !filesRequested) {
-      const promise = corganizeClient.getActiveFiles();
-      promise
-        .then((r) => {
-          return r.json();
-        })
-        .then((responseBody) => {
-          setFiles(responseBody.files);
-        });
-      setFilesRequested(true);
+    if (!files) {
+      const progressCallback = (moreFiles) => {
+        filesRenderBuffer = filesRenderBuffer.concat(moreFiles);
+        setFiles(filesRenderBuffer);
+      };
+      corganizeClient.getActiveFilesWithPagination(progressCallback);
     }
-  }, [files, filesRequested, library]);
+
+    return () => {
+      // cleanup function
+    };
+  }, []);
 
   if (!files) {
     return <h2 className="center">Loading...</h2>;
@@ -215,7 +220,7 @@ const TableView = ({ library }) => {
             ))}
           </thead>
           <tbody {...getTableBodyProps()}>
-            {page.map((row) => (
+            {page.map((row, i) => (
               <TableRow
                 row={row}
                 isHighlighted={highlightedFileid === row.original.fileid}

@@ -6,9 +6,10 @@ import React from 'react';
 
 const TableRow = ({ row, isHighlighted, prepareRow }) => {
   prepareRow(row);
+  const trClassName = isHighlighted ? 'highlighted' : null;
   return (
     <>
-      <tr {...row.getRowProps()} className={isHighlighted && 'highlighted'}>
+      <tr {...row.getRowProps()} className={trClassName}>
         {row.cells.map((cell) => {
           const columnName = cell?.column?.id;
           return (

@@ -6,13 +6,48 @@ class CorganizeClient {
     this.apikey = apikey;
   }
 
-  getActiveFiles() {
+  getActiveFiles(nexttoken) {
     const url = new URL('/Prod/files/active', this.host);
-    return fetch(url, {
-      headers: {
-        apikey: this.apikey,
-      },
-    });
+    const headers = { apikey: this.apikey };
+
+    if (nexttoken) {
+      headers.nexttoken = nexttoken;
+    }
+
+    return fetch(url, { headers });
+  }
+
+  getActiveFilesWithPagination(
+    progress,
+    paginationToken = null,
+    limit = null,
+    total = 0
+  ) {
+    return new Promise((resolve, reject) =>
+      this.getActiveFiles(paginationToken)
+        .then((r) => r.json())
+        .then((body) => {
+          const nextToken = body?.metadata?.nexttoken;
+          const newTotal = total + body.files.length;
+          const hasReachedLimit = limit && newTotal >= limit;
+
+          progress(body.files);
+
+          if (nextToken && !hasReachedLimit) {
+            // eslint-disable-next-line promise/no-nesting
+            return this.getActiveFilesWithPagination(
+              progress,
+              nextToken,
+              limit,
+              newTotal
+            )
+              .then(resolve)
+              .catch(reject);
+          }
+          return resolve(null);
+        })
+        .catch(reject)
+    );
   }
 
   updateFav(fileid, newValue) {
