@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React from 'react';
+import React, { useEffect } from 'react';
 import Button from './Button';
 
 import './PageControl.scss';
@@ -21,6 +21,10 @@ const PageControl = ({
   state,
 }) => {
   const { pageIndex, pageSize } = state;
+
+  // Re-render when pageCount changes.
+  useEffect(() => {}, [pageCount]);
+
   return (
     <div className="page-control">
       <div className="page-size">
