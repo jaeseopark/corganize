@@ -26,6 +26,7 @@ import CorganizeClient from '../client/corganize';
 import FileActions from './FileActions';
 import DownloadCenter from './DownloadCenter';
 import FullscreenView from './FullscreenView';
+import Filename from './Filename';
 
 const regularColumns = [
   'ispublic',
@@ -66,31 +67,6 @@ const TableView = ({ library }) => {
   const updateLocalFileStatus = (fileid: string, status: string | null) => {
     localFileStatusMap[fileid] = status;
     setRerenderTimestamp(Date.now());
-  };
-
-  const renderFilename = ({ row, column, value }) => {
-    const { mimetype } = row.original;
-    const icon = mimetype && (
-      <div className={`${mimetype.replace('/', '-')} icon mimetype`} />
-    );
-
-    return (
-      <>
-        {icon}
-        <textarea
-          readOnly
-          tabIndex="-1"
-          role="button"
-          onClick={() => {
-            setFullscreenComponent({
-              title: row.original.filename,
-              body: <pre>{JSON.stringify(row.original, null, 2)}</pre>,
-            });
-          }}
-          value={format({ column, value })}
-        />
-      </>
-    );
   };
 
   const showAlert = (el, timeout = 2000) => {
@@ -135,22 +111,26 @@ const TableView = ({ library }) => {
     );
   };
 
+  const toggleFav = (file) => {
+    const { fileid, dateactivated } = file;
+    corganizeClient
+      .updateFile(fileid, { isactive: !dateactivated })
+      .then(() => {
+        if (dateactivated) {
+          delete file.dateactivated;
+        } else {
+          file.dateactivated = Date.now();
+        }
+        const newStateStr = dateactivated ? 'unfavorited' : 'favorited';
+        setRerenderTimestamp(Date.now()); // This forces a re-render of the columns
+        showAlert(`The file has been ${newStateStr}`);
+      });
+  };
+
   const renderFav = ({ value, row }) => {
     const onClick = () => {
       const { original: file } = row;
-      const { fileid, dateactivated } = file;
-      corganizeClient
-        .updateFile(fileid, { isactive: !dateactivated })
-        .then(() => {
-          if (dateactivated) {
-            delete file.dateactivated;
-          } else {
-            file.dateactivated = Date.now();
-          }
-          const newStateStr = dateactivated ? 'unfavorited' : 'favorited';
-          setRerenderTimestamp(Date.now()); // This forces a re-render of the columns
-          showAlert(`The file has been ${newStateStr}`);
-        });
+      toggleFav(file);
     };
 
     const classNames = `${String(!!value)} icon`;
@@ -158,31 +138,27 @@ const TableView = ({ library }) => {
   };
 
   const data = useMemo(() => files || [], [files]);
-  const columns = useMemo(
-    () => {
-      const computedColumns = [
-        {
-          id: 'filename',
-          accessor: 'filename',
-          Header: 'filename',
-          Cell: renderFilename,
-        },
-        {
-          id: 'actions',
-          Cell: renderActions,
-        },
-        {
-          id: 'dateactivated',
-          accessor: 'dateactivated',
-          Header: 'fav',
-          Cell: renderFav,
-        },
-      ];
-      return regularColumns.concat(computedColumns);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [clipboardedFileid, rerenderTimestamp]
-  );
+  const columns = useMemo(() => {
+    const computedColumns = [
+      {
+        id: 'filename',
+        accessor: 'filename',
+        Header: 'filename',
+        Cell: (props) => Filename({ ...props, setFullscreenComponent }),
+      },
+      {
+        id: 'actions',
+        Cell: renderActions,
+      },
+      {
+        id: 'dateactivated',
+        accessor: 'dateactivated',
+        Header: 'fav',
+        Cell: renderFav,
+      },
+    ];
+    return regularColumns.concat(computedColumns);
+  }, [clipboardedFileid, rerenderTimestamp]);
 
   const tableInstance = useTable(
     {
