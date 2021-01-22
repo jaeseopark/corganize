@@ -99,11 +99,17 @@
           background-image: url('../../assets/lock-svgrepo-com.svg');
         }
 
-        .dateactivated>.true {
-          background-image: url('../../assets/iconmonstr-check-mark.svg');
-          cursor: pointer;
-          margin-top: 5px;
-          margin-left: 2px;
+        .dateactivated {
+          .icon {
+            background-image: url('../../assets/iconmonstr-check-mark.svg');
+            cursor: pointer;
+            margin-top: 5px;
+            margin-left: 2px;
+
+            &.false {
+              opacity: 15%;
+            }
+          }
         }
 
         .fileactions {
