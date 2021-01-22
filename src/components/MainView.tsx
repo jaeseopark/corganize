@@ -83,12 +83,26 @@ const MainView = ({ library }) => {
 
   const setMimetype = (fileid: string, mimetype: string) => {
     corganizeClient.updateFile(fileid, { mimetype }).then(() => {
-      if (files) {
-        const file = files.find((f) => f.fileid === fileid);
-        if (file) file.mimetype = mimetype;
-        setRerenderTimestamp(Date.now());
-      }
+      const file = filesRenderBuffer.find((f) => f.fileid === fileid);
+      if (file) file.mimetype = mimetype;
+      setRerenderTimestamp(Date.now());
     });
+  };
+
+  const toggleFav = (file) => {
+    const { fileid, dateactivated } = file;
+    corganizeClient
+      .updateFile(fileid, { isactive: !dateactivated })
+      .then(() => {
+        if (dateactivated) {
+          delete file.dateactivated;
+        } else {
+          file.dateactivated = Date.now();
+        }
+        const newStateStr = dateactivated ? 'unfavorited' : 'favorited';
+        setRerenderTimestamp(Date.now()); // This forces a re-render of the columns
+        showAlert(`The file has been ${newStateStr}`);
+      });
   };
 
   const renderActions = ({ row }) => {
@@ -107,22 +121,6 @@ const MainView = ({ library }) => {
         setMimetype={setMimetype}
       />
     );
-  };
-
-  const toggleFav = (file) => {
-    const { fileid, dateactivated } = file;
-    corganizeClient
-      .updateFile(fileid, { isactive: !dateactivated })
-      .then(() => {
-        if (dateactivated) {
-          delete file.dateactivated;
-        } else {
-          file.dateactivated = Date.now();
-        }
-        const newStateStr = dateactivated ? 'unfavorited' : 'favorited';
-        setRerenderTimestamp(Date.now()); // This forces a re-render of the columns
-        showAlert(`The file has been ${newStateStr}`);
-      });
   };
 
   const renderFav = ({ value, row }) => {
