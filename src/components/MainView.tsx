@@ -89,6 +89,22 @@ const MainView = ({ library }) => {
     });
   };
 
+  const toggleFav = (file) => {
+    const { fileid, dateactivated } = file;
+    corganizeClient
+      .updateFile(fileid, { isactive: !dateactivated })
+      .then(() => {
+        if (dateactivated) {
+          delete file.dateactivated;
+        } else {
+          file.dateactivated = Date.now();
+        }
+        const newStateStr = dateactivated ? 'unfavorited' : 'favorited';
+        setRerenderTimestamp(Date.now()); // This forces a re-render of the columns
+        showAlert(`The file has been ${newStateStr}`);
+      });
+  };
+
   const renderActions = ({ row }) => {
     const file = row.original;
     const { fileid } = file;
@@ -105,22 +121,6 @@ const MainView = ({ library }) => {
         setMimetype={setMimetype}
       />
     );
-  };
-
-  const toggleFav = (file) => {
-    const { fileid, dateactivated } = file;
-    corganizeClient
-      .updateFile(fileid, { isactive: !dateactivated })
-      .then(() => {
-        if (dateactivated) {
-          delete file.dateactivated;
-        } else {
-          file.dateactivated = Date.now();
-        }
-        const newStateStr = dateactivated ? 'unfavorited' : 'favorited';
-        setRerenderTimestamp(Date.now()); // This forces a re-render of the columns
-        showAlert(`The file has been ${newStateStr}`);
-      });
   };
 
   const renderFav = ({ value, row }) => {
