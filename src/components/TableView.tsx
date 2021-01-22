@@ -130,10 +130,8 @@ const TableView = ({ library }) => {
             file.dateactivated = Date.now();
           }
           const newStateStr = dateactivated ? 'unfavorited' : 'favorited';
-          setRerenderTimestamp(Date.now());
+          setRerenderTimestamp(Date.now()); // This forces a re-render of the columns
           showAlert(`The file has been ${newStateStr}`);
-          // TODO: How do I force the cell to show the new value?
-          // https://github.com/tannerlinsley/react-table/discussions/2340
         });
     };
 
