@@ -56,7 +56,6 @@ const MainView = ({ library }) => {
   const [localFileStatusMap] = useState({});
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
   const [fullscreenComponent, setFullscreenComponent] = useState(null);
-  const [] = useState(null);
   const [alertContent, setAlertContent] = useState(null);
   const [corganizeClient] = useState(
     new CorganizeClient(library.config.server)
@@ -178,7 +177,22 @@ const MainView = ({ library }) => {
         filesRenderBuffer = filesRenderBuffer.concat(moreFiles);
         setFiles(filesRenderBuffer);
       };
-      corganizeClient.getActiveFilesWithPagination(progressCallback);
+
+      switch (library.view) {
+        case 'recent': {
+          const limit = 5000;
+          corganizeClient.getRecentFilesWithPagination(progressCallback, limit);
+          break;
+        }
+        case 'active': {
+          corganizeClient.getActiveFilesWithPagination(progressCallback);
+          break;
+        }
+        default: {
+          showAlert(`Invalid view: ${library.view}`);
+          break;
+        }
+      }
     }
 
     return () => {
