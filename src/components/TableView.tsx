@@ -33,6 +33,7 @@ const regularColumns = [
   'size',
   'lastupdated',
   'sourceurl',
+  'mimetype',
 ].map((id) => {
   return {
     id,
@@ -41,12 +42,14 @@ const regularColumns = [
     Cell: format,
   };
 });
-const hiddenColumns = ['sourceurl', 'storageservice', 'ispublic'];
+const hiddenColumns = ['sourceurl', 'storageservice', 'ispublic', 'mimetype'];
 
 // TableView.state.files will grow in size as the data is retrieved via server side pagination.
 // Unfortunately, updating a state value within a React component can be slow at times; causing some chunks to be skipped, etc.
 // This array acts as the buffer so the UI can render reliably.
 let filesRenderBuffer = [];
+// Similarly, alertContent needs a buffer.
+let alertContentBuffer = null;
 
 const TableView = ({ library }) => {
   const [files, setFiles] = useState(null);
@@ -66,27 +69,42 @@ const TableView = ({ library }) => {
   };
 
   const renderFilename = ({ row, column, value }) => {
+    const { mimetype } = row.original;
+    const icon = mimetype && (
+      <div className={`${mimetype.replace('/', '-')} icon mimetype`} />
+    );
+
     return (
-      <textarea
-        readOnly
-        tabIndex="-1"
-        role="button"
-        onClick={() => {
-          setFullscreenComponent({
-            title: row.original.filename,
-            body: <pre>{JSON.stringify(row.original, null, 2)}</pre>,
-          });
-        }}
-        value={format({ column, value })}
-      />
+      <>
+        {icon}
+        <textarea
+          readOnly
+          tabIndex="-1"
+          role="button"
+          onClick={() => {
+            setFullscreenComponent({
+              title: row.original.filename,
+              body: <pre>{JSON.stringify(row.original, null, 2)}</pre>,
+            });
+          }}
+          value={format({ column, value })}
+        />
+      </>
     );
   };
 
   const showAlert = (el, timeout = 2000) => {
-    setTimeout(() => {
-      setAlertContent(null);
-    }, timeout);
-    setAlertContent(el);
+    if (!alertContentBuffer) {
+      setTimeout(() => {
+        setAlertContent(null);
+        alertContentBuffer = null;
+      }, timeout);
+      setAlertContent(el);
+      alertContentBuffer = el;
+    } else {
+      // Try again in 0.1s
+      setTimeout(() => showAlert(el, timeout), 100);
+    }
   };
 
   const setMimetype = (fileid: string, mimetype: string) => {
