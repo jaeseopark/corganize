@@ -26,7 +26,7 @@ const getFileManagerAppName = () => {
   }
 };
 
-const FileView = ({ encryptedPath, aespassword }) => {
+const FileView = ({ encryptedPath, aespassword, onDetectMimetype }) => {
   const decryptedPath = `${encryptedPath}.dec`;
   const [content, setContent] = useState(null);
 
@@ -45,8 +45,13 @@ const FileView = ({ encryptedPath, aespassword }) => {
       // eslint-disable-next-line promise/catch-or-return
       decryptPromise
         .then(() => FileType.fromFile(decryptedPath))
-        .then((response) => {
-          switch (response?.mime) {
+        .then((result) => {
+          const mimetype = result?.mime;
+          if (mimetype) {
+            onDetectMimetype(mimetype);
+          }
+
+          switch (mimetype) {
             case 'video/mp4':
               return <ReactPlayer url={decryptedPath} controls muted playing />;
             case 'text/plain':
@@ -60,7 +65,7 @@ const FileView = ({ encryptedPath, aespassword }) => {
             case 'application/zip':
               return <ZipViewer path={decryptedPath} />;
             default:
-              return `Unsupported: ${response?.mime}`;
+              return `Unsupported: ${mimetype}`;
           }
         })
         .then((value) => setContent(value));

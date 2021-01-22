@@ -50,15 +50,10 @@ class CorganizeClient {
     );
   }
 
-  updateFav(fileid, newValue) {
+  updateFile(fileid, props) {
     const url = new URL('/Prod/files/upsert', this.host);
     const body = {
-      files: [
-        {
-          fileid,
-          isactive: newValue,
-        },
-      ],
+      files: [{ ...props, fileid }],
     };
     return fetch(url, {
       method: 'post',

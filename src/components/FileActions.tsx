@@ -21,15 +21,28 @@ const FileActions = ({
   updateLocalFileStatus,
   setClipboardedFileId,
   setFullscreenComponent,
+  setMimetype,
   localFileStatus,
   aespassword,
 }) => {
-  const { fileid, sourceurl, locationref, filename } = file;
+  const { fileid, sourceurl, locationref, filename, mimetype } = file;
 
   const openInApp = () => {
+    const onDetectMimetype = (detected: string) => {
+      if (!mimetype) {
+        setMimetype(fileid, detected);
+      }
+    };
+
     setFullscreenComponent({
       title: filename,
-      body: <FileView encryptedPath={encryptedPath} aespassword={aespassword} />
+      body: (
+        <FileView
+          encryptedPath={encryptedPath}
+          aespassword={aespassword}
+          onDetectMimetype={onDetectMimetype}
+        />
+      ),
     });
   };
 

@@ -52,7 +52,7 @@ const TableView = ({ library }) => {
   const [files, setFiles] = useState(null);
   const [clipboardedFileid, setClipboardedFileId] = useState(null);
   const [localFileStatusMap] = useState({});
-  const [, setRerenderTimestamp] = useState(0);
+  const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
   const [fullscreenComponent, setFullscreenComponent] = useState(null);
   const [highlightedFileid, setHighlightedFileid] = useState(null);
   const [alertContent, setAlertContent] = useState(null);
@@ -89,6 +89,16 @@ const TableView = ({ library }) => {
     setAlertContent(el);
   };
 
+  const setMimetype = (fileid: string, mimetype: string) => {
+    corganizeClient.updateFile(fileid, { mimetype }).then(() => {
+      if (files) {
+        const file = files.find((f) => f.fileid === fileid);
+        if (file) file.mimetype = mimetype;
+        setRerenderTimestamp(Date.now());
+      }
+    });
+  };
+
   const renderActions = ({ row }) => {
     const file = row.original;
     const { fileid } = file;
@@ -102,6 +112,7 @@ const TableView = ({ library }) => {
         updateLocalFileStatus={updateLocalFileStatus}
         setClipboardedFileId={setClipboardedFileId}
         setFullscreenComponent={setFullscreenComponent}
+        setMimetype={setMimetype}
       />
     );
   };
@@ -110,15 +121,20 @@ const TableView = ({ library }) => {
     const onClick = () => {
       const { original: file } = row;
       const { fileid, dateactivated } = file;
-      corganizeClient.updateFav(fileid, !dateactivated).then(() => {
-        if (dateactivated) {
-          delete file.dateactivated;
-        }
-        const newStateStr = dateactivated ? 'unfavorited' : 'favorited';
-        showAlert(`The file has been ${newStateStr}`);
-        // TODO: How do I force the cell to show the new value?
-        // https://github.com/tannerlinsley/react-table/discussions/2340
-      });
+      corganizeClient
+        .updateFile(fileid, { isactive: !dateactivated })
+        .then(() => {
+          if (dateactivated) {
+            delete file.dateactivated;
+          } else {
+            file.dateactivated = Date.now();
+          }
+          const newStateStr = dateactivated ? 'unfavorited' : 'favorited';
+          setRerenderTimestamp(Date.now());
+          showAlert(`The file has been ${newStateStr}`);
+          // TODO: How do I force the cell to show the new value?
+          // https://github.com/tannerlinsley/react-table/discussions/2340
+        });
     };
 
     const classNames = `${String(!!value)} icon`;
@@ -149,7 +165,7 @@ const TableView = ({ library }) => {
       return regularColumns.concat(computedColumns);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [clipboardedFileid]
+    [clipboardedFileid, rerenderTimestamp]
   );
 
   const tableInstance = useTable(
@@ -220,7 +236,7 @@ const TableView = ({ library }) => {
             ))}
           </thead>
           <tbody {...getTableBodyProps()}>
-            {page.map((row, i) => (
+            {page.map((row) => (
               <TableRow
                 row={row}
                 isHighlighted={highlightedFileid === row.original.fileid}
