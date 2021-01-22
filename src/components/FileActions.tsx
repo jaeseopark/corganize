@@ -77,6 +77,7 @@ const FileActions = ({
           <button
             type="button"
             className={isClipboarded ? 'btn btn-success' : 'btn btn-light'}
+            tabIndex="-1"
             onClick={() => {
               const copySuccess = copyTextToClipboard(sourceurl);
               if (copySuccess) {
