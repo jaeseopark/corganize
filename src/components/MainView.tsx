@@ -19,7 +19,7 @@ import PageControl from './PageControl';
 import TableHeaderGroup from './TableHeaderGroup';
 import TableRow from './TableRow';
 
-import './TableView.scss';
+import './MainView.scss';
 import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 
@@ -45,14 +45,14 @@ const regularColumns = [
 });
 const hiddenColumns = ['sourceurl', 'storageservice', 'ispublic', 'mimetype'];
 
-// TableView.state.files will grow in size as the data is retrieved via server side pagination.
+// MainView.state.files will grow in size as the data is retrieved via server side pagination.
 // Unfortunately, updating a state value within a React component can be slow at times; causing some chunks to be skipped, etc.
 // This array acts as the buffer so the UI can render reliably.
 let filesRenderBuffer = [];
 // Similarly, alertContent needs a buffer.
 let alertContentBuffer = null;
 
-const TableView = ({ library }) => {
+const MainView = ({ library }) => {
   const [files, setFiles] = useState(null);
   const [clipboardedFileid, setClipboardedFileId] = useState(null);
   const [localFileStatusMap] = useState({});
@@ -243,4 +243,4 @@ const TableView = ({ library }) => {
   );
 };
 
-export default TableView;
+export default MainView;
