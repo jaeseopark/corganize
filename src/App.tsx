@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import { ipcRenderer } from 'electron';
-import TableView from './components/TableView';
+import MainView from './components/MainView';
 import LibrarySelector from './components/LibrarySelector';
 
 const Corganize = () => {
@@ -18,7 +18,7 @@ const Corganize = () => {
     return <LibrarySelector onLibraryChange={onLibraryChange} />;
   }
 
-  return <TableView library={library} />;
+  return <MainView library={library} />;
 };
 
 export default function App() {
