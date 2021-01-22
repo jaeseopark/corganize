@@ -83,11 +83,9 @@ const MainView = ({ library }) => {
 
   const setMimetype = (fileid: string, mimetype: string) => {
     corganizeClient.updateFile(fileid, { mimetype }).then(() => {
-      if (files) {
-        const file = files.find((f) => f.fileid === fileid);
-        if (file) file.mimetype = mimetype;
-        setRerenderTimestamp(Date.now());
-      }
+      const file = filesRenderBuffer.find((f) => f.fileid === fileid);
+      if (file) file.mimetype = mimetype;
+      setRerenderTimestamp(Date.now());
     });
   };
 
