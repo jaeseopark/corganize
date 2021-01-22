@@ -15,9 +15,6 @@ import {
   useColumnOrder,
 } from 'react-table';
 import format from '../cellformatter';
-import PageControl from './PageControl';
-import TableHeaderGroup from './TableHeaderGroup';
-import TableRow from './TableRow';
 
 import './MainView.scss';
 import GlobalFilter from './GlobalFilter';
@@ -27,6 +24,7 @@ import FileActions from './FileActions';
 import DownloadCenter from './DownloadCenter';
 import FullscreenView from './FullscreenView';
 import Filename from './Filename';
+import TableView from './TableView';
 
 const regularColumns = [
   'ispublic',
@@ -58,7 +56,7 @@ const MainView = ({ library }) => {
   const [localFileStatusMap] = useState({});
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
   const [fullscreenComponent, setFullscreenComponent] = useState(null);
-  const [highlightedFileid, setHighlightedFileid] = useState(null);
+  const [] = useState(null);
   const [alertContent, setAlertContent] = useState(null);
   const [corganizeClient] = useState(
     new CorganizeClient(library.config.server)
@@ -176,13 +174,6 @@ const MainView = ({ library }) => {
     usePagination
   );
 
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    page,
-  } = tableInstance;
-
   useEffect(() => {
     if (!files) {
       const progressCallback = (moreFiles) => {
@@ -218,27 +209,9 @@ const MainView = ({ library }) => {
           {alertContent}
         </div>
       )}
-      <div className="tableview">
-        <GlobalFilter {...tableInstance} />
-        <DownloadCenter />
-        <table className="table" {...getTableProps()}>
-          <thead>
-            {headerGroups.map((headerGroup) => (
-              <TableHeaderGroup headerGroup={headerGroup} />
-            ))}
-          </thead>
-          <tbody {...getTableBodyProps()}>
-            {page.map((row) => (
-              <TableRow
-                row={row}
-                isHighlighted={highlightedFileid === row.original.fileid}
-                {...tableInstance}
-              />
-            ))}
-          </tbody>
-        </table>
-        <PageControl {...tableInstance} />
-      </div>
+      <GlobalFilter {...tableInstance} />
+      <DownloadCenter />
+      <TableView tableInstance={tableInstance} />
     </>
   );
 };

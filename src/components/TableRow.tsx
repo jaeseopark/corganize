@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-const TableRow = ({ row, isHighlighted, prepareRow }) => {
+const TableRow = ({ row, prepareRow, isHighlighted = false }) => {
   prepareRow(row);
   const trClassName = isHighlighted ? 'highlighted' : null;
   return (

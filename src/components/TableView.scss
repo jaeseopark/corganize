@@ -1,0 +1,127 @@
+:global {
+  .tableview {
+    .table {
+
+      td,
+      th {
+        padding: 0.5rem 0;
+      }
+
+      thead {
+        th {
+          padding-left: 0;
+          padding-right: 0;
+
+          &.lastupdated {
+            width: 135px;
+          }
+
+          &.size {
+            width: 80px;
+          }
+
+          &.dateactivated {
+            width: 42px;
+          }
+
+          &.ispublic {
+            width: 80px;
+          }
+
+          &.actions {
+            width: 265px;
+          }
+        }
+
+        span {
+          float: left;
+        }
+
+        .sorted {
+          width: 18px;
+          height: 18px;
+          background-size: 18px 18px;
+          background-repeat: no-repeat;
+          margin-top: 4px;
+
+          &.desc {
+            background-image: url('../../assets/iconfinder_angle-down_1608507.svg');
+          }
+
+          &.asc {
+            background-image: url('../../assets/iconfinder_angle-up_1608510.svg');
+          }
+        }
+      }
+
+      tbody {
+        .icon {
+          width: 18px;
+          height: 18px;
+          background-size: 18px 18px;
+          background-repeat: no-repeat;
+        }
+
+        .filename {
+          .icon {
+            float: left;
+            margin-top: 4px;
+            margin-left: -2px;
+            margin-right: 5px;
+
+            &.application-zip {
+              background-image: url('../../assets/iconfinder_file-zip-alt_285690.svg');
+            }
+
+            &.video-mp4 {
+              background-image: url('../../assets/iconfinder_movie-alt2_285634.svg');
+            }
+          }
+
+          textarea[role='button'] {
+            cursor: pointer;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            overflow: hidden;
+            resize: none;
+            width: calc(100% - 21px);
+            height: 22px;
+            background-color: transparent;
+          }
+        }
+
+        .storageservice>.gdrive {
+          background-image: url('../../assets/gdrive.svg');
+        }
+
+        .ispublic>.false {
+          background-image: url('../../assets/lock-svgrepo-com.svg');
+        }
+
+        .dateactivated>.true {
+          background-image: url('../../assets/iconmonstr-check-mark.svg');
+          cursor: pointer;
+          margin-top: 5px;
+          margin-left: 2px;
+        }
+
+        .fileactions {
+          float: right;
+
+          .copy-to-clipboard {
+            float: left;
+            margin-right: 5px;
+          }
+
+          .btn {
+            float: right;
+            padding: 1px 6px;
+          }
+        }
+
+        .highlighted {}
+      }
+    }
+  }
+}

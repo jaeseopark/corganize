@@ -1,0 +1,37 @@
+/* eslint-disable react/jsx-props-no-spreading */
+/* eslint-disable react/jsx-key */
+import React from 'react';
+import PageControl from './PageControl';
+import TableHeaderGroup from './TableHeaderGroup';
+import TableRow from './TableRow';
+
+import './TableView.scss';
+
+const TableView = ({ tableInstance }) => {
+  const {
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    page,
+  } = tableInstance;
+
+  return (
+    <div className="tableview">
+      <table className="table" {...getTableProps()}>
+        <thead>
+          {headerGroups.map((headerGroup: any) => (
+            <TableHeaderGroup headerGroup={headerGroup} />
+          ))}
+        </thead>
+        <tbody {...getTableBodyProps()}>
+          {page.map((row) => (
+            <TableRow row={row} {...tableInstance} />
+          ))}
+        </tbody>
+      </table>
+      <PageControl {...tableInstance} />
+    </div>
+  );
+};
+
+export default TableView;
