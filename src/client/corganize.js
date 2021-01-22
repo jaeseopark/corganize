@@ -6,8 +6,8 @@ class CorganizeClient {
     this.apikey = apikey;
   }
 
-  getActiveFiles(nexttoken) {
-    const url = new URL('/Prod/files/active', this.host);
+  getFiles(path, nexttoken) {
+    const url = new URL(path, this.host);
     const headers = { apikey: this.apikey };
 
     if (nexttoken) {
@@ -17,14 +17,23 @@ class CorganizeClient {
     return fetch(url, { headers });
   }
 
-  getActiveFilesWithPagination(
+  getRecentFilesWithPagination(progress, limit = null) {
+    return this.getFilesWithPagination('/Prod/files', progress, limit);
+  }
+
+  getActiveFilesWithPagination(progress, limit = null) {
+    return this.getFilesWithPagination('/Prod/files/active', progress, limit);
+  }
+
+  getFilesWithPagination(
+    path,
     progress,
+    limit,
     paginationToken = null,
-    limit = null,
     total = 0
   ) {
     return new Promise((resolve, reject) =>
-      this.getActiveFiles(paginationToken)
+      this.getFiles(path, paginationToken)
         .then((r) => r.json())
         .then((body) => {
           const nextToken = body?.metadata?.nexttoken;
@@ -35,10 +44,11 @@ class CorganizeClient {
 
           if (nextToken && !hasReachedLimit) {
             // eslint-disable-next-line promise/no-nesting
-            return this.getActiveFilesWithPagination(
+            return this.getFilesWithPagination(
+              path,
               progress,
-              nextToken,
               limit,
+              nextToken,
               newTotal
             )
               .then(resolve)

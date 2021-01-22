@@ -6,6 +6,7 @@ const path = require('path');
 class Library {
   constructor(config) {
     this.config = config;
+    this.view = null;
 
     if (!fs.existsSync(config.local.path)) {
       fs.mkdirSync(config.local.path);
