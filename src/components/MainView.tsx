@@ -188,6 +188,10 @@ const MainView = ({ library }) => {
           corganizeClient.getActiveFilesWithPagination(progressCallback);
           break;
         }
+        case 'incomplete': {
+          corganizeClient.getIncompleteFilesWithPagination(progressCallback);
+          break;
+        }
         default: {
           showAlert(`Invalid view: ${library.view}`);
           break;
