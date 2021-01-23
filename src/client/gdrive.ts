@@ -1,4 +1,4 @@
-import { renameSync } from "fs";
+import { renameSync } from 'fs';
 
 /* eslint-disable import/prefer-default-export */
 const fs = require('fs');
@@ -93,11 +93,8 @@ class GdriveClient {
           }
         });
         data.on('finish', () => {
-          setTimeout(() => {
-            // wait 1.5s before removing the .download extension so the file pointer is properly closed, etc.
-            renameSync(tmpLocalPath, localPath);
-            resolve(localPath);
-          }, 1500);
+          renameSync(tmpLocalPath, localPath);
+          resolve(localPath);
         });
         data.pipe(dest);
       } catch (error) {

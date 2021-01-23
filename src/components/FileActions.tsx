@@ -5,22 +5,15 @@ import { existsSync } from 'fs';
 import React from 'react';
 
 import Button from './Button';
-import DownloadProgressBar from './DownloadProgressBar';
 import FileView from './FileView';
-
-const LOCAL_FILE_STATUS = {
-  DOWNLOADING: 'downloading',
-  DOWNLOADED: 'downloaded',
-};
 
 const FileActions = ({
   file,
   encryptedPath,
-  updateLocalFileStatus,
+  aespassword,
   setFullscreenComponent,
   updateFile,
-  localFileStatus,
-  aespassword,
+  downloadPercentage,
 }) => {
   const { fileid, locationref, filename, mimetype } = file;
 
@@ -43,28 +36,17 @@ const FileActions = ({
     });
   };
 
-  function downloadViaIpc() {
-    updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DOWNLOADING);
-    ipcRenderer
-      .invoke('download', file)
-      // eslint-disable-next-line promise/always-return
-      .then(() => {
-        updateLocalFileStatus(fileid, LOCAL_FILE_STATUS.DOWNLOADED);
-      })
-      .catch((error) => {
-        // eslint-disable-next-line no-alert
-        alert(error);
-        updateLocalFileStatus(fileid, null);
-      });
-  }
-
   let actionButton = null;
-  if (localFileStatus === LOCAL_FILE_STATUS.DOWNLOADING) {
-    actionButton = <DownloadProgressBar fileid={fileid} />;
+  if (downloadPercentage < 100) {
+    actionButton = <Button disabled>{downloadPercentage}%</Button>;
   } else if (existsSync(encryptedPath)) {
     actionButton = <Button onClick={openInApp}>Open</Button>;
   } else if (locationref) {
-    actionButton = <Button onClick={downloadViaIpc}>Download</Button>;
+    actionButton = (
+      <Button onClick={() => ipcRenderer.invoke('download', file)}>
+        Download
+      </Button>
+    );
   }
 
   return <div className="fileactions">{actionButton}</div>;

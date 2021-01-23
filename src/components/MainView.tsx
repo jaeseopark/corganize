@@ -13,6 +13,7 @@ import {
   useGlobalFilter,
   useColumnOrder,
 } from 'react-table';
+import { ipcRenderer } from 'electron';
 import format from '../cellformatter';
 
 import './MainView.scss';
@@ -42,6 +43,8 @@ const regularColumns = [
 });
 const hiddenColumns = ['sourceurl', 'storageservice', 'ispublic', 'mimetype'];
 
+const downloadProgress = {};
+
 // MainView.state.files will grow in size as the data is retrieved via server side pagination.
 // Unfortunately, updating a state value within a React component can be slow at times; causing some chunks to be skipped, etc.
 // This array acts as the buffer so the UI can render reliably.
@@ -49,17 +52,11 @@ let filesRenderBuffer = [];
 
 const MainView = ({ library, showAlert }) => {
   const [files, setFiles] = useState(null);
-  const [localFileStatusMap] = useState({});
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
   const [fullscreenComponent, setFullscreenComponent] = useState(null);
   const [corganizeClient] = useState(
     new CorganizeClient(library.config.server)
   );
-
-  const updateLocalFileStatus = (fileid: string, status: string | null) => {
-    localFileStatusMap[fileid] = status;
-    setRerenderTimestamp(Date.now());
-  };
 
   const updateFile = (fileid: string, props) => {
     corganizeClient.updateFile(fileid, props).then((newFile) => {
@@ -95,11 +92,10 @@ const MainView = ({ library, showAlert }) => {
       <FileActions
         file={file}
         encryptedPath={library.getEncryptedPath(fileid)}
-        localFileStatus={localFileStatusMap[fileid]}
         aespassword={library.config.local.aes.password}
-        updateLocalFileStatus={updateLocalFileStatus}
         setFullscreenComponent={setFullscreenComponent}
         updateFile={updateFile}
+        downloadPercentage={downloadProgress[fileid]}
       />
     );
   };
@@ -155,6 +151,17 @@ const MainView = ({ library, showAlert }) => {
 
   useEffect(() => {
     if (!files) {
+      ipcRenderer.removeAllListeners('downloadProgress');
+      ipcRenderer.on(
+        'downloadProgress',
+        (_event, { fileid, percentage, isInitial }) => {
+          if (isInitial || percentage > downloadProgress[fileid]) {
+            downloadProgress[fileid] = percentage;
+            setRerenderTimestamp(Date.now());
+          }
+        }
+      );
+
       const progressCallback = (moreFiles) => {
         filesRenderBuffer = filesRenderBuffer.concat(moreFiles);
         setFiles(filesRenderBuffer);
@@ -203,7 +210,7 @@ const MainView = ({ library, showAlert }) => {
   return (
     <>
       <GlobalFilter {...tableInstance} />
-      <DownloadCenter />
+      <DownloadCenter downloadProgress={downloadProgress} />
       <TableView tableInstance={tableInstance} />
     </>
   );

@@ -1,31 +1,13 @@
 /* eslint-disable promise/always-return */
 /* eslint-disable promise/catch-or-return */
-import { ipcRenderer } from 'electron';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 import './DownloadCenter.scss';
 
-const DownloadCenter = () => {
-  const [activeDownloadCount, setActiveDownloadCount] = useState(0);
-  const [intervalId, setIntervalId] = useState(null);
-
-  const createIntervalId = () => {
-    return setInterval(() => {
-      ipcRenderer.invoke('downloadProgressAll').then((allDownloads) => {
-        if (allDownloads) {
-          setActiveDownloadCount(
-            Object.values(allDownloads).filter((value) => value < 100).length
-          );
-        }
-      });
-    }, 500);
-  };
-
-  useEffect(() => {
-    if (intervalId === null) {
-      setIntervalId(createIntervalId());
-    }
-  }, []);
+const DownloadCenter = ({ downloadProgress }) => {
+  const activeDownloadCount = Object.values(downloadProgress).filter(
+    (value) => value < 100
+  ).length;
 
   return (
     <div className={`download-center ${activeDownloadCount === 0 && 'zero'}`}>
