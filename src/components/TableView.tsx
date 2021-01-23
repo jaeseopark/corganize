@@ -1,13 +1,15 @@
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable react/jsx-key */
 import React from 'react';
+import classNames from 'classnames';
+
 import PageControl from './PageControl';
 import TableHeaderGroup from './TableHeaderGroup';
 import TableRow from './TableRow';
 
 import './TableView.scss';
 
-const TableView = ({ tableInstance }) => {
+const TableView = ({ tableInstance, isVisible }) => {
   const {
     getTableProps,
     getTableBodyProps,
@@ -15,8 +17,12 @@ const TableView = ({ tableInstance }) => {
     page,
   } = tableInstance;
 
+  const className = classNames('tableview', {
+    hidden: !isVisible,
+  });
+
   return (
-    <div className="tableview">
+    <div className={className}>
       <table className="table" {...getTableProps()}>
         <thead>
           {headerGroups.map((headerGroup: any) => (

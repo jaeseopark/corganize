@@ -184,9 +184,6 @@ const MainView = ({ library, showAlert }) => {
 
   return (
     <>
-      <GlobalFilter {...tableInstance} isVisible={!fullscreenComponent} />
-      <DownloadCenter isVisible={!fullscreenComponent} />
-      {!fullscreenComponent && <TableView tableInstance={tableInstance} />}
       {fullscreenComponent && (
         <FullscreenView
           title={fullscreenComponent.title}
@@ -194,6 +191,12 @@ const MainView = ({ library, showAlert }) => {
           onClose={() => setFullscreenComponent(null)}
         />
       )}
+      <GlobalFilter {...tableInstance} isVisible={!fullscreenComponent} />
+      <DownloadCenter isVisible={!fullscreenComponent} />
+      <TableView
+        tableInstance={tableInstance}
+        isVisible={!fullscreenComponent}
+      />
     </>
   );
 };
