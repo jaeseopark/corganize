@@ -8,22 +8,21 @@ export const handleDownload = (mainWindow, library, gdriveClient) => {
   ipcMain.handle(
     'download',
     async (_event, { fileid, storageservice, locationref, size }) => {
+      const respond = (percentage: number, isInitial = false) => {
+        const payload = { fileid, percentage, isInitial };
+        mainWindow?.webContents.send('downloadProgress', payload);
+        mainWindow?.webContents.send(`download${fileid}`, payload);
+      };
+
       console.log(`Download event received: ${fileid}`);
       const localPath = library.getEncryptedPath(fileid);
       switch (storageservice) {
         case 'gdrive': {
-          mainWindow?.webContents.send('downloadProgress', {
-            fileid,
-            percentage: 0,
-            isInitial: true,
-          });
+          respond(0, true);
           console.log(`Download started: ${fileid}`);
           const callback = ({ downloadedBytes }) => {
             const percentage = Math.floor((downloadedBytes * 100) / size);
-            mainWindow?.webContents.send('downloadProgress', {
-              fileid,
-              percentage,
-            });
+            respond(percentage);
             if (percentage === 100) {
               console.log(`Download finished: ${fileid}`);
             }

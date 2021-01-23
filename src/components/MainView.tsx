@@ -13,7 +13,6 @@ import {
   useGlobalFilter,
   useColumnOrder,
 } from 'react-table';
-import { ipcRenderer } from 'electron';
 import format from '../cellformatter';
 
 import './MainView.scss';
@@ -42,8 +41,6 @@ const regularColumns = [
   };
 });
 const hiddenColumns = ['sourceurl', 'storageservice', 'ispublic', 'mimetype'];
-
-const downloadProgress = {};
 
 // MainView.state.files will grow in size as the data is retrieved via server side pagination.
 // Unfortunately, updating a state value within a React component can be slow at times; causing some chunks to be skipped, etc.
@@ -95,7 +92,6 @@ const MainView = ({ library, showAlert }) => {
         aespassword={library.config.local.aes.password}
         setFullscreenComponent={setFullscreenComponent}
         updateFile={updateFile}
-        downloadPercentage={downloadProgress[fileid]}
       />
     );
   };
@@ -151,17 +147,6 @@ const MainView = ({ library, showAlert }) => {
 
   useEffect(() => {
     if (!files) {
-      ipcRenderer.removeAllListeners('downloadProgress');
-      ipcRenderer.on(
-        'downloadProgress',
-        (_event, { fileid, percentage, isInitial }) => {
-          if (isInitial || percentage > downloadProgress[fileid]) {
-            downloadProgress[fileid] = percentage;
-            setRerenderTimestamp(Date.now());
-          }
-        }
-      );
-
       const progressCallback = (moreFiles) => {
         filesRenderBuffer = filesRenderBuffer.concat(moreFiles);
         setFiles(filesRenderBuffer);
@@ -210,7 +195,7 @@ const MainView = ({ library, showAlert }) => {
   return (
     <>
       <GlobalFilter {...tableInstance} />
-      <DownloadCenter downloadProgress={downloadProgress} />
+      <DownloadCenter />
       <TableView tableInstance={tableInstance} />
     </>
   );
