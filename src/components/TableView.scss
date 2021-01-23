@@ -29,7 +29,7 @@
           }
 
           &.actions {
-            width: 265px;
+            width: 40px;
           }
         }
 
@@ -114,11 +114,6 @@
 
         .fileactions {
           float: right;
-
-          .copy-to-clipboard {
-            float: left;
-            margin-right: 5px;
-          }
 
           .btn {
             float: right;

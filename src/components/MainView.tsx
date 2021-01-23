@@ -52,7 +52,6 @@ let alertContentBuffer = null;
 
 const MainView = ({ library }) => {
   const [files, setFiles] = useState(null);
-  const [clipboardedFileid, setClipboardedFileId] = useState(null);
   const [localFileStatusMap] = useState({});
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
   const [fullscreenComponent, setFullscreenComponent] = useState(null);
@@ -110,12 +109,10 @@ const MainView = ({ library }) => {
     return (
       <FileActions
         file={file}
-        isClipboarded={fileid === clipboardedFileid}
         encryptedPath={library.getEncryptedPath(fileid)}
         localFileStatus={localFileStatusMap[fileid]}
         aespassword={library.config.local.aes.password}
         updateLocalFileStatus={updateLocalFileStatus}
-        setClipboardedFileId={setClipboardedFileId}
         setFullscreenComponent={setFullscreenComponent}
         setMimetype={setMimetype}
       />
@@ -153,7 +150,7 @@ const MainView = ({ library }) => {
       },
     ];
     return regularColumns.concat(computedColumns);
-  }, [clipboardedFileid, rerenderTimestamp]);
+  }, [rerenderTimestamp]);
 
   const tableInstance = useTable(
     {
