@@ -3,7 +3,6 @@
 import { ipcRenderer } from 'electron';
 import { existsSync } from 'fs';
 import React from 'react';
-import { copyTextToClipboard } from '../utils/clipboardUtils';
 
 import Button from './Button';
 import DownloadProgressBar from './DownloadProgressBar';
@@ -16,16 +15,14 @@ const LOCAL_FILE_STATUS = {
 
 const FileActions = ({
   file,
-  isClipboarded,
   encryptedPath,
   updateLocalFileStatus,
-  setClipboardedFileId,
   setFullscreenComponent,
   setMimetype,
   localFileStatus,
   aespassword,
 }) => {
-  const { fileid, sourceurl, locationref, filename, mimetype } = file;
+  const { fileid, locationref, filename, mimetype } = file;
 
   const openInApp = () => {
     const onDetectMimetype = (detected: string) => {
@@ -70,28 +67,7 @@ const FileActions = ({
     actionButton = <Button onClick={downloadViaIpc}>Download</Button>;
   }
 
-  return (
-    <div className="fileactions">
-      {sourceurl && (
-        <div className="copy-to-clipboard">
-          <button
-            type="button"
-            className={isClipboarded ? 'btn btn-success' : 'btn btn-light'}
-            tabIndex="-1"
-            onClick={() => {
-              const copySuccess = copyTextToClipboard(sourceurl);
-              if (copySuccess) {
-                setClipboardedFileId(fileid);
-              }
-            }}
-          >
-            {isClipboarded ? 'Copied' : 'Copy Source URL'}
-          </button>
-        </div>
-      )}
-      {actionButton}
-    </div>
-  );
+  return <div className="fileactions">{actionButton}</div>;
 };
 
 export default FileActions;

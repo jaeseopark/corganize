@@ -6,6 +6,18 @@ class CorganizeClient {
     this.apikey = apikey;
   }
 
+  getRecentFilesWithPagination(progress, limit = null) {
+    return this.getFilesWithPagination('/Prod/files', progress, limit);
+  }
+
+  getActiveFilesWithPagination(progress, limit = null) {
+    return this.getFilesWithPagination('/Prod/files/active', progress, limit);
+  }
+
+  getIncompleteFilesWithPagination(progress, limit = null) {
+    return this.getFilesWithPagination('/Prod/files/incomplete', progress, limit);
+  }
+
   getFiles(path, nexttoken) {
     const url = new URL(path, this.host);
     const headers = { apikey: this.apikey };
@@ -15,14 +27,6 @@ class CorganizeClient {
     }
 
     return fetch(url, { headers });
-  }
-
-  getRecentFilesWithPagination(progress, limit = null) {
-    return this.getFilesWithPagination('/Prod/files', progress, limit);
-  }
-
-  getActiveFilesWithPagination(progress, limit = null) {
-    return this.getFilesWithPagination('/Prod/files/active', progress, limit);
   }
 
   getFilesWithPagination(
