@@ -18,7 +18,7 @@ const FileActions = ({
   encryptedPath,
   updateLocalFileStatus,
   setFullscreenComponent,
-  setMimetype,
+  updateFile,
   localFileStatus,
   aespassword,
 }) => {
@@ -27,7 +27,7 @@ const FileActions = ({
   const openInApp = () => {
     const onDetectMimetype = (detected: string) => {
       if (!mimetype) {
-        setMimetype(fileid, detected);
+        updateFile(fileid, { mimetype: detected });
       }
     };
 
