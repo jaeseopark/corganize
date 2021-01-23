@@ -1,4 +1,3 @@
-/* eslint-disable promise/always-return */
 /* eslint-disable promise/catch-or-return */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/interactive-supports-focus */
@@ -79,11 +78,14 @@ const MainView = ({ library }) => {
     }
   };
 
-  const setMimetype = (fileid: string, mimetype: string) => {
-    corganizeClient.updateFile(fileid, { mimetype }).then(() => {
+  const updateFile = (fileid: string, props) => {
+    corganizeClient.updateFile(fileid, props).then((newFile) => {
       const file = filesRenderBuffer.find((f) => f.fileid === fileid);
-      if (file) file.mimetype = mimetype;
-      setRerenderTimestamp(Date.now());
+      if (file) {
+        Object.assign(file, newFile);
+        setRerenderTimestamp(Date.now());
+      }
+      return file;
     });
   };
 
@@ -114,7 +116,7 @@ const MainView = ({ library }) => {
         aespassword={library.config.local.aes.password}
         updateLocalFileStatus={updateLocalFileStatus}
         setFullscreenComponent={setFullscreenComponent}
-        setMimetype={setMimetype}
+        updateFile={updateFile}
       />
     );
   };
