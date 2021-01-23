@@ -1,5 +1,10 @@
 :global {
   .tableview {
+
+    &.hidden {
+      display: none;
+    }
+
     .table {
 
       td,

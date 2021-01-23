@@ -2,10 +2,11 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
 import React from 'react';
+import classNames from 'classnames';
 
 const ButtonClassOverride = ({ props, classOverride }) => {
   const { className, ...remainingProps } = props;
-  const newClassName = `${className || ''} ${classOverride}`;
+  const newClassName = classNames(className, classOverride);
   return <button type="button" className={newClassName} {...remainingProps} />;
 };
 
