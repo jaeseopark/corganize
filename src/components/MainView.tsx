@@ -46,15 +46,12 @@ const hiddenColumns = ['sourceurl', 'storageservice', 'ispublic', 'mimetype'];
 // Unfortunately, updating a state value within a React component can be slow at times; causing some chunks to be skipped, etc.
 // This array acts as the buffer so the UI can render reliably.
 let filesRenderBuffer = [];
-// Similarly, alertContent needs a buffer.
-let alertContentBuffer = null;
 
-const MainView = ({ library }) => {
+const MainView = ({ library, showAlert }) => {
   const [files, setFiles] = useState(null);
   const [localFileStatusMap] = useState({});
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
   const [fullscreenComponent, setFullscreenComponent] = useState(null);
-  const [alertContent, setAlertContent] = useState(null);
   const [corganizeClient] = useState(
     new CorganizeClient(library.config.server)
   );
@@ -62,20 +59,6 @@ const MainView = ({ library }) => {
   const updateLocalFileStatus = (fileid: string, status: string | null) => {
     localFileStatusMap[fileid] = status;
     setRerenderTimestamp(Date.now());
-  };
-
-  const showAlert = (el, timeout = 2000) => {
-    if (!alertContentBuffer) {
-      setTimeout(() => {
-        setAlertContent(null);
-        alertContentBuffer = null;
-      }, timeout);
-      setAlertContent(el);
-      alertContentBuffer = el;
-    } else {
-      // Try again in 0.1s
-      setTimeout(() => showAlert(el, timeout), 100);
-    }
   };
 
   const updateFile = (fileid: string, props) => {
@@ -219,11 +202,6 @@ const MainView = ({ library }) => {
 
   return (
     <>
-      {alertContent && (
-        <div className="alert alert-light" role="alert">
-          {alertContent}
-        </div>
-      )}
       <GlobalFilter {...tableInstance} />
       <DownloadCenter />
       <TableView tableInstance={tableInstance} />
