@@ -2,12 +2,13 @@
 /* eslint-disable promise/catch-or-return */
 import { ipcRenderer } from 'electron';
 import React, { useEffect, useState } from 'react';
+import classNames from 'classnames';
 
 import './DownloadCenter.scss';
 
 const downloads = {};
 
-const DownloadCenter = () => {
+const DownloadCenter = ({ isVisible }) => {
   const [activeDownloadCount, setActiveDownloadCount] = useState(0);
 
   useEffect(() => {
@@ -26,8 +27,13 @@ const DownloadCenter = () => {
     };
   });
 
+  const className = classNames('download-center', {
+    zero: activeDownloadCount === 0,
+    hidden: !isVisible,
+  });
+
   return (
-    <div className={`download-center ${activeDownloadCount === 0 && 'zero'}`}>
+    <div className={className}>
       <div className="download-center-icon" />
       <div className="active-download-count-badge">
         <div className="active-download-count-text">{activeDownloadCount}</div>

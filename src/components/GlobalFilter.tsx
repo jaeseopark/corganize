@@ -1,8 +1,10 @@
 /* eslint-disable react/prop-types */
 import React, { useState } from 'react';
+import classNames from 'classnames';
+
 import { useAsyncDebounce } from 'react-table';
 
-const GlobalFilter = ({ setGlobalFilter, gotoPage, state }) => {
+const GlobalFilter = ({ setGlobalFilter, gotoPage, state, isVisible }) => {
   const { globalFilter } = state;
 
   const [value, setValue] = useState(globalFilter);
@@ -11,8 +13,12 @@ const GlobalFilter = ({ setGlobalFilter, gotoPage, state }) => {
     setGlobalFilter(v || undefined);
   }, 200);
 
+  const className = classNames('globalfilter', {
+    hidden: !isVisible,
+  });
+
   return (
-    <div className="globalfilter">
+    <div className={className}>
       <input
         value={value || ''}
         placeholder="Search..."

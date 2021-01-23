@@ -182,21 +182,18 @@ const MainView = ({ library, showAlert }) => {
     return <h2 className="center">Loading...</h2>;
   }
 
-  if (fullscreenComponent) {
-    return (
-      <FullscreenView
-        title={fullscreenComponent.title}
-        content={fullscreenComponent.body}
-        onClose={() => setFullscreenComponent(null)}
-      />
-    );
-  }
-
   return (
     <>
-      <GlobalFilter {...tableInstance} />
-      <DownloadCenter />
-      <TableView tableInstance={tableInstance} />
+      <GlobalFilter {...tableInstance} isVisible={!fullscreenComponent} />
+      <DownloadCenter isVisible={!fullscreenComponent} />
+      {!fullscreenComponent && <TableView tableInstance={tableInstance} />}
+      {fullscreenComponent && (
+        <FullscreenView
+          title={fullscreenComponent.title}
+          content={fullscreenComponent.body}
+          onClose={() => setFullscreenComponent(null)}
+        />
+      )}
     </>
   );
 };
