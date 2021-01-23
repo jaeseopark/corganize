@@ -1,4 +1,3 @@
-/* eslint-disable promise/always-return */
 /* eslint-disable promise/catch-or-return */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/interactive-supports-focus */
@@ -86,6 +85,7 @@ const MainView = ({ library }) => {
         Object.assign(file, newFile);
         setRerenderTimestamp(Date.now());
       }
+      return file;
     });
   };
 
