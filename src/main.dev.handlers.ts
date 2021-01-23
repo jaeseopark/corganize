@@ -28,7 +28,10 @@ export const handleDownload = (mainWindow, library, gdriveClient) => {
             }
           };
 
-          gdriveClient.downloadFileAsync(locationref, localPath, callback);
+          gdriveClient
+            .downloadFileAsync(locationref, localPath, callback)
+            .then(() => respond(100))
+            .catch(console.log);
           break;
         }
         default: {
