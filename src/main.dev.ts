@@ -14,12 +14,11 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import { createWriteStream, createReadStream } from 'fs';
 import MenuBuilder from './menu';
 import GdriveClient from './client/gdrive';
 import Library from './library';
-import { decryptAes256Cbc } from './utils/cryptoUtils';
 import { purgeDecryptedFiles } from './utils/fileUtils';
+import { handleDecrypt, handleDownload } from './main.dev.handlers';
 
 export default class AppUpdater {
   constructor() {
@@ -33,7 +32,6 @@ let mainWindow: BrowserWindow | null = null;
 
 let library = null;
 let gdriveClient = null;
-const downloadProgress = {};
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -157,46 +155,10 @@ app.on('activate', () => {
   if (mainWindow === null) createWindow();
 });
 
-ipcMain.handle(
-  'download',
-  async (_event, { fileid, storageservice, locationref, size }) => {
-    console.log('Download event received');
-    downloadProgress[fileid] = 0;
-    const localPath = library.getEncryptedPath(fileid);
-    if (storageservice === 'gdrive') {
-      return gdriveClient.downloadFileAsync(
-        locationref,
-        localPath,
-        ({ downloadedBytes }) => {
-          downloadProgress[fileid] = Math.floor((downloadedBytes * 100) / size);
-        }
-      );
-    }
-    throw new Error(`Unsupported storageservice: ${storageservice}`);
-  }
-);
-
-ipcMain.handle('downloadProgressAll', async () =>
-  Promise.resolve(downloadProgress)
-);
-
-ipcMain.handle('downloadProgress', async (_event, { fileid }) =>
-  Promise.resolve(downloadProgress[fileid])
-);
-
-ipcMain.handle(
-  'decrypt',
-  async (_event, { encryptedPath, decryptedPath, aespassword }) => {
-    const streamIn = createReadStream(encryptedPath);
-    const streamOut = createWriteStream(decryptedPath);
-    return decryptAes256Cbc(streamIn, streamOut, aespassword).then(() => {
-      streamIn.close();
-      streamOut.close();
-    });
-  }
-);
-
 ipcMain.on('changeLibraryConfig', (_event, libraryConfig) => {
   library = new Library(libraryConfig);
   gdriveClient = new GdriveClient(library.config.storageservice.gdrive);
+
+  handleDownload(mainWindow, library, gdriveClient);
+  handleDecrypt();
 });
