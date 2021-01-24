@@ -68,7 +68,7 @@ class CorganizeClient {
     const url = new URL('/Prod/files', this.host);
     const body = { ...props, fileid };
     return fetch(url, {
-      method: 'patch',
+      method: 'PATCH',
       body: JSON.stringify(body),
       headers: {
         'Content-Type': 'application/json',
