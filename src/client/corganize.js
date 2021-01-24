@@ -65,12 +65,10 @@ class CorganizeClient {
   }
 
   updateFile(fileid, props) {
-    const url = new URL('/Prod/files/upsert', this.host);
-    const body = {
-      files: [{ ...props, fileid }],
-    };
+    const url = new URL('/Prod/files', this.host);
+    const body = { ...props, fileid };
     return fetch(url, {
-      method: 'post',
+      method: 'PATCH',
       body: JSON.stringify(body),
       headers: {
         'Content-Type': 'application/json',
