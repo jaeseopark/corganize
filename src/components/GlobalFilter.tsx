@@ -10,6 +10,7 @@ const GlobalFilter = ({ setGlobalFilter, gotoPage, state, isVisible }) => {
   const { globalFilter } = state;
 
   const [value, setValue] = useState(globalFilter);
+
   const onChange = useAsyncDebounce((v) => {
     gotoPage(0);
     setGlobalFilter(v || undefined);
@@ -18,6 +19,12 @@ const GlobalFilter = ({ setGlobalFilter, gotoPage, state, isVisible }) => {
   const clear = () => {
     setValue('');
     onChange('');
+  };
+
+  const onKeyUp = (event) => {
+    if (event.key === 'Escape') {
+      clear();
+    }
   };
 
   const className = classNames('globalfilter', {
@@ -33,8 +40,9 @@ const GlobalFilter = ({ setGlobalFilter, gotoPage, state, isVisible }) => {
           setValue(e.target.value);
           onChange(e.target.value);
         }}
+        onKeyUp={onKeyUp}
       />
-      <img className="clear" src={clearIcon} onClick={clear}/>
+      <img className="clear" src={clearIcon} onClick={clear} />
     </div>
   );
 };
