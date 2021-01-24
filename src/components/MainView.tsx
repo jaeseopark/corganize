@@ -45,7 +45,7 @@ const hiddenColumns = ['sourceurl', 'storageservice', 'ispublic', 'mimetype'];
 // MainView.state.files will grow in size as the data is retrieved via server side pagination.
 // Unfortunately, updating a state value within a React component can be slow at times; causing some chunks to be skipped, etc.
 // This array acts as the buffer so the UI can render reliably.
-let filesRenderBuffer = [];
+const renderBuffer = { files: [] };
 
 const MainView = ({ library, showAlert }) => {
   const [files, setFiles] = useState(null);
@@ -56,13 +56,10 @@ const MainView = ({ library, showAlert }) => {
   );
 
   const updateFile = (fileid: string, props) => {
+    const file = renderBuffer.files.find((f) => f.fileid === fileid);
     corganizeClient.updateFile(fileid, props).then((newFile) => {
-      const file = filesRenderBuffer.find((f) => f.fileid === fileid);
-      if (file) {
-        Object.assign(file, newFile);
-        setRerenderTimestamp(Date.now());
-      }
-      return file;
+      Object.assign(file, newFile);
+      return setRerenderTimestamp(Date.now());
     });
   };
 
@@ -148,8 +145,8 @@ const MainView = ({ library, showAlert }) => {
   useEffect(() => {
     if (!files) {
       const progressCallback = (moreFiles) => {
-        filesRenderBuffer = filesRenderBuffer.concat(moreFiles);
-        setFiles(filesRenderBuffer);
+        renderBuffer.files = renderBuffer.files.concat(moreFiles);
+        setFiles(renderBuffer.files);
       };
 
       switch (library.view) {

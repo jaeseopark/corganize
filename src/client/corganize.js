@@ -74,9 +74,7 @@ class CorganizeClient {
         'Content-Type': 'application/json',
         apikey: this.apikey,
       },
-    })
-      .then((res) => res.json())
-      .then((resArray) => resArray[0]);
+    }).then((res) => res.json());
   }
 }
 

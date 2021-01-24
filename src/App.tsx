@@ -4,8 +4,8 @@ import { ipcRenderer } from 'electron';
 import MainView from './components/MainView';
 import LibrarySelector from './components/LibrarySelector';
 
-// See MainView.filesRenderBuffer to understand how this variable is used.
-let alertContentBuffer = null;
+// See MainView.renderBuffer to understand how this variable is used.
+const renderBuffer = { alertContent: null };
 
 const Corganize = () => {
   const [library, setLibrary] = useState(null);
@@ -14,13 +14,13 @@ const Corganize = () => {
   useEffect(() => {}, [library]);
 
   const showAlert = (el, timeout = 2000) => {
-    if (!alertContentBuffer) {
+    if (!renderBuffer.alertContent) {
       setTimeout(() => {
         setAlertContent(null);
-        alertContentBuffer = null;
+        renderBuffer.alertContent = null;
       }, timeout);
       setAlertContent(el);
-      alertContentBuffer = el;
+      renderBuffer.alertContent = el;
     } else {
       // Try again in 0.1s
       setTimeout(() => showAlert(el, timeout), 100);
