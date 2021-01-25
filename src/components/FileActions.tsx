@@ -23,7 +23,15 @@ const FileActions = ({
     const downloadListener = (_event, { percentage, isInitial }) => {
       if (isInitial || percentage > download.percentage) {
         download.percentage = percentage;
-        setRerenderTimestamp(Date.now());
+        if (percentage !== 100) {
+          setRerenderTimestamp(Date.now());
+        } else {
+          // If the file is small, the component must have been re-rendering very rapidly.
+          // Give it a little break to ensure the final render happens properly.
+          setTimeout(() => {
+            setRerenderTimestamp(Date.now());
+          }, 100);
+        }
       }
     };
     ipcRenderer.on(channel, downloadListener);
@@ -52,10 +60,10 @@ const FileActions = ({
   };
 
   let actionButton = null;
-  if (download.percentage !== null && download.percentage < 100) {
-    actionButton = <Button disabled>{download.percentage}%</Button>;
-  } else if (existsSync(encryptedPath)) {
+  if (existsSync(encryptedPath)) {
     actionButton = <Button onClick={openInApp}>Open</Button>;
+  } else if (download.percentage !== null) {
+    actionButton = <Button disabled>{download.percentage}%</Button>;
   } else if (locationref) {
     actionButton = (
       <Button onClick={() => ipcRenderer.invoke('download', file)}>
