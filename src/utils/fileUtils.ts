@@ -1,5 +1,5 @@
-/* eslint-disable import/prefer-default-export */
 import { unlink, readdirSync, lstatSync, rmdirSync } from 'fs';
+import { glob } from 'glob';
 
 const path = require('path');
 
@@ -21,4 +21,19 @@ export const purgeDecryptedFiles = (dir: string) => {
       });
     })
   );
+};
+
+const getDirectories = (src: string, callback) => {
+  glob(`${src}/**/*`, callback);
+};
+
+export const listDirRecursively = (dir: string, includeFolders = false) => {
+  return new Promise((resolve, reject) => {
+    getDirectories(dir, (error, response) => {
+      if (error) reject(error);
+      resolve(response.filter(
+        (path) => includeFolders || !lstatSync(path).isDirectory()
+      ));
+    });
+  });
 };
