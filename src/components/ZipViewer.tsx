@@ -1,12 +1,10 @@
-import { readdirSync } from 'fs';
 import React, { useEffect, useState } from 'react';
 import Carousel, { Modal, ModalGateway } from 'react-images';
+import { listDirRecursively } from '../utils/fileUtils';
 import Button from './Button';
 
 import './ZipViewer.scss';
 import ZipViewerHotkeyHelper from './ZipViewerHotkeyHelper';
-
-const { join } = require('path');
 
 const AdmZip = require('adm-zip');
 
@@ -27,15 +25,15 @@ const ZipViewer = ({ path }) => {
       return;
     }
 
-    const imgs = readdirSync(dir).map((filename) => {
-      const fullPath = join(dir, filename);
-      return {
-        source: `file://${fullPath}`,
-        caption: filename,
-      };
-    });
-
-    setImages(imgs);
+    listDirRecursively(dir)
+      .then((fullPaths) => {
+        return fullPaths.map((fullPath: string) => {
+          const img = { source: `file://${fullPath}` };
+          return img;
+        });
+      })
+      .then((imgs) => setImages(imgs))
+      .catch(setErrorMessage);
   }, [path]);
 
   if (errorMessage) {
