@@ -26,7 +26,12 @@ const getFileManagerAppName = () => {
   }
 };
 
-const FileView = ({ encryptedPath, aespassword, onDetectMimetype }) => {
+const FileView = ({
+  encryptedPath,
+  aespassword,
+  onDetectMimetype,
+  onDeleteRemoteCopy,
+}) => {
   const decryptedPath = `${encryptedPath}.dec`;
   const [content, setContent] = useState(null);
 
@@ -86,8 +91,11 @@ const FileView = ({ encryptedPath, aespassword, onDetectMimetype }) => {
     <div>
       {content || 'Decrypting...'}
       <div className="footer">
-        <Button onClick={onClickReveal}>
+        <Button onClick={onClickReveal} className="reveal">
           {`Reveal in ${getFileManagerAppName()}`}
+        </Button>
+        <Button onClick={onDeleteRemoteCopy} className="delete-remote">
+          Delete Remote Copy
         </Button>
       </div>
     </div>

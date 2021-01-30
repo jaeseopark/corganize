@@ -57,10 +57,11 @@ const MainView = ({ library, showAlert }) => {
 
   const updateFile = (fileid: string, props) => {
     const file = renderBuffer.files.find((f) => f.fileid === fileid);
-    corganizeClient.updateFile(fileid, props).then((newFile) => {
-      Object.assign(file, newFile);
-      return setRerenderTimestamp(Date.now());
-    });
+    return corganizeClient
+      .updateFile(fileid, props)
+      .then((newFile) => Object.assign(file, newFile))
+      .then(setRerenderTimestamp(Date.now()))
+      .then(showAlert('File has been updated'));
   };
 
   const toggleFav = (file) => {
