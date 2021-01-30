@@ -14,7 +14,7 @@ const FileActions = ({
   setFullscreenComponent,
   updateFile,
 }) => {
-  const { fileid, locationref, filename, mimetype } = file;
+  const { fileid, locationref, storageservice, filename, mimetype } = file;
   const [download] = useState({ percentage: null });
   const [, setRerenderTimestamp] = useState(null);
 
@@ -47,6 +47,11 @@ const FileActions = ({
       }
     };
 
+    const onDeleteRemoteCopy = () => {
+      const payload = { storageservice: 'None' };
+      updateFile(fileid, payload);
+    };
+
     setFullscreenComponent({
       title: filename,
       body: (
@@ -54,6 +59,7 @@ const FileActions = ({
           encryptedPath={encryptedPath}
           aespassword={aespassword}
           onDetectMimetype={onDetectMimetype}
+          onDeleteRemoteCopy={onDeleteRemoteCopy}
         />
       ),
     });
@@ -64,7 +70,7 @@ const FileActions = ({
     actionButton = <Button onClick={openInApp}>Open</Button>;
   } else if (download.percentage !== null) {
     actionButton = <Button disabled>{download.percentage}%</Button>;
-  } else if (locationref) {
+  } else if (storageservice && storageservice !== 'None' && locationref) {
     actionButton = (
       <Button onClick={() => ipcRenderer.invoke('download', file)}>
         Download
