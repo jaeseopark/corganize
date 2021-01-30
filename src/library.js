@@ -14,7 +14,8 @@ class Library {
   }
 
   getEncryptedPath(fileid) {
-    return path.join(this.config.local.path, `${fileid}.aes`);
+    const fileidNew = fileid.replace('/', 'slash');
+    return path.join(this.config.local.path, `${fileidNew}.aes`);
   }
 }
 
