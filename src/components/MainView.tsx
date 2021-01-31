@@ -32,6 +32,7 @@ const regularColumns = [
   'lastupdated',
   'sourceurl',
   'mimetype',
+  'fileid',
 ].map((id) => {
   return {
     id,
@@ -40,7 +41,13 @@ const regularColumns = [
     Cell: format,
   };
 });
-const hiddenColumns = ['sourceurl', 'storageservice', 'ispublic', 'mimetype'];
+const hiddenColumns = [
+  'sourceurl',
+  'storageservice',
+  'ispublic',
+  'mimetype',
+  'fileid',
+];
 
 // MainView.state.files will grow in size as the data is retrieved via server side pagination.
 // Unfortunately, updating a state value within a React component can be slow at times; causing some chunks to be skipped, etc.
