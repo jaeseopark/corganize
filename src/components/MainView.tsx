@@ -159,7 +159,7 @@ const MainView = ({ library, showAlert }) => {
 
       switch (library.view) {
         case 'recent': {
-          const limit = 5000;
+          const limit = 20000;
           corganizeClient.getRecentFilesWithPagination(progressCallback, limit);
           break;
         }
