@@ -29,32 +29,27 @@ class CorganizeClient {
     return fetch(url, { headers });
   }
 
-  getFilesWithPagination(
-    path,
-    progress,
-    limit,
-    paginationToken = null,
-    total = 0
-  ) {
+  getFilesWithPagination(path, cb, limit, paginationToken = null, total = 0) {
     return new Promise((resolve, reject) =>
       this.getFiles(path, paginationToken)
         .then((r) => r.json())
         .then((body) => {
-          const nextToken = body?.metadata?.nexttoken;
-          const newTotal = total + body.files.length;
+          return [
+            body?.metadata?.nexttoken,
+            body.files.filter((f) => f.ispublic !== false),
+          ];
+        })
+        .then((transformedBody) => {
+          const [token, files] = transformedBody;
+          const newTotal = total + files.length;
           const hasReachedLimit = limit && newTotal >= limit;
 
-          progress(body.files);
+          // eslint-disable-next-line promise/no-callback-in-promise
+          cb(files);
 
-          if (nextToken && !hasReachedLimit) {
+          if (token && !hasReachedLimit) {
             // eslint-disable-next-line promise/no-nesting
-            return this.getFilesWithPagination(
-              path,
-              progress,
-              limit,
-              nextToken,
-              newTotal
-            )
+            return this.getFilesWithPagination(path, cb, limit, token, newTotal)
               .then(resolve)
               .catch(reject);
           }
