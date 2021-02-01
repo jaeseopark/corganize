@@ -100,6 +100,7 @@ const MainView = ({ library, showAlert }) => {
         aespassword={library.config.local.aes.password}
         setFullscreenComponent={setFullscreenComponent}
         updateFile={updateFile}
+        showAlert={showAlert}
       />
     );
   };

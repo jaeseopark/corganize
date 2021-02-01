@@ -12,6 +12,7 @@ const FileActions = ({
   encryptedPath,
   aespassword,
   setFullscreenComponent,
+  showAlert,
   updateFile,
 }) => {
   const { fileid, locationref, storageservice, filename, mimetype } = file;
@@ -68,7 +69,17 @@ const FileActions = ({
     actionButton = <Button disabled>{download.percentage}%</Button>;
   } else if (storageservice && storageservice !== 'None' && locationref) {
     actionButton = (
-      <Button onClick={() => ipcRenderer.invoke('download', file)}>DL</Button>
+      <Button
+        onClick={() => {
+          if (fileid.length <= 128) {
+            ipcRenderer.invoke('download', file);
+          } else {
+            showAlert('fileid too long');
+          }
+        }}
+      >
+        DL
+      </Button>
     );
   }
 
