@@ -38,18 +38,15 @@ const TableRow = ({
 
   return (
     <tr {...row.getRowProps()}>
-      {row.cells.map((cell) => {
-        const columnName = cell?.column?.id;
-        return (
-          <td {...cell.getCellProps()} className={columnName}>
-            <ContextMenuWrapper
-              id={row.original.fileid}
-              component={cell.render('Cell')}
-              options={options}
-            />
-          </td>
-        );
-      })}
+      {row.cells.map((cell) => (
+        <td {...cell.getCellProps()} className={cell?.column?.id}>
+          <ContextMenuWrapper
+            id={row.original.fileid}
+            component={cell.render('Cell')}
+            options={options}
+          />
+        </td>
+      ))}
     </tr>
   );
 };
