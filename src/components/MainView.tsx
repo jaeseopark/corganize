@@ -19,7 +19,6 @@ import './MainView.scss';
 import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 
-import FileActions from './FileActions';
 import DownloadCenter from './DownloadCenter';
 import FullscreenView from './FullscreenView';
 import Filename from './Filename';
@@ -87,20 +86,6 @@ const MainView = ({ library, showAlert }) => {
       });
   };
 
-  const renderActions = ({ row }) => {
-    const file = row.original;
-    const { fileid } = file;
-    return (
-      <FileActions
-        file={file}
-        encryptedPath={library.getEncryptedPath(fileid)}
-        aespassword={library.config.local.aes.password}
-        setFullscreenComponent={setFullscreenComponent}
-        updateFile={updateFile}
-      />
-    );
-  };
-
   const renderFav = ({ value, row }) => {
     const onClick = () => {
       const { original: file } = row;
@@ -119,10 +104,6 @@ const MainView = ({ library, showAlert }) => {
         accessor: 'filename',
         Header: 'filename',
         Cell: (props) => Filename({ ...props, setFullscreenComponent }),
-      },
-      {
-        id: 'actions',
-        Cell: renderActions,
       },
       {
         id: 'dateactivated',
@@ -201,6 +182,10 @@ const MainView = ({ library, showAlert }) => {
       <TableView
         tableInstance={tableInstance}
         isVisible={!fullscreenComponent}
+        setFullscreenComponent={setFullscreenComponent}
+        updateFile={updateFile}
+        showAlert={showAlert}
+        library={library}
       />
     </>
   );

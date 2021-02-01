@@ -9,7 +9,14 @@ import TableRow from './TableRow';
 
 import './TableView.scss';
 
-const TableView = ({ tableInstance, isVisible }) => {
+const TableView = ({
+  tableInstance,
+  isVisible,
+  setFullscreenComponent,
+  updateFile,
+  showAlert,
+  library,
+}) => {
   const {
     getTableProps,
     getTableBodyProps,
@@ -31,7 +38,14 @@ const TableView = ({ tableInstance, isVisible }) => {
         </thead>
         <tbody {...getTableBodyProps()}>
           {page.map((row) => (
-            <TableRow row={row} {...tableInstance} />
+            <TableRow
+              row={row}
+              setFullscreenComponent={setFullscreenComponent}
+              updateFile={updateFile}
+              showAlert={showAlert}
+              library={library}
+              {...tableInstance}
+            />
           ))}
         </tbody>
       </table>
