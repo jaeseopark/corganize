@@ -18,7 +18,7 @@ export const getLocalActions = (
       onClick: () => {
         switch (os.platform()) {
           case 'win32':
-            exec(`explorer /select,${encryptedPath}`);
+            exec(`explorer /select,"${encryptedPath}"`);
             break;
           default:
             throw new Error('Not Implemented');
