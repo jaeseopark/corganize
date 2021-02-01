@@ -14,8 +14,13 @@
 
       thead {
         th {
+          cursor: unset !important; // Underlying library uses !important
           padding-left: 0;
           padding-right: 0;
+
+          span[role='button'] {
+            cursor: pointer;
+          }
 
           &.lastupdated {
             width: 135px;
@@ -83,8 +88,7 @@
             }
           }
 
-          textarea[role='button'] {
-            cursor: pointer;
+          textarea.filename {
             margin: 0;
             padding: 0;
             border: 0;
@@ -125,8 +129,6 @@
             padding: 1px 6px;
           }
         }
-
-        .highlighted {}
       }
     }
   }

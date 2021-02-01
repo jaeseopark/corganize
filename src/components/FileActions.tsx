@@ -12,11 +12,14 @@ const FileActions = ({
   encryptedPath,
   aespassword,
   setFullscreenComponent,
+  showAlert,
   updateFile,
 }) => {
   const { fileid, locationref, storageservice, filename, mimetype } = file;
   const [download] = useState({ percentage: null });
   const [, setRerenderTimestamp] = useState(null);
+
+  const rerender = () => setRerenderTimestamp(Date.now());
 
   useEffect(() => {
     const channel = `download${fileid}`;
@@ -24,12 +27,12 @@ const FileActions = ({
       if (isInitial || percentage > download.percentage) {
         download.percentage = percentage;
         if (percentage !== 100) {
-          setRerenderTimestamp(Date.now());
+          rerender();
         } else {
           // If the file is small, the component must have been re-rendering very rapidly.
           // Give it a little break to ensure the final render happens properly.
           setTimeout(() => {
-            setRerenderTimestamp(Date.now());
+            rerender();
           }, 100);
         }
       }
@@ -47,11 +50,6 @@ const FileActions = ({
       }
     };
 
-    const onDeleteRemoteCopy = () => {
-      const payload = { storageservice: 'None' };
-      updateFile(fileid, payload);
-    };
-
     setFullscreenComponent({
       title: filename,
       body: (
@@ -59,7 +57,6 @@ const FileActions = ({
           encryptedPath={encryptedPath}
           aespassword={aespassword}
           onDetectMimetype={onDetectMimetype}
-          onDeleteRemoteCopy={onDeleteRemoteCopy}
         />
       ),
     });
@@ -72,8 +69,16 @@ const FileActions = ({
     actionButton = <Button disabled>{download.percentage}%</Button>;
   } else if (storageservice && storageservice !== 'None' && locationref) {
     actionButton = (
-      <Button onClick={() => ipcRenderer.invoke('download', file)}>
-        Download
+      <Button
+        onClick={() => {
+          if (fileid.length <= 128) {
+            ipcRenderer.invoke('download', file);
+          } else {
+            showAlert('fileid too long');
+          }
+        }}
+      >
+        DL
       </Button>
     );
   }
