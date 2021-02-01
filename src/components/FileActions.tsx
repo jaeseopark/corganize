@@ -47,11 +47,6 @@ const FileActions = ({
       }
     };
 
-    const onDeleteRemoteCopy = () => {
-      const payload = { storageservice: 'None' };
-      updateFile(fileid, payload);
-    };
-
     setFullscreenComponent({
       title: filename,
       body: (
@@ -59,7 +54,6 @@ const FileActions = ({
           encryptedPath={encryptedPath}
           aespassword={aespassword}
           onDetectMimetype={onDetectMimetype}
-          onDeleteRemoteCopy={onDeleteRemoteCopy}
         />
       ),
     });

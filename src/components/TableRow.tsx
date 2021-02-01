@@ -1,74 +1,35 @@
 /* eslint-disable react/jsx-key */
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable react/prop-types */
-
-import { existsSync } from 'fs';
 import React from 'react';
-import { copyTextToClipboard } from '../utils/clipboardUtils';
+import {
+  getLocalActions,
+  getMetadataOptions,
+  getRemoteActions,
+} from '../utils/contextMenuUtils';
+
 import ContextMenuWrapper from './ContextMenuWrapper';
-import FileMetadataView from './FileMetadataView';
-
-const getPrimarylActions = (
-  { fileid, storageservice, locationref },
-  library
-) => {
-  const primaryActions = [];
-  const encryptedPath = library.getEncryptedPath(fileid);
-  if (existsSync(encryptedPath)) {
-    primaryActions.push({
-      label: 'Open',
-      onClick: () => alert('open hehe'),
-    });
-  } else if (storageservice && storageservice !== 'None' && locationref) {
-    primaryActions.push({
-      label: 'Download',
-      onClick: () => {},
-    });
-  }
-
-  if (primaryActions.length > 0) primaryActions.push(null);
-  return primaryActions;
-};
-
-const getSecondaryActions = ({ sourceurl, storageservice }, showAlert) => {
-  const secondaryActions = [];
-  if (storageservice !== 'None')
-    secondaryActions.push({
-      label: 'Delete Remote File',
-      onClick: () => alert('delete remote'),
-    });
-
-  if (sourceurl)
-    secondaryActions.push({
-      label: 'Copy Source URL',
-      onClick: () =>
-        copyTextToClipboard(sourceurl).then(showAlert('Copied to clipboard')),
-    });
-
-  secondaryActions.push(null);
-  return secondaryActions;
-};
 
 const TableRow = ({
   row,
   prepareRow,
+  library,
   setFullscreenComponent,
   updateFile,
   showAlert,
-  library,
 }) => {
   prepareRow(row);
 
-  const { filename, fileid } = row.original;
-
   const options = [];
-  options.push(...getPrimarylActions(row.original, library));
-  options.push(...getSecondaryActions(row.original, showAlert));
+  options.push(...getLocalActions(row.original, library, showAlert));
+  options.push(...getRemoteActions(row.original, updateFile, showAlert));
+
+  // Show Metadata is always available.
   options.push({
-    label: 'Show Details',
+    label: 'Show Metadata',
     onClick: () => {
       setFullscreenComponent({
-        title: filename,
+        title: row.original.filename,
         body: <pre>{JSON.stringify(row.original, null, 2)}</pre>,
       });
     },
@@ -81,7 +42,7 @@ const TableRow = ({
         return (
           <td {...cell.getCellProps()} className={columnName}>
             <ContextMenuWrapper
-              id={fileid}
+              id={row.original.fileid}
               component={cell.render('Cell')}
               options={options}
             />
