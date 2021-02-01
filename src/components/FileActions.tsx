@@ -68,9 +68,7 @@ const FileActions = ({
     actionButton = <Button disabled>{download.percentage}%</Button>;
   } else if (storageservice && storageservice !== 'None' && locationref) {
     actionButton = (
-      <Button onClick={() => ipcRenderer.invoke('download', file)}>
-        Download
-      </Button>
+      <Button onClick={() => ipcRenderer.invoke('download', file)}>DL</Button>
     );
   }
 
