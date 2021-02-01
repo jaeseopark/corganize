@@ -3,7 +3,12 @@ import { exec } from 'child_process';
 import { existsSync, unlink } from 'fs';
 import { copyTextToClipboard } from './clipboardUtils';
 
-export const getLocalActions = ({ fileid }, library, showAlert) => {
+export const getLocalActions = (
+  { fileid },
+  library,
+  rerenderRowData,
+  showAlert
+) => {
   const localActions = [];
 
   const encryptedPath = library.getEncryptedPath(fileid);
@@ -28,6 +33,7 @@ export const getLocalActions = ({ fileid }, library, showAlert) => {
             showAlert('The file could not be deleted');
             return;
           }
+          rerenderRowData();
           showAlert('The local file has been deleted');
         }),
     });
@@ -40,6 +46,7 @@ export const getLocalActions = ({ fileid }, library, showAlert) => {
 export const getRemoteActions = (
   { fileid, sourceurl, storageservice },
   updateFile,
+  rerenderRowData,
   showAlert
 ) => {
   const remoetActions = [];
@@ -47,7 +54,9 @@ export const getRemoteActions = (
     remoetActions.push({
       label: 'Copy Source URL',
       onClick: () =>
-        copyTextToClipboard(sourceurl).then(showAlert('Copied to clipboard')),
+        copyTextToClipboard(sourceurl)
+          .then(rerenderRowData())
+          .then(showAlert('Copied to clipboard')),
     });
   if (storageservice !== 'None')
     remoetActions.push({

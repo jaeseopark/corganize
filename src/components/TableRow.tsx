@@ -16,13 +16,14 @@ const TableRow = ({
   library,
   setFullscreenComponent,
   updateFile,
+  rerenderRowData,
   showAlert,
 }) => {
   prepareRow(row);
 
   const options = [];
-  options.push(...getLocalActions(row.original, library, showAlert));
-  options.push(...getRemoteActions(row.original, updateFile, showAlert));
+  options.push(...getLocalActions(row.original, library, rerenderRowData, showAlert));
+  options.push(...getRemoteActions(row.original, updateFile, rerenderRowData, showAlert));
 
   // Show Metadata is always available.
   options.push({

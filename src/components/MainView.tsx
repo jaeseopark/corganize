@@ -24,6 +24,7 @@ import FullscreenView from './FullscreenView';
 import Filename from './Filename';
 import TableView from './TableView';
 import FileActions from './FileActions';
+import { ipcRenderer } from 'electron';
 
 const regularColumns = [
   'ispublic',
@@ -62,12 +63,14 @@ const MainView = ({ library, showAlert }) => {
     new CorganizeClient(library.config.server)
   );
 
+  const rerender = () => setRerenderTimestamp(Date.now());
+
   const updateFile = (fileid: string, props) => {
     const file = renderBuffer.files.find((f) => f.fileid === fileid);
     return corganizeClient
       .updateFile(fileid, props)
       .then((newFile) => Object.assign(file, newFile))
-      .then(setRerenderTimestamp(Date.now()))
+      .then(rerender())
       .then(showAlert('File has been updated'));
   };
 
@@ -82,7 +85,7 @@ const MainView = ({ library, showAlert }) => {
           file.dateactivated = Date.now();
         }
         const newStateStr = dateactivated ? 'unfavorited' : 'favorited';
-        setRerenderTimestamp(Date.now()); // This forces a re-render of the columns
+        rerender();
         showAlert(`The file has been ${newStateStr}`);
       });
   };
@@ -178,8 +181,13 @@ const MainView = ({ library, showAlert }) => {
       }
     }
 
+    const downloadListener = (_event, { percentage }) => {
+      if (percentage === 100) rerender();
+    };
+    ipcRenderer.on('downloadProgress', downloadListener);
+
     return () => {
-      // cleanup function
+      ipcRenderer.removeListener('downloadProgress', downloadListener);
     };
   }, []);
 
@@ -203,6 +211,7 @@ const MainView = ({ library, showAlert }) => {
         isVisible={!fullscreenComponent}
         setFullscreenComponent={setFullscreenComponent}
         updateFile={updateFile}
+        rerenderRowData={rerender}
         showAlert={showAlert}
         library={library}
       />

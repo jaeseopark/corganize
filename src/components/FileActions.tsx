@@ -18,18 +18,20 @@ const FileActions = ({
   const [download] = useState({ percentage: null });
   const [, setRerenderTimestamp] = useState(null);
 
+  const rerender = () => setRerenderTimestamp(Date.now());
+
   useEffect(() => {
     const channel = `download${fileid}`;
     const downloadListener = (_event, { percentage, isInitial }) => {
       if (isInitial || percentage > download.percentage) {
         download.percentage = percentage;
         if (percentage !== 100) {
-          setRerenderTimestamp(Date.now());
+          rerender();
         } else {
           // If the file is small, the component must have been re-rendering very rapidly.
           // Give it a little break to ensure the final render happens properly.
           setTimeout(() => {
-            setRerenderTimestamp(Date.now());
+            rerender();
           }, 100);
         }
       }

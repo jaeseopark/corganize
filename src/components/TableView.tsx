@@ -14,6 +14,7 @@ const TableView = ({
   isVisible,
   setFullscreenComponent,
   updateFile,
+  rerenderRowData,
   showAlert,
   library,
 }) => {
@@ -43,6 +44,7 @@ const TableView = ({
               setFullscreenComponent={setFullscreenComponent}
               updateFile={updateFile}
               showAlert={showAlert}
+              rerenderRowData={rerenderRowData}
               library={library}
               {...tableInstance}
             />
