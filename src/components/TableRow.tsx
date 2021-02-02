@@ -1,39 +1,26 @@
-/* eslint-disable react/jsx-key */
-/* eslint-disable react/jsx-props-no-spreading */
-/* eslint-disable react/prop-types */
-import React from 'react';
-import {
-  getLocalActions,
-  getMetadataOptions,
-  getRemoteActions,
-} from '../utils/contextMenuUtils';
-
+import { ipcRenderer } from 'electron';
+import React, { useEffect, useState } from 'react';
 import ContextMenuWrapper from './ContextMenuWrapper';
 
-const TableRow = ({
-  row,
-  prepareRow,
-  library,
-  setFullscreenComponent,
-  updateFile,
-  rerenderRowData,
-  showAlert,
-}) => {
+const TableRow = ({ row, prepareRow, getConextMenuOptions }) => {
+  const [,setTimestamp] = useState(null);
   prepareRow(row);
 
-  const options = [];
-  options.push(...getLocalActions(row.original, library, rerenderRowData, showAlert));
-  options.push(...getRemoteActions(row.original, updateFile, rerenderRowData, showAlert));
+  const rerender = () => {
+    setTimestamp(Date.now());
+  };
 
-  // Show Metadata is always available.
-  options.push({
-    label: 'Show Metadata',
-    onClick: () => {
-      setFullscreenComponent({
-        title: row.original.filename,
-        body: <pre>{JSON.stringify(row.original, null, 2)}</pre>,
-      });
-    },
+  useEffect(() => {
+    const channel = `download${row.original.fileid}`;
+    const downloadListener = (_event, { percentage }) => {
+      if (percentage === 100) {
+        rerender();
+      }
+    };
+    ipcRenderer.on(channel, downloadListener);
+    return () => {
+      ipcRenderer.removeListener(channel, downloadListener);
+    };
   });
 
   return (
@@ -43,7 +30,7 @@ const TableRow = ({
           <ContextMenuWrapper
             id={row.original.fileid}
             component={cell.render('Cell')}
-            options={options}
+            options={getConextMenuOptions(row.original)}
           />
         </td>
       ))}

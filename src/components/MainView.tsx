@@ -1,10 +1,3 @@
-/* eslint-disable promise/catch-or-return */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
-/* eslint-disable jsx-a11y/interactive-supports-focus */
-/* eslint-disable react/display-name */
-/* eslint-disable react/jsx-key */
-/* eslint-disable react/jsx-props-no-spreading */
-/* eslint-disable react/prop-types */
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   useTable,
@@ -24,7 +17,7 @@ import FullscreenView from './FullscreenView';
 import Filename from './Filename';
 import TableView from './TableView';
 import FileActions from './FileActions';
-import { ipcRenderer } from 'electron';
+import { getLocalActions, getRemoteActions } from '../utils/contextMenuUtils';
 
 const regularColumns = [
   'ispublic',
@@ -84,10 +77,11 @@ const MainView = ({ library, showAlert }) => {
         } else {
           file.dateactivated = Date.now();
         }
-        const newStateStr = dateactivated ? 'unfavorited' : 'favorited';
-        rerender();
-        showAlert(`The file has been ${newStateStr}`);
-      });
+        return dateactivated ? 'unfavorited' : 'favorited';
+      })
+      .then((newValue: string) => showAlert(`The file has been ${newValue}`))
+      .then(rerender())
+      .catch(showAlert);
   };
 
   const renderActions = ({ row }) => {
@@ -181,16 +175,26 @@ const MainView = ({ library, showAlert }) => {
         }
       }
     }
-
-    const downloadListener = (_event, { percentage }) => {
-      if (percentage === 100) rerender();
-    };
-    ipcRenderer.on('downloadProgress', downloadListener);
-
-    return () => {
-      ipcRenderer.removeListener('downloadProgress', downloadListener);
-    };
   }, []);
+
+  const getConextMenuOptions = (inputFile) => {
+    const file =
+      renderBuffer.files.find((f) => f.fileid === inputFile.fileid) ||
+      inputFile;
+    return [
+      ...getLocalActions(file, library, rerender, showAlert),
+      ...getRemoteActions(file, updateFile, rerender, showAlert),
+      {
+        label: 'Show Metadata',
+        onClick: () => {
+          setFullscreenComponent({
+            title: file.filename,
+            body: <pre>{JSON.stringify(file, null, 2)}</pre>,
+          });
+        },
+      },
+    ];
+  };
 
   if (!files) {
     return <h2 className="center">Loading...</h2>;
@@ -210,11 +214,7 @@ const MainView = ({ library, showAlert }) => {
       <TableView
         tableInstance={tableInstance}
         isVisible={!fullscreenComponent}
-        setFullscreenComponent={setFullscreenComponent}
-        updateFile={updateFile}
-        rerenderRowData={rerender}
-        showAlert={showAlert}
-        library={library}
+        getConextMenuOptions={getConextMenuOptions}
       />
     </>
   );
