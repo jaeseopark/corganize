@@ -12,17 +12,14 @@ import './TableView.scss';
 const TableView = ({
   tableInstance,
   isVisible,
-  setFullscreenComponent,
-  updateFile,
-  rerenderRowData,
-  showAlert,
-  library,
+  getConextMenuOptions,
 }) => {
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     page,
+    prepareRow,
   } = tableInstance;
 
   const className = classNames('tableview', {
@@ -41,12 +38,8 @@ const TableView = ({
           {page.map((row) => (
             <TableRow
               row={row}
-              setFullscreenComponent={setFullscreenComponent}
-              updateFile={updateFile}
-              showAlert={showAlert}
-              rerenderRowData={rerenderRowData}
-              library={library}
-              {...tableInstance}
+              prepareRow={prepareRow}
+              getConextMenuOptions={getConextMenuOptions}
             />
           ))}
         </tbody>
