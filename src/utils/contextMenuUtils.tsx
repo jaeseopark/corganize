@@ -1,3 +1,4 @@
+import React from 'react';
 import os from 'os';
 import { exec } from 'child_process';
 import { existsSync, unlink } from 'fs';
@@ -54,7 +55,7 @@ export const getRemoteActions = (
     remoetActions.push({
       label: 'Copy Source URL',
       onClick: () =>
-        copyTextToClipboard(sourceurl)
+        copyTextToClipboard(sourceurl.split('://').slice(-1).pop())
           .then(rerenderRowData)
           .then(showAlert('Copied to clipboard')),
     });
@@ -65,4 +66,24 @@ export const getRemoteActions = (
     });
   if (remoetActions.length > 0) remoetActions.push(null);
   return remoetActions;
+};
+
+export const getCommonActions = (file, setFullscreenComponent, deleteFile) => {
+  return [
+    {
+      label: 'Show Metadata',
+      onClick: () => {
+        setFullscreenComponent({
+          title: file.filename,
+          body: <pre>{JSON.stringify(file, null, 2)}</pre>,
+        });
+      },
+    },
+    {
+      label: 'Delete',
+      onClick: () => {
+        deleteFile(file.fileid);
+      },
+    },
+  ];
 };

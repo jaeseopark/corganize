@@ -71,6 +71,18 @@ class CorganizeClient {
       },
     }).then((res) => res.json());
   }
+
+  deleteFile(fileid) {
+    const url = new URL('/Prod/files', this.host);
+    return fetch(url, {
+      method: 'DELETE',
+      body: JSON.stringify({ fileid }),
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: this.apikey,
+      },
+    }).then((res) => res.json());
+  }
 }
 
 export default CorganizeClient;

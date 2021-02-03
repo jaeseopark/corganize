@@ -17,7 +17,11 @@ import FullscreenView from './FullscreenView';
 import Filename from './Filename';
 import TableView from './TableView';
 import FileActions from './FileActions';
-import { getLocalActions, getRemoteActions } from '../utils/contextMenuUtils';
+import {
+  getCommonActions,
+  getLocalActions,
+  getRemoteActions,
+} from '../utils/contextMenuUtils';
 
 const regularColumns = [
   'ispublic',
@@ -57,6 +61,21 @@ const MainView = ({ library, showAlert }) => {
   );
 
   const rerender = (_ = null) => setRerenderTimestamp(Date.now());
+
+  const deleteFile = (fileid: string) => {
+    corganizeClient
+      .deleteFile(fileid)
+      .then(() => {
+        // const i = renderBuffer.files.findIndex((f) => f.fileid === fileid);
+        // renderBuffer.files.splice(i, 1);
+        // return setFiles(renderBuffer.files);
+        // How do i delete a row?
+        return null;
+      })
+      .then(showAlert('file has been deleted'))
+      .then(rerender)
+      .catch(showAlert);
+  };
 
   const updateFile = (fileid: string, props) => {
     const file = renderBuffer.files.find((f) => f.fileid === fileid);
@@ -187,15 +206,7 @@ const MainView = ({ library, showAlert }) => {
     return [
       ...getLocalActions(file, library, rerender, showAlert),
       ...getRemoteActions(file, updateFile, rerender, showAlert),
-      {
-        label: 'Show Metadata',
-        onClick: () => {
-          setFullscreenComponent({
-            title: file.filename,
-            body: <pre>{JSON.stringify(file, null, 2)}</pre>,
-          });
-        },
-      },
+      ...getCommonActions(file, setFullscreenComponent, deleteFile),
     ];
   };
 
