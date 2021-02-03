@@ -56,15 +56,17 @@ const MainView = ({ library, showAlert }) => {
     new CorganizeClient(library.config.server)
   );
 
-  const rerender = () => setRerenderTimestamp(Date.now());
+  const rerender = (_ = null) => setRerenderTimestamp(Date.now());
 
   const updateFile = (fileid: string, props) => {
     const file = renderBuffer.files.find((f) => f.fileid === fileid);
     return corganizeClient
       .updateFile(fileid, props)
       .then((newFile) => Object.assign(file, newFile))
-      .then(rerender())
-      .then(showAlert('File has been updated'));
+      .then(rerender)
+      .then(() => {
+        return showAlert('File has been updated');
+      });
   };
 
   const toggleFav = (file) => {
@@ -77,10 +79,11 @@ const MainView = ({ library, showAlert }) => {
         } else {
           file.dateactivated = Date.now();
         }
-        return dateactivated ? 'unfavorited' : 'favorited';
+        const newValue = dateactivated ? 'unfavorited' : 'favorited';
+        return `The file has been ${newValue}`;
       })
-      .then((newValue: string) => showAlert(`The file has been ${newValue}`))
-      .then(rerender())
+      .then(showAlert)
+      .then(rerender)
       .catch(showAlert);
   };
 

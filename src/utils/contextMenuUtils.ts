@@ -55,7 +55,7 @@ export const getRemoteActions = (
       label: 'Copy Source URL',
       onClick: () =>
         copyTextToClipboard(sourceurl)
-          .then(rerenderRowData())
+          .then(rerenderRowData)
           .then(showAlert('Copied to clipboard')),
     });
   if (storageservice !== 'None')
