@@ -36,7 +36,7 @@ class CorganizeClient {
         .then((body) => {
           return [
             body?.metadata?.nexttoken,
-            body.files.filter((f) => f.ispublic !== false || f.locationref),
+            body.files.filter((f) => f.storageservice !== 'None'),
           ];
         })
         .then((transformedBody) => {
