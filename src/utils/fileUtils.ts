@@ -33,9 +33,11 @@ export const listDirRecursively = (dir: string, includeFolders = false) => {
   return new Promise((resolve, reject) => {
     getDirectories(dir, (error, response) => {
       if (error) reject(error);
-      resolve(response.filter(
-        (path) => includeFolders || !lstatSync(path).isDirectory()
-      ));
+      resolve(
+        response.filter(
+          (path) => includeFolders || !lstatSync(path).isDirectory()
+        )
+      );
     });
   });
 };
