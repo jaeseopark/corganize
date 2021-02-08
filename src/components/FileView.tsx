@@ -8,8 +8,7 @@ import { Document, Page } from 'react-pdf';
 import './FileView.scss';
 
 import ZipViewer from './ZipViewer';
-
-const FileType = require('file-type');
+import { guessMimetypeAsync } from '../utils/fileUtils';
 
 const FileView = ({ encryptedPath, aespassword, onDetectMimetype }) => {
   const decryptedPath = `${encryptedPath}.dec`;
@@ -27,11 +26,9 @@ const FileView = ({ encryptedPath, aespassword, onDetectMimetype }) => {
           aespassword,
         });
       }
-      // eslint-disable-next-line promise/catch-or-return
       decryptPromise
-        .then(() => FileType.fromFile(decryptedPath))
-        .then((result) => {
-          const mimetype = result?.mime;
+        .then(() => guessMimetypeAsync(decryptedPath))
+        .then((mimetype) => {
           if (mimetype) {
             onDetectMimetype(mimetype);
           }
@@ -53,7 +50,11 @@ const FileView = ({ encryptedPath, aespassword, onDetectMimetype }) => {
               return `Unsupported: ${mimetype}`;
           }
         })
-        .then((value) => setContent(value));
+        .then((value) => setContent(value))
+        .catch((error) => {
+          const errorString = JSON.stringify(error, null, 2);
+          setContent(<pre>{errorString}</pre>);
+        });
     }
   }, [content]);
 

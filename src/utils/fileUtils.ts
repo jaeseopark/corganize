@@ -1,6 +1,8 @@
 import { unlink, readdirSync, lstatSync, rmdirSync } from 'fs';
 import { glob } from 'glob';
 
+import FileType from 'file-type';
+
 const path = require('path');
 
 export const purgeDecryptedFiles = (dir: string) => {
@@ -36,4 +38,16 @@ export const listDirRecursively = (dir: string, includeFolders = false) => {
       ));
     });
   });
+};
+
+export const guessMimetypeAsync = (path) => {
+  return FileType.fromFile(path)
+    .then((result) => result?.mime)
+    .then((mimetype) => {
+      if (mimetype) return mimetype;
+      throw {
+        message: 'Could not detect the mime type',
+        path
+      };
+    });
 };
