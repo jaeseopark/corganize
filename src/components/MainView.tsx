@@ -110,7 +110,6 @@ const MainView = ({ library, showAlert }) => {
 
   const renderActions = ({ row }) => {
     const file = row.original;
-    const { fileid } = file;
     return (
       <FileActions
         file={file}
@@ -173,11 +172,18 @@ const MainView = ({ library, showAlert }) => {
 
   useEffect(() => {
     if (!files) {
+      const filterMoreFiles = (moreFiles) => {
+        if (!library.showDownloadableFilesOnly) return moreFiles;
+        return moreFiles.filter((f) => f.storageservice !== 'None');
+      };
+
       const progressCallback = (moreFiles) => {
-        moreFiles.forEach(file => {
+        moreFiles.forEach((file) => {
           file.encryptedPath = library.getEncryptedPath(file.fileid);
         });
-        renderBuffer.files = renderBuffer.files.concat(moreFiles);
+        renderBuffer.files = renderBuffer.files.concat(
+          filterMoreFiles(moreFiles)
+        );
         setFiles(renderBuffer.files);
       };
 

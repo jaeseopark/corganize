@@ -6,9 +6,14 @@ import Library from '../library';
 const LibrarySelector = ({ onLibraryChange }) => {
   const hiddenFileInput = useRef(null);
   const [selectedView, setSelectedView] = useState('active');
+  const [downloadableChecked, setDownloadableChecked] = useState(true);
 
   const onViewDropdownChange = (event) => {
     setSelectedView(event.target.value);
+  };
+
+  const onCheckboxChange = () => {
+    setDownloadableChecked(!downloadableChecked);
   };
 
   const onChangeFile = (event) => {
@@ -21,6 +26,7 @@ const LibrarySelector = ({ onLibraryChange }) => {
 
         const lib = new Library(JSON.parse(data));
         lib.view = selectedView;
+        lib.showDownloadableFilesOnly = downloadableChecked;
         onLibraryChange(lib);
       });
     }
@@ -30,28 +36,40 @@ const LibrarySelector = ({ onLibraryChange }) => {
   return (
     <div className="library-selection">
       <h2>Choose a Library</h2>
-      <div className="view-selection-container">
-        <select className="view-selection" onChange={onViewDropdownChange}>
-          <option value="active">Active</option>
-          <option value="recent">Recent</option>
-          <option value="incomplete">Incomplete</option>
-        </select>
+      <div>
+        <span className="view-selection-container">
+          <select className="view-selection" onChange={onViewDropdownChange}>
+            <option value="active">Active</option>
+            <option value="recent">Recent</option>
+            <option value="incomplete">Incomplete</option>
+          </select>
+        </span>
+        <span className="filter-downloadable-only">
+          <input
+            type="checkbox"
+            defaultChecked={downloadableChecked}
+            onChange={onCheckboxChange}
+          />
+          <span className="text">Show downloadable files only</span>
+        </span>
       </div>
-      <button
-        type="button"
-        className="btn btn-primary"
-        onClick={() => {
-          hiddenFileInput.current.click();
-        }}
-      >
-        Choose File
-      </button>
-      <input
-        type="file"
-        ref={hiddenFileInput}
-        onChange={onChangeFile}
-        style={{ display: 'none' }}
-      />
+      <div className="button-container">
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => {
+            hiddenFileInput.current.click();
+          }}
+        >
+          Choose File
+        </button>
+        <input
+          type="file"
+          ref={hiddenFileInput}
+          onChange={onChangeFile}
+          style={{ display: 'none' }}
+        />
+      </div>
     </div>
   );
 };

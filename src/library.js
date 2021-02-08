@@ -7,6 +7,7 @@ class Library {
   constructor(config) {
     this.config = config;
     this.view = null;
+    this.showDownloadableFilesOnly = null;
 
     if (!fs.existsSync(config.local.path)) {
       fs.mkdirSync(config.local.path);
