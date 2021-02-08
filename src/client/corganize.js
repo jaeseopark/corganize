@@ -34,10 +34,7 @@ class CorganizeClient {
       this.getFiles(path, paginationToken)
         .then((r) => r.json())
         .then((body) => {
-          return [
-            body?.metadata?.nexttoken,
-            body.files.filter((f) => f.storageservice !== 'None'),
-          ];
+          return [body?.metadata?.nexttoken, body.files];
         })
         .then((transformedBody) => {
           const [token, files] = transformedBody;
