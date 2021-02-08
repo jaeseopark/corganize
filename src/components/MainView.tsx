@@ -31,6 +31,7 @@ const regularColumns = [
   'sourceurl',
   'mimetype',
   'fileid',
+  'encryptedPath',
 ].map((id) => {
   return {
     id,
@@ -45,6 +46,7 @@ const hiddenColumns = [
   'ispublic',
   'mimetype',
   'fileid',
+  'encryptedPath',
 ];
 
 // MainView.state.files will grow in size as the data is retrieved via server side pagination.
@@ -112,7 +114,6 @@ const MainView = ({ library, showAlert }) => {
     return (
       <FileActions
         file={file}
-        encryptedPath={library.getEncryptedPath(fileid)}
         aespassword={library.config.local.aes.password}
         setFullscreenComponent={setFullscreenComponent}
         updateFile={updateFile}
@@ -173,6 +174,9 @@ const MainView = ({ library, showAlert }) => {
   useEffect(() => {
     if (!files) {
       const progressCallback = (moreFiles) => {
+        moreFiles.forEach(file => {
+          file.encryptedPath = library.getEncryptedPath(file.fileid);
+        });
         renderBuffer.files = renderBuffer.files.concat(moreFiles);
         setFiles(renderBuffer.files);
       };
@@ -204,7 +208,7 @@ const MainView = ({ library, showAlert }) => {
       renderBuffer.files.find((f) => f.fileid === inputFile.fileid) ||
       inputFile;
     return [
-      ...getLocalActions(file, library, rerender, showAlert),
+      ...getLocalActions(file, rerender, showAlert),
       ...getRemoteActions(file, updateFile, rerender, showAlert),
       ...getCommonActions(file, setFullscreenComponent, deleteFile),
     ];

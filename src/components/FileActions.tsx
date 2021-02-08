@@ -9,13 +9,12 @@ import FileView from './FileView';
 
 const FileActions = ({
   file,
-  encryptedPath,
   aespassword,
   setFullscreenComponent,
   showAlert,
   updateFile,
 }) => {
-  const { fileid, locationref, storageservice, filename, mimetype } = file;
+  const { fileid, locationref, storageservice, filename, mimetype, encryptedPath } = file;
   const [download] = useState({ percentage: null });
   const [, setRerenderTimestamp] = useState(null);
 

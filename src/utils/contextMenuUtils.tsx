@@ -5,14 +5,12 @@ import { existsSync, unlink } from 'fs';
 import { copyTextToClipboard } from './clipboardUtils';
 
 export const getLocalActions = (
-  { fileid },
-  library,
+  { fileid, encryptedPath },
   rerenderRowData,
   showAlert
 ) => {
   const localActions = [];
 
-  const encryptedPath = library.getEncryptedPath(fileid);
   if (existsSync(encryptedPath)) {
     localActions.push({
       label: 'Reveal',
