@@ -10,9 +10,15 @@ import './FileView.scss';
 import ZipViewer from './ZipViewer';
 import { guessMimetypeAsync } from '../utils/fileUtils';
 
-const FileView = ({ encryptedPath, aespassword, onDetectMimetype }) => {
+type FileViewProps = {
+  encryptedPath: string,
+  aespassword: string,
+  onDetectMimetype: Function
+};
+
+const FileView = ({ encryptedPath, aespassword, onDetectMimetype }: FileViewProps) => {
   const decryptedPath = `${encryptedPath}.dec`;
-  const [content, setContent] = useState(null);
+  const [content, setContent] = useState<Element | null>(null);
 
   useEffect(() => {
     if (!content) {
@@ -47,7 +53,8 @@ const FileView = ({ encryptedPath, aespassword, onDetectMimetype }) => {
             case 'application/zip':
               return <ZipViewer path={decryptedPath} />;
             default:
-              return `Unsupported: ${mimetype}`;
+              const msg = `Unsupported: ${mimetype}`;
+              return <span>{msg}</span>;
           }
         })
         .then((value) => setContent(value))

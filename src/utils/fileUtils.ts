@@ -25,7 +25,7 @@ export const purgeDecryptedFiles = (dir: string) => {
   );
 };
 
-const getDirectories = (src: string, callback) => {
+const getDirectories = (src: string, callback: Function) => {
   glob(`${src}/**/*`, callback);
 };
 
@@ -42,7 +42,7 @@ export const listDirRecursively = (dir: string, includeFolders = false) => {
   });
 };
 
-export const guessMimetypeAsync = (path) => {
+export const guessMimetypeAsync = (path: string) => {
   return FileType.fromFile(path)
     .then((result) => result?.mime)
     .then((mimetype) => {
