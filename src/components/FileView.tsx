@@ -35,6 +35,7 @@ const FileView = ({ encryptedPath, aespassword, onDetectMimetype }) => {
 
           switch (mimetype) {
             case 'video/mp4':
+            case 'video/x-matroska':
               return <ReactPlayer url={decryptedPath} controls muted playing />;
             case 'text/plain':
               return <pre>{readFileSync(decryptedPath)}</pre>;
