@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Carousel, { Modal, ModalGateway } from 'react-images';
-import { listDirRecursively } from '../utils/fileUtils';
+import { listDirAsync } from '../utils/fileUtils';
 import Button from './Button';
 
 import './ZipViewer.scss';
@@ -25,7 +25,7 @@ const ZipViewer = ({ path }) => {
       return;
     }
 
-    listDirRecursively(dir)
+    listDirAsync(dir, true)
       .then((fullPaths) => {
         return fullPaths.map((fullPath: string) => {
           const img = { source: `file://${fullPath}` };

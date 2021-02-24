@@ -1,7 +1,11 @@
 const fetch = require('node-fetch');
 
 class CorganizeClient {
-  constructor({ host, apikey }) {
+  host: string;
+
+  apikey: string;
+
+  constructor({ host, apikey }: CorganizeClientProps) {
     this.host = host;
     this.apikey = apikey;
   }
@@ -15,7 +19,11 @@ class CorganizeClient {
   }
 
   getIncompleteFilesWithPagination(progress, limit = null) {
-    return this.getFilesWithPagination('/Prod/files/incomplete', progress, limit);
+    return this.getFilesWithPagination(
+      '/Prod/files/incomplete',
+      progress,
+      limit
+    );
   }
 
   getFiles(path, nexttoken) {

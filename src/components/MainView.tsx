@@ -22,6 +22,7 @@ import {
   getLocalActions,
   getRemoteActions,
 } from '../utils/contextMenuUtils';
+import PurgeCenterLauncher from './PurgeCenterLauncher';
 
 const regularColumns = [
   'ispublic',
@@ -207,7 +208,7 @@ const MainView = ({ library, showAlert }) => {
         }
       }
     }
-  }, []);
+  }, [corganizeClient, files, library, showAlert]);
 
   const getConextMenuOptions = (inputFile) => {
     const file =
@@ -233,6 +234,12 @@ const MainView = ({ library, showAlert }) => {
           onClose={() => setFullscreenComponent(null)}
         />
       )}
+      <PurgeCenterLauncher
+        setFullscreenComponent={setFullscreenComponent}
+        isVisible={!fullscreenComponent}
+        files={files}
+        localPath={library.config.local.path}
+      />
       <GlobalFilter {...tableInstance} isVisible={!fullscreenComponent} />
       <DownloadCenter isVisible={!fullscreenComponent} />
       <TableView
