@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import fs from 'fs';
-import Library from '../library';
+import Library from '../entity/Library';
 
 const LibrarySelector = ({ onLibraryChange }) => {
   const hiddenFileInput = useRef(null);

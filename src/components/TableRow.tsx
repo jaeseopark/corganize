@@ -25,15 +25,26 @@ const TableRow = ({ row, prepareRow, getConextMenuOptions }) => {
 
   return (
     <tr {...row.getRowProps()}>
-      {row.cells.map((cell) => (
-        <td {...cell.getCellProps()} className={cell?.column?.id}>
-          <ContextMenuWrapper
-            id={row.original.fileid}
-            component={cell.render('Cell')}
-            options={getConextMenuOptions(row.original)}
-          />
-        </td>
-      ))}
+      {row.cells.map((cell) => {
+        let component;
+        if (cell.column.id === 'filename') {
+          component = (
+            <ContextMenuWrapper
+              id={row.original.fileid}
+              component={cell.render('Cell')}
+              options={getConextMenuOptions(row.original)}
+            />
+          );
+        } else {
+          component = cell.render('Cell');
+        }
+
+        return (
+          <td {...cell.getCellProps()} className={cell?.column?.id}>
+            {component}
+          </td>
+        );
+      })}
     </tr>
   );
 };

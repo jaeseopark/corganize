@@ -1,0 +1,58 @@
+import React, { useState } from 'react';
+import { File } from '../entity/File';
+import { deleteAllAsync, listDirAsync } from '../utils/fileUtils';
+import Button from './Button';
+
+type PurgeCenterProps = {
+  files: File[];
+  localPath: string;
+};
+
+const PurgeCenter = ({ files, localPath }: PurgeCenterProps) => {
+  const [lfnil, setLfnil] = useState<string[] | null>(null);
+  const [errorObj, setErrorObj] = useState(null);
+
+  const calculateLfnil = () => {
+    return listDirAsync(localPath, false)
+      .then((localFilePaths: string[]) => {
+        const pathsInLibrary = files
+          .filter((f) => f.storageservice && f.storageservice !== 'None')
+          .map((f) => f.encryptedPath);
+        return localFilePaths.filter(
+          (p) => p.endsWith('.aes') && !pathsInLibrary.includes(p)
+        );
+      })
+      .then((tmpLfnil) => setLfnil(tmpLfnil))
+      .catch(setErrorObj);
+  };
+  const purgeLfnil = () => {
+    const p = lfnil ? Promise.resolve() : calculateLfnil();
+    p.then(() => deleteAllAsync(lfnil))
+      .then(() => setLfnil([]))
+      .catch(setErrorObj);
+  };
+
+  const handleLfnilClick = () => {
+    if (lfnil) {
+      purgeLfnil();
+    } else {
+      calculateLfnil();
+    }
+  };
+
+  if (errorObj) {
+    return <span>{JSON.stringify(error, null, 2)}</span>;
+  }
+
+  const lfnilLabel = lfnil
+    ? `Purege ${lfnil.length} file(s)`
+    : 'Local files not in library';
+
+  return (
+    <Button onClick={handleLfnilClick} disabled={lfnil && lfnil.length === 0}>
+      {lfnilLabel}
+    </Button>
+  );
+};
+
+export default PurgeCenter;

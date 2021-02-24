@@ -12,7 +12,7 @@ import { guessMimetypeAsync } from '../utils/fileUtils';
 
 const FileView = ({ encryptedPath, aespassword, onDetectMimetype }) => {
   const decryptedPath = `${encryptedPath}.dec`;
-  const [content, setContent] = useState(null);
+  const [content, setContent] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!content) {
@@ -52,11 +52,11 @@ const FileView = ({ encryptedPath, aespassword, onDetectMimetype }) => {
         })
         .then((value) => setContent(value))
         .catch((error) => {
-          const errorString = JSON.stringify(error, null, 2);
-          setContent(<pre>{errorString}</pre>);
+          const preformatted = <pre>{JSON.stringify(error, null, 2)}</pre>;
+          setContent(preformatted);
         });
     }
-  }, [content]);
+  }, [aespassword, content, decryptedPath, encryptedPath, onDetectMimetype]);
 
   return content || <span>Decrypting...</span>;
 };

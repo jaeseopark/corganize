@@ -16,7 +16,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import GdriveClient from './client/gdrive';
-import Library from './library';
+import Library from './entity/Library';
 import { purgeDecryptedFiles } from './utils/fileUtils';
 import { handleDecrypt, handleDownload } from './main.dev.handlers';
 
@@ -30,8 +30,8 @@ export default class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-let library = null;
-let gdriveClient = null;
+let library: Library | null = null;
+let gdriveClient: GdriveClient | null = null;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
