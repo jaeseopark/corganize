@@ -3,10 +3,7 @@ export type CorganizeClientProps = {
   apikey: string;
 };
 
-export type StorageServiceConfigProps = {
-
-};
-
-export type LocalConfigProps = {
-
+export type ContextMenuOption = {
+  label: string;
+  onClick: Function;
 };

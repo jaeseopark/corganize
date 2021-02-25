@@ -3,13 +3,15 @@ import os from 'os';
 import { exec } from 'child_process';
 import { existsSync, unlink } from 'fs';
 import { copyTextToClipboard } from './clipboardUtils';
+import { File } from '../entity/File';
+import { ContextMenuOption } from '../entity/props';
 
 export const getLocalActions = (
-  { fileid, encryptedPath },
+  { encryptedPath }: File,
   rerenderRowData,
   showAlert
-) => {
-  const localActions = [];
+): ContextMenuOption[] => {
+  const localActions: ContextMenuOption[] = [];
 
   if (existsSync(encryptedPath)) {
     localActions.push({
@@ -43,12 +45,12 @@ export const getLocalActions = (
 };
 
 export const getRemoteActions = (
-  { fileid, sourceurl, storageservice },
+  { fileid, sourceurl, storageservice }: File,
   updateFile,
   rerenderRowData,
   showAlert
-) => {
-  const remoetActions = [];
+): ContextMenuOption[] => {
+  const remoetActions: ContextMenuOption[] = [];
   if (sourceurl)
     remoetActions.push({
       label: 'Copy Source URL',
@@ -66,7 +68,11 @@ export const getRemoteActions = (
   return remoetActions;
 };
 
-export const getCommonActions = (file, setFullscreenComponent, deleteFile) => {
+export const getCommonActions = (
+  file: File,
+  setFullscreenComponent,
+  deleteFile
+): ContextMenuOption[] => {
   return [
     {
       label: 'Show Metadata',

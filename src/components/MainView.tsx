@@ -23,6 +23,8 @@ import {
   getRemoteActions,
 } from '../utils/contextMenuUtils';
 import PurgeCenterLauncher from './PurgeCenterLauncher';
+import { File } from '../entity/File';
+import { ContextMenuOption } from '../entity/props';
 
 const regularColumns = [
   'ispublic',
@@ -80,18 +82,18 @@ const MainView = ({ library, showAlert }) => {
       .catch(showAlert);
   };
 
-  const updateFile = (fileid: string, props) => {
-    const file = renderBuffer.files.find((f) => f.fileid === fileid);
+  const updateFile = (fileid: string, props: File) => {
+    const file = renderBuffer.files.find((f: File) => f.fileid === fileid);
     return corganizeClient
       .updateFile(fileid, props)
-      .then((newFile) => Object.assign(file, newFile))
+      .then((newFile: File) => Object.assign(file, newFile))
       .then(rerender)
       .then(() => {
         return showAlert('File has been updated');
       });
   };
 
-  const toggleFav = (file) => {
+  const toggleFav = (file: File) => {
     const { fileid, dateactivated } = file;
     corganizeClient
       .updateFile(fileid, { isactive: !dateactivated })
@@ -210,9 +212,9 @@ const MainView = ({ library, showAlert }) => {
     }
   }, [corganizeClient, files, library, showAlert]);
 
-  const getConextMenuOptions = (inputFile) => {
+  const getConextMenuOptions = (inputFile: File): ContextMenuOption[] => {
     const file =
-      renderBuffer.files.find((f) => f.fileid === inputFile.fileid) ||
+      renderBuffer.files.find((f: File) => f.fileid === inputFile.fileid) ||
       inputFile;
     return [
       ...getLocalActions(file, rerender, showAlert),

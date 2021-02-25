@@ -3,7 +3,7 @@
 /**
  * https://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript
  */
-export const copyTextToClipboard = (text) => {
+export const copyTextToClipboard = (text: string) => {
   return navigator.clipboard
     .writeText(text)
     .then(() => true)
