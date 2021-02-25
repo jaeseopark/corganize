@@ -8,7 +8,7 @@ const relativeTime = require('dayjs/plugin/relativeTime');
 
 dayjs.extend(relativeTime);
 
-const htmlDecode = (input) => {
+const htmlDecode = (input: string) => {
   return new DOMParser().parseFromString(input, 'text/html').body.textContent;
 };
 

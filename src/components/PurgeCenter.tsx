@@ -41,7 +41,7 @@ const PurgeCenter = ({ files, localPath }: PurgeCenterProps) => {
   };
 
   if (errorObj) {
-    return <span>{JSON.stringify(error, null, 2)}</span>;
+    return <span>{JSON.stringify(errorObj, null, 2)}</span>;
   }
 
   const lfnilLabel = lfnil

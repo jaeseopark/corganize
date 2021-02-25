@@ -3,6 +3,12 @@ import { ContextMenu, MenuItem, ContextMenuTrigger } from 'react-contextmenu';
 
 import './ContextMenuWrapper.scss';
 
+type ContextMenuWrapperProps = {
+  id: string;
+  component: HTMLElement;
+  options: any[];
+};
+
 const attributes = {
   className: 'custom-root',
   disabledClassName: 'custom-disabled',
@@ -10,7 +16,11 @@ const attributes = {
   selectedClassName: 'custom-selected',
 };
 
-const ContextMenuWrapper = ({ id, component, options }) => {
+const ContextMenuWrapper = ({
+  id,
+  component,
+  options,
+}: ContextMenuWrapperProps) => {
   return (
     <>
       <ContextMenuTrigger id={id}>{component}</ContextMenuTrigger>

@@ -10,7 +10,17 @@ import './FileView.scss';
 import ZipViewer from './ZipViewer';
 import { guessMimetypeAsync } from '../utils/fileUtils';
 
-const FileView = ({ encryptedPath, aespassword, onDetectMimetype }) => {
+type FileViewProps = {
+  encryptedPath: string;
+  aespassword: string;
+  onDetectMimetype;
+};
+
+const FileView = ({
+  encryptedPath,
+  aespassword,
+  onDetectMimetype,
+}: FileViewProps) => {
   const decryptedPath = `${encryptedPath}.dec`;
   const [content, setContent] = useState<HTMLElement | null>(null);
 
