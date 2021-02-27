@@ -25,6 +25,7 @@ import {
 import PurgeCenterLauncher from './PurgeCenterLauncher';
 import { File } from '../entity/File';
 import { ContextMenuOption } from '../entity/props';
+import { htmlDecode } from '../utils/stringUtils';
 
 const regularColumns = [
   'ispublic',
@@ -183,6 +184,7 @@ const MainView = ({ library, showAlert }) => {
       const progressCallback = (moreFiles) => {
         moreFiles.forEach((file) => {
           file.encryptedPath = library.getEncryptedPath(file.fileid);
+          file.filename = htmlDecode(file.filename);
         });
         renderBuffer.files = renderBuffer.files.concat(
           filterMoreFiles(moreFiles)
