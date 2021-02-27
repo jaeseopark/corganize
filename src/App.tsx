@@ -25,9 +25,7 @@ const Corganize = () => {
 
   const showAlert = (el, timeout = 2000) => {
     if (!renderBuffer.alertContent) {
-      closeTimeoutId = setTimeout(() => {
-        closeAlert();
-      }, timeout);
+      closeTimeoutId = setTimeout(closeAlert, timeout);
       setAlertContent(el);
       renderBuffer.alertContent = el;
     } else {
