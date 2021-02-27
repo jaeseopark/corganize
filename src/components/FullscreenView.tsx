@@ -1,7 +1,13 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
 
-const FullscreenView = ({ onClose, title, content }) => {
+type FullscreenViewProps = {
+  onClose: Function;
+  title: HTMLElement;
+  content: HTMLElement;
+};
+
+const FullscreenView = ({ onClose, title, content }: FullscreenViewProps) => {
   const onKeyUp = (event) => {
     if (event.key === 'q') {
       onClose();

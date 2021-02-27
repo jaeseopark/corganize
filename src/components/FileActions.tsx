@@ -5,6 +5,7 @@ import { existsSync } from 'fs';
 import React, { useEffect, useState } from 'react';
 
 import Button from './Button';
+import ContextMenuWrapper from './ContextMenuWrapper';
 import FileView from './FileView';
 
 const FileActions = ({
@@ -13,8 +14,16 @@ const FileActions = ({
   setFullscreenComponent,
   showAlert,
   updateFile,
+  getConextMenuOptions,
 }) => {
-  const { fileid, locationref, storageservice, filename, mimetype, encryptedPath } = file;
+  const {
+    fileid,
+    locationref,
+    storageservice,
+    filename,
+    mimetype,
+    encryptedPath,
+  } = file;
   const [download] = useState({ percentage: null });
   const [, setRerenderTimestamp] = useState(null);
 
@@ -50,7 +59,13 @@ const FileActions = ({
     };
 
     setFullscreenComponent({
-      title: filename,
+      title: (
+        <ContextMenuWrapper
+          id="fileview-title"
+          component={<span>{filename}</span>}
+          options={getConextMenuOptions(file)}
+        />
+      ),
       body: (
         <FileView
           encryptedPath={encryptedPath}

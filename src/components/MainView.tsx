@@ -98,18 +98,30 @@ const MainView = ({ library, showAlert }) => {
     const { fileid, dateactivated } = file;
     corganizeClient
       .updateFile(fileid, { isactive: !dateactivated })
-      .then(() => {
+      .then((newFile: File) => {
         if (dateactivated) {
           delete file.dateactivated;
         } else {
           file.dateactivated = Date.now();
         }
+        file.lastupdated = newFile.lastupdated;
         const newValue = dateactivated ? 'unfavorited' : 'favorited';
         return `The file has been ${newValue}`;
       })
       .then(showAlert)
       .then(rerender)
       .catch(showAlert);
+  };
+
+  const getConextMenuOptions = (inputFile: File): ContextMenuOption[] => {
+    const file =
+      renderBuffer.files.find((f: File) => f.fileid === inputFile.fileid) ||
+      inputFile;
+    return [
+      ...getLocalActions(file, rerender, showAlert),
+      ...getRemoteActions(file, updateFile, rerender, showAlert),
+      ...getCommonActions(file, setFullscreenComponent, toggleFav, deleteFile),
+    ];
   };
 
   const renderActions = ({ row }) => {
@@ -119,6 +131,7 @@ const MainView = ({ library, showAlert }) => {
         file={file}
         aespassword={library.config.local.aes.password}
         setFullscreenComponent={setFullscreenComponent}
+        getConextMenuOptions={getConextMenuOptions}
         updateFile={updateFile}
         showAlert={showAlert}
       />
@@ -213,17 +226,6 @@ const MainView = ({ library, showAlert }) => {
       }
     }
   }, [corganizeClient, files, library, showAlert]);
-
-  const getConextMenuOptions = (inputFile: File): ContextMenuOption[] => {
-    const file =
-      renderBuffer.files.find((f: File) => f.fileid === inputFile.fileid) ||
-      inputFile;
-    return [
-      ...getLocalActions(file, rerender, showAlert),
-      ...getRemoteActions(file, updateFile, rerender, showAlert),
-      ...getCommonActions(file, setFullscreenComponent, deleteFile),
-    ];
-  };
 
   if (!files) {
     return <h2 className="center">Loading...</h2>;
