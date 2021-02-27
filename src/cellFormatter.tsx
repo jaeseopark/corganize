@@ -3,14 +3,11 @@ import React from 'react';
 import dayjs from 'dayjs';
 
 import { humanFileSize } from './utils/numberUtils';
+import { htmlDecode } from './utils/stringUtils';
 
 const relativeTime = require('dayjs/plugin/relativeTime');
 
 dayjs.extend(relativeTime);
-
-const htmlDecode = (input: string) => {
-  return new DOMParser().parseFromString(input, 'text/html').body.textContent;
-};
 
 export default function format(props) {
   const { value, column } = props;
