@@ -13,12 +13,19 @@ const Corganize = () => {
 
   useEffect(() => {}, [library]);
 
+  let closeTimeoutId: number | null = null;
+
+  const closeAlert = (shouldClearTimeout = false) => {
+    if (shouldClearTimeout) {
+      clearTimeout(closeTimeoutId);
+    }
+    setAlertContent(null);
+    renderBuffer.alertContent = null;
+  };
+
   const showAlert = (el, timeout = 2000) => {
     if (!renderBuffer.alertContent) {
-      setTimeout(() => {
-        setAlertContent(null);
-        renderBuffer.alertContent = null;
-      }, timeout);
+      closeTimeoutId = setTimeout(closeAlert, timeout);
       setAlertContent(el);
       renderBuffer.alertContent = el;
     } else {
@@ -39,7 +46,11 @@ const Corganize = () => {
   return (
     <>
       {alertContent && (
-        <div className="alert alert-light" role="alert">
+        <div
+          className="alert alert-light"
+          role="alert"
+          onClick={() => closeAlert(true)}
+        >
           {alertContent}
         </div>
       )}
