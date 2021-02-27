@@ -4,4 +4,5 @@ export type File = {
   encryptedPath: string;
   sourceurl: string;
   dateactivated: number | null | undefined;
+  lastupdated: number;
 };

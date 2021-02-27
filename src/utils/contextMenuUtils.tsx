@@ -71,9 +71,14 @@ export const getRemoteActions = (
 export const getCommonActions = (
   file: File,
   setFullscreenComponent,
+  toggleFav,
   deleteFile
 ): ContextMenuOption[] => {
   return [
+    {
+      label: 'Toggle Favourite',
+      onClick: () => toggleFav(file),
+    },
     {
       label: 'Show Metadata',
       onClick: () => {
@@ -85,9 +90,7 @@ export const getCommonActions = (
     },
     {
       label: 'Delete',
-      onClick: () => {
-        deleteFile(file.fileid);
-      },
+      onClick: () => deleteFile(file.fileid),
     },
   ];
 };
