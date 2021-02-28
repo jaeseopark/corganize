@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactPlayer from 'react-player';
 import { existsSync, readFileSync } from 'fs';
 import { ipcRenderer } from 'electron';
@@ -9,6 +9,14 @@ import './FileView.scss';
 
 import ZipViewer from './ZipViewer';
 import { guessMimetypeAsync } from '../utils/fileUtils';
+
+const getInnermostChild = (el: HTMLElement) => {
+  if (el.children.length === 0) {
+    return el;
+  }
+  const [child] = el.children;
+  return getInnermostChild(child);
+};
 
 type FileViewProps = {
   encryptedPath: string;
@@ -23,6 +31,7 @@ const FileView = ({
 }: FileViewProps) => {
   const decryptedPath = `${encryptedPath}.dec`;
   const [content, setContent] = useState<HTMLElement | null>(null);
+  const contentRef = useRef(null);
 
   useEffect(() => {
     if (!content) {
@@ -67,9 +76,15 @@ const FileView = ({
           setContent(preformatted);
         });
     }
+
+    if (contentRef?.current) {
+      const child = getInnermostChild(contentRef.current);
+      child.focus();
+    }
   }, [aespassword, content, decryptedPath, encryptedPath, onDetectMimetype]);
 
-  return content || <span>Decrypting...</span>;
+  const contentToDisplay: HTMLElement = content || <span>Decrypting...</span>;
+  return <div ref={contentRef}>{contentToDisplay}</div>;
 };
 
 export default FileView;
