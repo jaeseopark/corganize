@@ -3,12 +3,12 @@ import Carousel, { Modal, ModalGateway } from 'react-images';
 import { listDirAsync } from '../utils/fileUtils';
 import Button from './Button';
 
-import './ZipViewer.scss';
-import ZipViewerHotkeyHelper from './ZipViewerHotkeyHelper';
+import './ZipView.scss';
+import ZipViewHotkeyHelper from './ZipViewHotkeyHelper';
 
 const AdmZip = require('adm-zip');
 
-const ZipViewer = ({ path }) => {
+const ZipView = ({ path }) => {
   const [images, setImages] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const [modalIsOpen, setModalIsOpen] = useState(true);
@@ -84,7 +84,7 @@ const ZipViewer = ({ path }) => {
   };
 
   return (
-    <div className="zip-viewer" onKeyUp={onKeyUp}>
+    <div className="zip-view" onKeyUp={onKeyUp}>
       <ModalGateway>
         {modalIsOpen && (
           <Modal onClose={() => setModalIsOpen(!modalIsOpen)}>
@@ -97,9 +97,9 @@ const ZipViewer = ({ path }) => {
         )}
       </ModalGateway>
       <Button onClick={() => setModalIsOpen(true)}>Open Lightbox</Button>
-      <ZipViewerHotkeyHelper />
+      <ZipViewHotkeyHelper />
     </div>
   );
 };
 
-export default ZipViewer;
+export default ZipView;
