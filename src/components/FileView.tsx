@@ -1,14 +1,14 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useRef, useState } from 'react';
-import ReactPlayer from 'react-player';
 import { existsSync, readFileSync } from 'fs';
 import { ipcRenderer } from 'electron';
 import { Document, Page } from 'react-pdf';
 
 import './FileView.scss';
 
-import ZipViewer from './ZipViewer';
+import ZipView from './ZipView';
 import { guessMimetypeAsync } from '../utils/fileUtils';
+import VideoView from './VideoView';
 
 const getInnermostChild = (el: HTMLElement) => {
   if (el.children.length === 0) {
@@ -55,7 +55,7 @@ const FileView = ({
           switch (mimetype) {
             case 'video/mp4':
             case 'video/x-matroska':
-              return <ReactPlayer url={decryptedPath} controls muted playing />;
+              return <VideoView path={decryptedPath} />;
             case 'text/plain':
               return <pre>{readFileSync(decryptedPath)}</pre>;
             case 'application/pdf':
@@ -65,7 +65,7 @@ const FileView = ({
                 </Document>
               );
             case 'application/zip':
-              return <ZipViewer path={decryptedPath} />;
+              return <ZipView path={decryptedPath} />;
             default:
               return `Unsupported: ${mimetype}`;
           }

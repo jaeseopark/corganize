@@ -10,7 +10,7 @@ const keyAssignment = {
   esc: 'quit',
 };
 
-const ZipViewerHotkeyHelper = () => (
+const ZipViewHotkeyHelper = () => (
   <table className="helper">
     <tbody>
       {Object.keys(keyAssignment).map((key) => {
@@ -28,4 +28,4 @@ const ZipViewerHotkeyHelper = () => (
   </table>
 );
 
-export default ZipViewerHotkeyHelper;
+export default ZipViewHotkeyHelper;
