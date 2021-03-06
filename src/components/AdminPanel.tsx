@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { File } from '../entity/File';
 import { deleteAllAsync, listDirAsync } from '../utils/fileUtils';
+import { humanFileSize } from '../utils/numberUtils';
 import Button from './Button';
 
-type PurgeCenterProps = {
+type AdminPanelProps = {
   files: File[];
   localPath: string;
 };
 
-const PurgeCenter = ({ files, localPath }: PurgeCenterProps) => {
+const AdminPanel = ({ files, localPath }: AdminPanelProps) => {
   const [lfnil, setLfnil] = useState<string[] | null>(null);
   const [errorObj, setErrorObj] = useState(null);
 
@@ -48,11 +49,18 @@ const PurgeCenter = ({ files, localPath }: PurgeCenterProps) => {
     ? `Purege ${lfnil.length} file(s)`
     : 'Local files not in library';
 
+  const total_bytes = files.reduce((total, file: File) => total + file.size, 0);
+
   return (
-    <Button onClick={handleLfnilClick} disabled={lfnil && lfnil.length === 0}>
-      {lfnilLabel}
-    </Button>
+    <div>
+      <div>
+        <span>{humanFileSize(total_bytes)}</span>
+      </div>
+      <Button onClick={handleLfnilClick} disabled={lfnil && lfnil.length === 0}>
+        {lfnilLabel}
+      </Button>
+    </div>
   );
 };
 
-export default PurgeCenter;
+export default AdminPanel;

@@ -22,7 +22,7 @@ import {
   getLocalActions,
   getRemoteActions,
 } from '../utils/contextMenuUtils';
-import PurgeCenterLauncher from './PurgeCenterLauncher';
+import AdminPanelLauncher from './AdminPanelLauncher';
 import { File } from '../entity/File';
 import { ContextMenuOption } from '../entity/props';
 import { htmlDecode } from '../utils/stringUtils';
@@ -240,7 +240,7 @@ const MainView = ({ library, showAlert }) => {
           onClose={() => setFullscreenComponent(null)}
         />
       )}
-      <PurgeCenterLauncher
+      <AdminPanelLauncher
         setFullscreenComponent={setFullscreenComponent}
         isVisible={!fullscreenComponent}
         files={files}
