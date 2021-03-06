@@ -60,6 +60,7 @@ const renderBuffer = { files: [] };
 
 const MainView = ({ library, showAlert }) => {
   const [files, setFiles] = useState(null);
+  const [allFilesLoaded, setAllFilesLoaded] = useState(false);
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
   const [fullscreenComponent, setFullscreenComponent] = useState(null);
   const [corganizeClient] = useState(
@@ -205,25 +206,28 @@ const MainView = ({ library, showAlert }) => {
         setFiles(renderBuffer.files);
       };
 
+      let promise;
       switch (library.view) {
         case 'recent': {
           const limit = 20000;
-          corganizeClient.getRecentFilesWithPagination(progressCallback, limit);
+          promise = corganizeClient.getRecentFilesWithPagination(progressCallback, limit);
           break;
         }
         case 'active': {
-          corganizeClient.getActiveFilesWithPagination(progressCallback);
+          promise = corganizeClient.getActiveFilesWithPagination(progressCallback);
           break;
         }
         case 'incomplete': {
-          corganizeClient.getIncompleteFilesWithPagination(progressCallback);
+          promise = corganizeClient.getIncompleteFilesWithPagination(progressCallback);
           break;
         }
         default: {
           showAlert(`Invalid view: ${library.view}`);
-          break;
+          return;
         }
       }
+
+      promise?.then(() => setAllFilesLoaded(true));
     }
   }, [corganizeClient, files, library, showAlert]);
 
@@ -242,7 +246,7 @@ const MainView = ({ library, showAlert }) => {
       )}
       <AdminPanelLauncher
         setFullscreenComponent={setFullscreenComponent}
-        isVisible={!fullscreenComponent}
+        isVisible={allFilesLoaded && !fullscreenComponent}
         files={files}
         localPath={library.config.local.path}
       />

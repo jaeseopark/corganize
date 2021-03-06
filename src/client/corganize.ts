@@ -10,20 +10,16 @@ class CorganizeClient {
     this.apikey = apikey;
   }
 
-  getRecentFilesWithPagination(progress, limit = null) {
-    return this.getFilesWithPagination('/Prod/files', progress, limit);
+  getRecentFilesWithPagination(cb, limit = null) {
+    return this.getFilesWithPagination('/Prod/files', cb, limit);
   }
 
-  getActiveFilesWithPagination(progress, limit = null) {
-    return this.getFilesWithPagination('/Prod/files/active', progress, limit);
+  getActiveFilesWithPagination(cb, limit = null) {
+    return this.getFilesWithPagination('/Prod/files/active', cb, limit);
   }
 
-  getIncompleteFilesWithPagination(progress, limit = null) {
-    return this.getFilesWithPagination(
-      '/Prod/files/incomplete',
-      progress,
-      limit
-    );
+  getIncompleteFilesWithPagination(cb, limit = null) {
+    return this.getFilesWithPagination('/Prod/files/incomplete', cb, limit);
   }
 
   getFiles(path, nexttoken) {
