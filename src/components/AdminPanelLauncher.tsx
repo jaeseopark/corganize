@@ -1,15 +1,15 @@
 import React from 'react';
 import classNames from 'classnames';
 import Button from './Button';
-import PurgeCenter from './PurgeCenter';
+import AdminPanel from './AdminPanel';
 
-const PurgeCenterLauncher = ({
+const AdminPanelLauncher = ({
   setFullscreenComponent,
   isVisible,
   files,
   localPath,
 }) => {
-  const className = classNames('purge-center', {
+  const className = classNames('admin-panel', {
     hidden: !isVisible,
   });
 
@@ -18,14 +18,14 @@ const PurgeCenterLauncher = ({
       className={className}
       onClick={() =>
         setFullscreenComponent({
-          title: 'Purge Center',
-          body: <PurgeCenter files={files} localPath={localPath} />,
+          title: 'Admin Panel',
+          body: <AdminPanel files={files} localPath={localPath} />,
         })
       }
     >
-      Purge
+      Admin
     </Button>
   );
 };
 
-export default PurgeCenterLauncher;
+export default AdminPanelLauncher;
