@@ -19,12 +19,13 @@ const VideoView = ({ path }) => {
   };
 
   const onKeyUp = (event) => {
-    if (event.key === 'f') {
+    const key = event.key.toLowerCase();
+    if (key === 'f') {
       if (screenfull.isEnabled) {
         screenfull.toggle(el.current);
       }
-    } else if (isHotkey(event.key)) {
-      jumpTime(TIME_HOTKEY_MAP[event.key]);
+    } else if (isHotkey(key)) {
+      jumpTime(TIME_HOTKEY_MAP[key]);
     }
   };
 
