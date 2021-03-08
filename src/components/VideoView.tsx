@@ -24,6 +24,8 @@ const VideoView = ({ path }) => {
       if (screenfull.isEnabled) {
         screenfull.toggle(el.current);
       }
+    } else if (key === 'm') {
+      el.current.muted = !el.current.muted;
     } else if (isHotkey(key)) {
       jumpTime(TIME_HOTKEY_MAP[key]);
     }
