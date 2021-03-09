@@ -49,7 +49,7 @@ const AdminPanel = ({ files, localPath }: AdminPanelProps) => {
     ? `Purege ${lfnil.length} file(s)`
     : 'Local files not in library';
 
-  const total_bytes = files.reduce((total, file: File) => total + file.size, 0);
+  const total_bytes = files.reduce((sum, f: File) => sum + (f.size || 0), 0);
 
   return (
     <div>
