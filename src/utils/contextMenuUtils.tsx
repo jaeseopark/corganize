@@ -15,7 +15,7 @@ export const getLocalActions = (
 
   if (existsSync(encryptedPath)) {
     localActions.push({
-      label: 'Reveal',
+      label: 'Reveal (R)',
       onClick: () => {
         switch (os.platform()) {
           case 'win32':
@@ -25,9 +25,10 @@ export const getLocalActions = (
             throw new Error('Not Implemented');
         }
       },
+      hotkey: 'r',
     });
     localActions.push({
-      label: 'Delete Local File',
+      label: 'Delete Local File (E)',
       onClick: () =>
         unlink(encryptedPath, (error) => {
           if (error) {
@@ -37,6 +38,7 @@ export const getLocalActions = (
           rerenderRowData();
           showAlert('The local file has been deleted');
         }),
+      hotkey: 'e',
     });
   }
 
@@ -61,8 +63,9 @@ export const getRemoteActions = (
     });
   if (storageservice !== 'None')
     remoetActions.push({
-      label: 'Delete Remote File',
+      label: 'Delete Remote File (D)',
       onClick: () => updateFile(fileid, { storageservice: 'None' }),
+      hotkey: 'd',
     });
   if (remoetActions.length > 0) remoetActions.push(null);
   return remoetActions;
@@ -76,8 +79,9 @@ export const getCommonActions = (
 ): ContextMenuOption[] => {
   return [
     {
-      label: 'Toggle Favourite',
+      label: 'Toggle Favourite (A)',
       onClick: () => toggleFav(file),
+      hotkey: 'a',
     },
     {
       label: 'Show Metadata',

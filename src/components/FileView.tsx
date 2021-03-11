@@ -9,6 +9,8 @@ import './FileView.scss';
 import ZipView from './ZipView';
 import { guessMimetypeAsync } from '../utils/fileUtils';
 import VideoView from './VideoView';
+import { ContextMenuOption } from '../entity/props';
+import ContextMenuWrapper from './ContextMenuWrapper';
 
 const getInnermostChild = (el: HTMLElement) => {
   if (el.children.length === 0) {
@@ -21,13 +23,15 @@ const getInnermostChild = (el: HTMLElement) => {
 type FileViewProps = {
   encryptedPath: string;
   aespassword: string;
-  onDetectMimetype;
+  onDetectMimetype: Function;
+  contextMenuOptions: ContextMenuOption[];
 };
 
 const FileView = ({
   encryptedPath,
   aespassword,
   onDetectMimetype,
+  contextMenuOptions,
 }: FileViewProps) => {
   const decryptedPath = `${encryptedPath}.dec`;
   const [content, setContent] = useState<HTMLElement | null>(null);
@@ -84,7 +88,14 @@ const FileView = ({
   }, [aespassword, content, decryptedPath, encryptedPath, onDetectMimetype]);
 
   const contentToDisplay: HTMLElement = content || <span>Decrypting...</span>;
-  return <div ref={contentRef}>{contentToDisplay}</div>;
+  const contentWrapper = <div ref={contentRef}>{contentToDisplay}</div>;
+  return (
+    <ContextMenuWrapper
+      id="fileview-body"
+      component={contentWrapper}
+      options={contextMenuOptions}
+    />
+  );
 };
 
 export default FileView;
