@@ -67,12 +67,12 @@ const FileView = ({
             case 'application/zip':
               return <ZipView path={decryptedPath} />;
             default:
-              return `Unsupported: ${mimetype}`;
+              return <span tabIndex="1">{`Unsupported: ${mimetype}`}</span>;
           }
         })
         .then((value) => setContent(value))
         .catch((error) => {
-          const preformatted = <pre>{JSON.stringify(error, null, 2)}</pre>;
+          const preformatted = <pre tabIndex="1">{JSON.stringify(error, null, 2)}</pre>;
           setContent(preformatted);
         });
     }
