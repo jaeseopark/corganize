@@ -21,8 +21,23 @@ const ContextMenuWrapper = ({
   component,
   options,
 }: ContextMenuWrapperProps) => {
+  const optionsWithHotkeys = options
+    .filter((option) => option && option.hotkey)
+    .reduce((map, obj) => {
+      map[obj.hotkey.toLowerCase()] = obj.onClick;
+      return map;
+    }, {});
+
+  const onKeyUp = (event) => {
+    const key = event.key.toLowerCase();
+    const onClick = optionsWithHotkeys[key];
+    if (onClick) {
+      onClick();
+    }
+  };
+
   return (
-    <>
+    <div onKeyUp={onKeyUp}>
       <ContextMenuTrigger id={id}>{component}</ContextMenuTrigger>
       <ContextMenu id={id}>
         {options.map((option) => {
@@ -36,7 +51,7 @@ const ContextMenuWrapper = ({
           );
         })}
       </ContextMenu>
-    </>
+    </div>
   );
 };
 

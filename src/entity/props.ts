@@ -6,4 +6,5 @@ export type CorganizeClientProps = {
 export type ContextMenuOption = {
   label: string;
   onClick: Function;
+  hotkey?: string;
 };

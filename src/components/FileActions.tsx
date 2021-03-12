@@ -58,12 +58,14 @@ const FileActions = ({
       }
     };
 
+    const contextMenuOptions = getConextMenuOptions(file);
+
     setFullscreenComponent({
       title: (
         <ContextMenuWrapper
           id="fileview-title"
           component={<span>{filename}</span>}
-          options={getConextMenuOptions(file)}
+          options={contextMenuOptions}
         />
       ),
       body: (
@@ -71,6 +73,7 @@ const FileActions = ({
           encryptedPath={encryptedPath}
           aespassword={aespassword}
           onDetectMimetype={onDetectMimetype}
+          contextMenuOptions={contextMenuOptions}
         />
       ),
     });
