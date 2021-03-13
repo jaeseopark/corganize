@@ -14,10 +14,11 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import { existsSync } from 'fs';
 import MenuBuilder from './menu';
 import GdriveClient from './client/gdrive';
 import Library from './entity/Library';
-import { purgeDecryptedFiles } from './utils/fileUtils';
+import { purgeDecryptedFiles as purgeTmpFiles } from './utils/fileUtils';
 import { handleDecrypt, handleDownload } from './main.dev.handlers';
 
 export default class AppUpdater {
@@ -132,19 +133,16 @@ const createWindow = async () => {
  */
 
 app.on('window-all-closed', () => {
-  if (!library) {
+  const tmpPath = library?.getTmpPath();
+  if (!library || !existsSync(tmpPath)) {
     appQuitWrapper();
     return;
   }
 
-  setTimeout(
-    () =>
-      // Wait 1.5 seconds for files to close gracefully, delete the files and then call .appQuitWrapper().
-      purgeDecryptedFiles(library.config.local.path)
-        .then((results) => results.forEach((result) => console.log(result)))
-        .finally(appQuitWrapper),
-    1500
-  );
+  purgeTmpFiles(tmpPath)
+    .then((results) => results.forEach((result) => console.log(result)))
+    .finally(appQuitWrapper)
+    .catch(alert);
 });
 
 app.whenReady().then(createWindow).catch(console.log);

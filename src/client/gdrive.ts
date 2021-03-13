@@ -1,4 +1,5 @@
 import { renameSync } from 'fs';
+import { createParentPath } from '../utils/fileUtils';
 
 /* eslint-disable import/prefer-default-export */
 const fs = require('fs');
@@ -65,7 +66,7 @@ class GdriveClient {
     });
   }
 
-  async downloadFileAsync(fileId: string, localPath: string, progressCallback) {
+  async downloadFileAsync(fileId: string, localPath: string, tmpLocalPath: string, progressCallback) {
     google.options({ auth: this.getOAuthClient() });
 
     const res = await drive.files.get(
@@ -74,7 +75,7 @@ class GdriveClient {
     );
 
     return new Promise((resolve, reject) => {
-      const tmpLocalPath = `${localPath}.download`;
+      createParentPath(tmpLocalPath);
       const dest = fs.createWriteStream(tmpLocalPath);
       const { data } = res;
       let downloadedBytes = 0;

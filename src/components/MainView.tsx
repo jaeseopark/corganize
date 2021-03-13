@@ -198,6 +198,7 @@ const MainView = ({ library, showAlert }) => {
       const progressCallback = (moreFiles) => {
         moreFiles.forEach((file) => {
           file.encryptedPath = library.getEncryptedPath(file.fileid);
+          file.decryptedPath = library.getDecryptedPath(file.fileid);
           file.filename = htmlDecode(file.filename);
         });
         renderBuffer.files = renderBuffer.files.concat(

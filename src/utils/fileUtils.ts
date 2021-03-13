@@ -1,4 +1,4 @@
-import { unlink, readdirSync, lstatSync, rmdirSync } from 'fs';
+import { unlink, readdirSync, lstatSync, rmdirSync, existsSync, mkdirSync } from 'fs';
 import { glob } from 'glob';
 
 import FileType from 'file-type';
@@ -60,4 +60,11 @@ export const guessMimetypeAsync = (filepath: string) => {
       // eslint-disable-next-line @typescript-eslint/no-throw-literal
       throw MIMETYPE_DETECTION_ERROR;
     });
+};
+
+export const createParentPath = (filepath: string) => {
+  const parentPath = path.dirname(filepath);
+  if (!existsSync(parentPath)) {
+    mkdirSync(parentPath);
+  }
 };

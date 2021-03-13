@@ -22,6 +22,7 @@ const getInnermostChild = (el: HTMLElement) => {
 
 type FileViewProps = {
   encryptedPath: string;
+  decryptedPath: string;
   aespassword: string;
   onDetectMimetype: Function;
   contextMenuOptions: ContextMenuOption[];
@@ -29,11 +30,11 @@ type FileViewProps = {
 
 const FileView = ({
   encryptedPath,
+  decryptedPath,
   aespassword,
   onDetectMimetype,
   contextMenuOptions,
 }: FileViewProps) => {
-  const decryptedPath = `${encryptedPath}.dec`;
   const [content, setContent] = useState<HTMLElement | null>(null);
   const contentRef = useRef(null);
 
