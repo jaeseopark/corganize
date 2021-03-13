@@ -14,7 +14,13 @@ type LibraryConfig = {
   };
   local: {
     path: string;
+    tmpPath?: string;
   };
+};
+
+const getPath = (parent: string, fileid: string, ext: string) => {
+  const fileidNew = fileid.replace('/', 'slash');
+  return path.join(parent, `${fileidNew}.${ext}`);
 };
 
 class Library {
@@ -35,8 +41,19 @@ class Library {
   }
 
   getEncryptedPath(fileid: string) {
-    const fileidNew = fileid.replace('/', 'slash');
-    return path.join(this.config.local.path, `${fileidNew}.aes`);
+    return getPath(this.config.local.path, fileid, 'aes');
+  }
+
+  getTmpPath() {
+    return this.config.local.tmpPath || this.config.local.path;
+  }
+
+  getDecryptedPath(fileid: string) {
+    return getPath(this.getTmpPath(), fileid, 'dec');
+  }
+
+  getDownloadPath(fileid: string) {
+    return getPath(this.getTmpPath(), fileid, 'download');
   }
 }
 

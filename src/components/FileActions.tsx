@@ -23,6 +23,7 @@ const FileActions = ({
     filename,
     mimetype,
     encryptedPath,
+    decryptedPath,
   } = file;
   const [download] = useState({ percentage: null });
   const [, setRerenderTimestamp] = useState(null);
@@ -71,6 +72,7 @@ const FileActions = ({
       body: (
         <FileView
           encryptedPath={encryptedPath}
+          decryptedPath={decryptedPath}
           aespassword={aespassword}
           onDetectMimetype={onDetectMimetype}
           contextMenuOptions={contextMenuOptions}

@@ -1,8 +1,15 @@
 export type File = {
+  // Mandatory fields
   fileid: string;
-  storageservice: string | null | undefined;
-  encryptedPath: string;
   sourceurl: string;
-  dateactivated: number | null | undefined;
   lastupdated: number;
+
+  // Optional fields
+  dateactivated?: number;
+  storageservice?: string;
+  locationref?: string;
+  size?: number;
+
+  // Decorative/local fields
+  encryptedPath: string;
 };

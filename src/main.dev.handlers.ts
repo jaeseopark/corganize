@@ -1,45 +1,45 @@
 /* eslint-disable no-console */
 import { ipcMain } from 'electron';
 import { createReadStream, createWriteStream } from 'fs';
+import { File } from './entity/File';
 import { decryptAes256Cbc } from './utils/cryptoUtils';
+import { createParentPath } from './utils/fileUtils';
 
 export const handleDownload = (mainWindow, library, gdriveClient) => {
   ipcMain.removeHandler('download');
-  ipcMain.handle(
-    'download',
-    async (_event, { fileid, storageservice, locationref, size }) => {
-      const respond = (percentage: number, isInitial = false) => {
-        const payload = { fileid, percentage, isInitial };
-        mainWindow?.webContents.send('downloadProgress', payload);
-        mainWindow?.webContents.send(`download${fileid}`, payload);
-      };
+  ipcMain.handle('download', async (_event, file: File) => {
+    const { fileid, storageservice, locationref, size, encryptedPath } = file;
+    const respond = (percentage: number, isInitial = false) => {
+      const payload = { fileid, percentage, isInitial };
+      mainWindow?.webContents.send('downloadProgress', payload);
+      mainWindow?.webContents.send(`download${fileid}`, payload);
+    };
 
-      console.log(`Download event received: ${fileid}`);
-      const localPath = library.getEncryptedPath(fileid);
-      switch (storageservice) {
-        case 'gdrive': {
-          respond(0, true);
-          console.log(`Download started: ${fileid}`);
-          const callback = ({ downloadedBytes }) => {
-            const percentage = Math.floor((downloadedBytes * 100) / size);
-            respond(percentage);
-            if (percentage === 100) {
-              console.log(`Download finished: ${fileid}`);
-            }
-          };
+    console.log(`Download event received: ${fileid}`);
+    switch (storageservice) {
+      case 'gdrive': {
+        respond(0, true);
+        console.log(`Download started: ${fileid}`);
+        const callback = ({ downloadedBytes }) => {
+          const percentage = Math.floor((downloadedBytes * 100) / size);
+          respond(percentage);
+          if (percentage === 100) {
+            console.log(`Download finished: ${fileid}`);
+          }
+        };
 
-          gdriveClient
-            .downloadFileAsync(locationref, localPath, callback)
-            .then(() => respond(100))
-            .catch(console.log);
-          break;
-        }
-        default: {
-          throw new Error(`Unsupported storageservice: ${storageservice}`);
-        }
+        const downloadPath = library.getDownloadPath(fileid);
+        gdriveClient
+          .downloadFileAsync(locationref, encryptedPath, downloadPath, callback)
+          .then(() => respond(100))
+          .catch(console.log);
+        break;
+      }
+      default: {
+        throw new Error(`Unsupported storageservice: ${storageservice}`);
       }
     }
-  );
+  });
 };
 
 export const handleDecrypt = () => {
@@ -47,6 +47,8 @@ export const handleDecrypt = () => {
   ipcMain.handle(
     'decrypt',
     async (_event, { encryptedPath, decryptedPath, aespassword }) => {
+      createParentPath(decryptedPath);
+
       const streamIn = createReadStream(encryptedPath);
       const streamOut = createWriteStream(decryptedPath);
       return decryptAes256Cbc(streamIn, streamOut, aespassword).then(() => {
