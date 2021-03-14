@@ -1,4 +1,4 @@
-import { unlink, readdirSync, lstatSync, rmdirSync, existsSync, mkdirSync } from 'fs';
+import { unlink, readdirSync, lstatSync, rmdirSync, existsSync, mkdirSync, copyFile } from 'fs';
 import { glob } from 'glob';
 
 import FileType from 'file-type';
@@ -67,4 +67,16 @@ export const createParentPath = (filepath: string) => {
   if (!existsSync(parentPath)) {
     mkdirSync(parentPath);
   }
+};
+
+export const moveFileAsync = (srcPath: string, destPath: string) => {
+  return new Promise((resolve, reject) => {
+    copyFile(srcPath, destPath, (err, _data) => {
+      if (err) reject(err);
+      unlink(srcPath, (innerErr, _data) => {
+        if (innerErr) reject(innerErr);
+        resolve(destPath);
+      });
+    });
+  });
 };
