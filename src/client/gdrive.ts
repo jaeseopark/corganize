@@ -1,5 +1,4 @@
-import { copyFileSync, unlinkSync } from 'fs';
-import { createParentPath } from '../utils/fileUtils';
+import { createParentPath, moveFileAsync } from '../utils/fileUtils';
 
 /* eslint-disable import/prefer-default-export */
 const fs = require('fs');
@@ -94,9 +93,7 @@ class GdriveClient {
           }
         });
         data.on('finish', () => {
-          copyFileSync(tmpLocalPath, localPath);
-          unlinkSync(tmpLocalPath);
-          resolve(localPath);
+          moveFileAsync(tmpLocalPath, localPath).then(resolve).catch(reject);
         });
         data.pipe(dest);
       } catch (error) {
