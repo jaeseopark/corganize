@@ -30,7 +30,7 @@ export const deleteAllAsync = (
     })
   );
 
-export const purgeDecryptedFiles = (dir: string) => {
+export const purgeTmpFiles = (dir: string) => {
   const filenames = readdirSync(dir).filter((f) => !f.endsWith('.aes'));
   return deleteAllAsync(filenames, dir);
 };

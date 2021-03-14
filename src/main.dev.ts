@@ -18,7 +18,7 @@ import { existsSync } from 'fs';
 import MenuBuilder from './menu';
 import GdriveClient from './client/gdrive';
 import Library from './entity/Library';
-import { purgeDecryptedFiles as purgeTmpFiles } from './utils/fileUtils';
+import { purgeTmpFiles } from './utils/fileUtils';
 import { handleDecrypt, handleDownload } from './main.dev.handlers';
 
 export default class AppUpdater {
@@ -141,8 +141,8 @@ app.on('window-all-closed', () => {
 
   purgeTmpFiles(tmpPath)
     .then((results) => results.forEach((result) => console.log(result)))
-    .finally(appQuitWrapper)
-    .catch(alert);
+    .catch(console.log)
+    .finally(appQuitWrapper);
 });
 
 app.whenReady().then(createWindow).catch(console.log);
