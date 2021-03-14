@@ -1,4 +1,4 @@
-import { renameSync } from 'fs';
+import { copyFileSync, unlinkSync } from 'fs';
 import { createParentPath } from '../utils/fileUtils';
 
 /* eslint-disable import/prefer-default-export */
@@ -94,7 +94,8 @@ class GdriveClient {
           }
         });
         data.on('finish', () => {
-          renameSync(tmpLocalPath, localPath);
+          copyFileSync(tmpLocalPath, localPath);
+          unlinkSync(tmpLocalPath);
           resolve(localPath);
         });
         data.pipe(dest);
