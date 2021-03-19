@@ -9,7 +9,8 @@ type FullscreenViewProps = {
 
 const FullscreenView = ({ onClose, title, content }: FullscreenViewProps) => {
   const onKeyUp = (event) => {
-    if (event.key === 'q') {
+    const key = event.key.toLowerCase();
+    if (key === 'q') {
       onClose();
     }
   };
