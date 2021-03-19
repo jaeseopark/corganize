@@ -14,8 +14,15 @@ const isHotkey = (key: string) => Object.keys(TIME_HOTKEY_MAP).includes(key);
 const VideoView = ({ path }) => {
   const el = useRef(null);
 
-  const jumpTime = (deltaInSeconds) => {
+  const jumpTimeByDelta = (deltaInSeconds) => {
     el.current.currentTime += deltaInSeconds;
+  };
+
+  /**
+   * @param percentage 0-1.0
+   */
+  const jumpTimeByPercentage = (percentage: number) => {
+    el.current.currentTime = el.current.duration * percentage;
   };
 
   const onKeyUp = (event) => {
@@ -26,8 +33,10 @@ const VideoView = ({ path }) => {
       }
     } else if (key === 'm') {
       el.current.muted = !el.current.muted;
+    } else if (key >= '0' && key <= '9') {
+      jumpTimeByPercentage(parseInt(key) / 10);
     } else if (isHotkey(key)) {
-      jumpTime(TIME_HOTKEY_MAP[key]);
+      jumpTimeByDelta(TIME_HOTKEY_MAP[key]);
     }
   };
 
