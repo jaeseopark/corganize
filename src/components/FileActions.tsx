@@ -81,25 +81,21 @@ const FileActions = ({
     });
   };
 
+  const downloadFile = () => {
+    if (fileid.length <= 128) {
+      ipcRenderer.invoke('download', file);
+    } else {
+      showAlert('fileid too long');
+    }
+  };
+
   let actionButton = null;
   if (existsSync(encryptedPath)) {
     actionButton = <Button onClick={openInApp}>Open</Button>;
   } else if (download.percentage !== null) {
     actionButton = <Button disabled>{download.percentage}%</Button>;
   } else if (storageservice && storageservice !== 'None' && locationref) {
-    actionButton = (
-      <Button
-        onClick={() => {
-          if (fileid.length <= 128) {
-            ipcRenderer.invoke('download', file);
-          } else {
-            showAlert('fileid too long');
-          }
-        }}
-      >
-        DL
-      </Button>
-    );
+    actionButton = <Button onClick={downloadFile}>DL</Button>;
   }
 
   return <div className="fileactions">{actionButton}</div>;
