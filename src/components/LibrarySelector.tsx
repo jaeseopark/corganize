@@ -7,13 +7,18 @@ const LibrarySelector = ({ onLibraryChange }) => {
   const hiddenFileInput = useRef(null);
   const [selectedView, setSelectedView] = useState('active');
   const [downloadableChecked, setDownloadableChecked] = useState(true);
+  const [hideDownloadedChecked, setHideDownloadedChecked] = useState(false);
 
   const onViewDropdownChange = (event) => {
     setSelectedView(event.target.value);
   };
 
-  const onCheckboxChange = () => {
+  const onChangeDownloadable = () => {
     setDownloadableChecked(!downloadableChecked);
+  };
+
+  const onChangeHideDownloaded = () => {
+    setHideDownloadedChecked(!hideDownloadedChecked);
   };
 
   const onChangeFile = (event) => {
@@ -27,6 +32,7 @@ const LibrarySelector = ({ onLibraryChange }) => {
         const lib = new Library(JSON.parse(data));
         lib.view = selectedView;
         lib.showDownloadableFilesOnly = downloadableChecked;
+        lib.hideDownloadedFiles = hideDownloadedChecked;
         onLibraryChange(lib);
       });
     }
@@ -44,13 +50,21 @@ const LibrarySelector = ({ onLibraryChange }) => {
             <option value="incomplete">Incomplete</option>
           </select>
         </span>
-        <span className="filter-downloadable-only">
+        <span className="filter">
           <input
             type="checkbox"
             defaultChecked={downloadableChecked}
-            onChange={onCheckboxChange}
+            onChange={onChangeDownloadable}
           />
           <span className="text">Show downloadable files only</span>
+        </span>
+        <span className="filter">
+          <input
+            type="checkbox"
+            defaultChecked={hideDownloadedChecked}
+            onChange={onChangeHideDownloaded}
+          />
+          <span className="text">Hide downloaded files</span>
         </span>
       </div>
       <div className="button-container">

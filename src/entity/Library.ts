@@ -30,10 +30,13 @@ class Library {
 
   showDownloadableFilesOnly: boolean | null;
 
+  hideDownloadedFiles: boolean | null;
+
   constructor(config: LibraryConfig) {
     this.config = config;
     this.view = null;
     this.showDownloadableFilesOnly = null;
+    this.hideDownloadedFiles = null;
 
     if (!fs.existsSync(config.local.path)) {
       fs.mkdirSync(config.local.path);
