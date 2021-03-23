@@ -18,7 +18,7 @@ import { existsSync } from 'fs';
 import MenuBuilder from './menu';
 import GdriveClient from './client/gdrive';
 import Library from './entity/Library';
-import { purgeTmpFiles } from './utils/fileUtils';
+import { removeTmpFiles } from './utils/fileUtils';
 import { handleDecrypt, handleDownload } from './main.dev.handlers';
 
 export default class AppUpdater {
@@ -139,7 +139,7 @@ app.on('window-all-closed', () => {
     return;
   }
 
-  purgeTmpFiles(tmpPath)
+  removeTmpFiles(tmpPath)
     .then((results) => results.forEach((result) => console.log(result)))
     .catch(console.log)
     .finally(appQuitWrapper);
