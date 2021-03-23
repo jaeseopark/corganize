@@ -6,6 +6,7 @@ import {
   useGlobalFilter,
   useColumnOrder,
 } from 'react-table';
+import { existsSync } from 'fs';
 import format from '../cellformatter';
 
 import './MainView.scss';
@@ -191,8 +192,18 @@ const MainView = ({ library, showAlert }) => {
   useEffect(() => {
     if (!files) {
       const filterMoreFiles = (moreFiles) => {
-        if (!library.showDownloadableFilesOnly) return moreFiles;
-        return moreFiles.filter((f) => f.storageservice !== 'None');
+        const {
+          showDownloadableFilesOnly: sdfo,
+          hideDownloadedFiles: hdf,
+        } = library;
+
+        if (!sdfo && !hdf) return moreFiles;
+
+        return moreFiles.filter(
+          (f: File) =>
+            (!sdfo || f.storageservice !== 'None') &&
+            (!hdf || !existsSync(f.encryptedPath))
+        );
       };
 
       const progressCallback = (moreFiles) => {
@@ -211,15 +222,22 @@ const MainView = ({ library, showAlert }) => {
       switch (library.view) {
         case 'recent': {
           const limit = 20000;
-          promise = corganizeClient.getRecentFilesWithPagination(progressCallback, limit);
+          promise = corganizeClient.getRecentFilesWithPagination(
+            progressCallback,
+            limit
+          );
           break;
         }
         case 'active': {
-          promise = corganizeClient.getActiveFilesWithPagination(progressCallback);
+          promise = corganizeClient.getActiveFilesWithPagination(
+            progressCallback
+          );
           break;
         }
         case 'incomplete': {
-          promise = corganizeClient.getIncompleteFilesWithPagination(progressCallback);
+          promise = corganizeClient.getIncompleteFilesWithPagination(
+            progressCallback
+          );
           break;
         }
         default: {
