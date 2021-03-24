@@ -1,4 +1,13 @@
-import { unlink, readdirSync, lstatSync, rmdirSync, existsSync, mkdirSync, copyFile } from 'fs';
+import {
+  unlink,
+  readdirSync,
+  lstatSync,
+  rmdirSync,
+  existsSync,
+  mkdirSync,
+  copyFile,
+  statSync,
+} from 'fs';
 import { glob } from 'glob';
 
 import FileType from 'file-type';
@@ -80,3 +89,9 @@ export const moveFileAsync = (srcPath: string, destPath: string) => {
     });
   });
 };
+
+export function getFilesizeInBytes(filepath) {
+  const stats = statSync(filepath);
+  const fileSizeInBytes = stats.size;
+  return fileSizeInBytes;
+}

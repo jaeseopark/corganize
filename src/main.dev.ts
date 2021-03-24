@@ -158,5 +158,5 @@ ipcMain.on('changeLibraryConfig', (_event, libraryConfig) => {
   gdriveClient = new GdriveClient(library.config.storageservice.gdrive);
 
   handleDownload(mainWindow, library, gdriveClient);
-  handleDecrypt();
+  handleDecrypt(mainWindow);
 });
