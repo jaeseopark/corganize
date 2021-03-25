@@ -189,6 +189,22 @@ const MainView = ({ library, showAlert }) => {
     usePagination
   );
 
+  const downloadOrOpenFileByIndex = (visibleIndex: number) => {
+    const { page } = tableInstance;
+    if (page.length < visibleIndex) {
+      const row = page[visibleIndex];
+      const { original: file } = row;
+      showAlert(`fileid: ${file.fileid}`);
+    }
+  };
+
+  const onKeyUp = (event) => {
+    const { key } = event;
+    if (key >= '0' && key <= '9') {
+      downloadOrOpenFileByIndex(parseInt(key));
+    }
+  };
+
   useEffect(() => {
     if (!files) {
       const filterMoreFiles = (moreFiles) => {

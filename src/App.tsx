@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import { ipcRenderer } from 'electron';
+import classNames from 'classnames';
 import MainView from './components/MainView';
 import LibrarySelector from './components/LibrarySelector';
 
@@ -43,17 +44,19 @@ const Corganize = () => {
     return <LibrarySelector onLibraryChange={onLibraryChange} />;
   }
 
+  const alertClassName = classNames('alert', 'alert-light', {
+    hidden: !alertContent,
+  });
+
   return (
     <>
-      {alertContent && (
-        <div
-          className="alert alert-light"
-          role="alert"
-          onClick={() => closeAlert(true)}
-        >
-          {alertContent}
-        </div>
-      )}
+      <div
+        className={alertClassName}
+        role="alert"
+        onClick={() => closeAlert(true)}
+      >
+        {alertContent}
+      </div>
       <MainView library={library} showAlert={showAlert} />
     </>
   );
