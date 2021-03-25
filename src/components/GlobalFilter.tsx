@@ -6,7 +6,7 @@ import { useAsyncDebounce } from 'react-table';
 
 import clearIcon from '../../assets/backspace_119404.svg';
 
-const GlobalFilter = ({ setGlobalFilter, gotoPage, state, isVisible }) => {
+const GlobalFilter = ({ setGlobalFilter, gotoPage, state }) => {
   const { globalFilter } = state;
 
   const [value, setValue] = useState(globalFilter);
@@ -27,9 +27,7 @@ const GlobalFilter = ({ setGlobalFilter, gotoPage, state, isVisible }) => {
     }
   };
 
-  const className = classNames('globalfilter', {
-    hidden: !isVisible,
-  });
+  const className = classNames('globalfilter');
 
   return (
     <div className={className}>

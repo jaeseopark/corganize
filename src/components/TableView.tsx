@@ -9,11 +9,7 @@ import TableRow from './TableRow';
 
 import './TableView.scss';
 
-const TableView = ({
-  tableInstance,
-  isVisible,
-  getConextMenuOptions,
-}) => {
+const TableView = ({ tableInstance, getConextMenuOptions }) => {
   const {
     getTableProps,
     getTableBodyProps,
@@ -22,9 +18,7 @@ const TableView = ({
     prepareRow,
   } = tableInstance;
 
-  const className = classNames('tableview', {
-    hidden: !isVisible,
-  });
+  const className = classNames('tableview');
 
   return (
     <div className={className}>

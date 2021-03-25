@@ -7,6 +7,7 @@ import {
   useColumnOrder,
 } from 'react-table';
 import { existsSync } from 'fs';
+import classNames from 'classnames';
 import format from '../cellformatter';
 
 import './MainView.scss';
@@ -270,6 +271,10 @@ const MainView = ({ library, showAlert }) => {
     return <h2 className="center">Loading...</h2>;
   }
 
+  const mainViewClassNames = classNames('mainview', {
+    hidden: !!fullscreenComponent,
+  });
+
   return (
     <>
       {fullscreenComponent && (
@@ -279,19 +284,20 @@ const MainView = ({ library, showAlert }) => {
           onClose={() => setFullscreenComponent(null)}
         />
       )}
-      <AdminPanelLauncher
-        setFullscreenComponent={setFullscreenComponent}
-        isVisible={allFilesLoaded && !fullscreenComponent}
-        files={files}
-        localPath={library.config.local.path}
-      />
-      <GlobalFilter {...tableInstance} isVisible={!fullscreenComponent} />
-      <DownloadCenter isVisible={!fullscreenComponent} />
-      <TableView
-        tableInstance={tableInstance}
-        isVisible={!fullscreenComponent}
-        getConextMenuOptions={getConextMenuOptions}
-      />
+      <div className={mainViewClassNames}>
+        <AdminPanelLauncher
+          setFullscreenComponent={setFullscreenComponent}
+          allFilesLoaded={allFilesLoaded}
+          files={files}
+          localPath={library.config.local.path}
+        />
+        <GlobalFilter {...tableInstance} />
+        <DownloadCenter />
+        <TableView
+          tableInstance={tableInstance}
+          getConextMenuOptions={getConextMenuOptions}
+        />
+      </div>
     </>
   );
 };
