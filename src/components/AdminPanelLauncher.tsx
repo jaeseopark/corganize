@@ -5,12 +5,12 @@ import AdminPanel from './AdminPanel';
 
 const AdminPanelLauncher = ({
   setFullscreenComponent,
-  isVisible,
+  allFilesLoaded,
   files,
   localPath,
 }) => {
   const className = classNames('admin-panel', {
-    hidden: !isVisible,
+    hidden: !allFilesLoaded,
   });
 
   return (
@@ -22,6 +22,7 @@ const AdminPanelLauncher = ({
           body: <AdminPanel files={files} localPath={localPath} />,
         })
       }
+      tabIndex="4"
     >
       Admin
     </Button>

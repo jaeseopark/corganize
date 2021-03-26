@@ -7,13 +7,14 @@ import {
   useColumnOrder,
 } from 'react-table';
 import { existsSync } from 'fs';
-import format from '../cellformatter';
+import classNames from 'classnames';
+import { ipcRenderer } from 'electron';
 
 import './MainView.scss';
 import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 
-import DownloadCenter from './DownloadCenter';
+import DownloadCenter, { isBeingDownloaded } from './DownloadCenter';
 import FullscreenView from './FullscreenView';
 import Filename from './Filename';
 import TableView from './TableView';
@@ -27,39 +28,26 @@ import AdminPanelLauncher from './AdminPanelLauncher';
 import { File } from '../entity/File';
 import { ContextMenuOption } from '../entity/props';
 import { htmlDecode } from '../utils/stringUtils';
+import ContextMenuWrapper from './ContextMenuWrapper';
+import FileView from './FileView';
+import { hiddenColumns, regularColumns } from '../uiutils/columnUtils';
+import Library from '../entity/Library';
 
-const regularColumns = [
-  'ispublic',
-  'storageservice',
-  'size',
-  'lastupdated',
-  'sourceurl',
-  'mimetype',
-  'fileid',
-  'encryptedPath',
-].map((id) => {
-  return {
-    id,
-    accessor: id,
-    Header: id,
-    Cell: format,
-  };
-});
-const hiddenColumns = [
-  'sourceurl',
-  'storageservice',
-  'ispublic',
-  'mimetype',
-  'fileid',
-  'encryptedPath',
-];
+type MainViewRenderBuffer = {
+  files: File[];
+};
+
+type MainViewProps = {
+  library: Library;
+  showAlert: Function;
+};
 
 // MainView.state.files will grow in size as the data is retrieved via server side pagination.
 // Unfortunately, updating a state value within a React component can be slow at times; causing some chunks to be skipped, etc.
 // This array acts as the buffer so the UI can render reliably.
-const renderBuffer = { files: [] };
+const renderBuffer: MainViewRenderBuffer = { files: [] };
 
-const MainView = ({ library, showAlert }) => {
+const MainView = ({ library, showAlert }: MainViewProps) => {
   const [files, setFiles] = useState(null);
   const [allFilesLoaded, setAllFilesLoaded] = useState(false);
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
@@ -69,6 +57,15 @@ const MainView = ({ library, showAlert }) => {
   );
 
   const rerender = (_ = null) => setRerenderTimestamp(Date.now());
+
+  const downloadFile = (file: File) => {
+    const { fileid } = file;
+    if (fileid.length <= 128) {
+      ipcRenderer.invoke('download', file);
+    } else {
+      showAlert('fileid too long');
+    }
+  };
 
   const deleteFile = (fileid: string) => {
     corganizeClient
@@ -87,13 +84,21 @@ const MainView = ({ library, showAlert }) => {
 
   const updateFile = (fileid: string, props: File) => {
     const file = renderBuffer.files.find((f: File) => f.fileid === fileid);
+    if (!file) {
+      showAlert('File not found in renderBuffer');
+      return Promise.resolve(null);
+    }
+
     return corganizeClient
       .updateFile(fileid, props)
-      .then((newFile: File) => Object.assign(file, newFile))
+      .then((newFile: File) => {
+        if (newFile) return Object.assign(file, newFile);
+        throw { message: 'File not found' };
+      })
       .then(rerender)
-      .then(() => {
-        return showAlert('File has been updated');
-      });
+      .then(() => 'File has been updated')
+      .then(showAlert)
+      .catch((error) => showAlert(error.message));
   };
 
   const toggleFav = (file: File) => {
@@ -126,16 +131,43 @@ const MainView = ({ library, showAlert }) => {
     ];
   };
 
+  const openFile = (file: File) => {
+    const { mimetype, fileid, encryptedPath, decryptedPath, filename } = file;
+    const onDetectMimetype = (detected: string) => {
+      if (!mimetype) {
+        updateFile(fileid, { mimetype: detected });
+      }
+    };
+
+    const contextMenuOptions = getConextMenuOptions(file);
+
+    setFullscreenComponent({
+      title: (
+        <ContextMenuWrapper
+          id="fileview-title"
+          component={<span>{filename}</span>}
+          options={contextMenuOptions}
+        />
+      ),
+      body: (
+        <FileView
+          encryptedPath={encryptedPath}
+          decryptedPath={decryptedPath}
+          aespassword={library.getAesPassword()}
+          onDetectMimetype={onDetectMimetype}
+          contextMenuOptions={contextMenuOptions}
+        />
+      ),
+    });
+  };
+
   const renderActions = ({ row }) => {
-    const file = row.original;
+    const { original: file } = row;
     return (
       <FileActions
         file={file}
-        aespassword={library.config.local.aes.password}
-        setFullscreenComponent={setFullscreenComponent}
-        getConextMenuOptions={getConextMenuOptions}
-        updateFile={updateFile}
-        showAlert={showAlert}
+        openFile={openFile}
+        downloadFile={downloadFile}
       />
     );
   };
@@ -189,93 +221,109 @@ const MainView = ({ library, showAlert }) => {
     usePagination
   );
 
+  const downloadOrOpenFile = (file: File) => {
+    if (isBeingDownloaded(file.fileid)) {
+      showAlert('Download in progress');
+      return;
+    }
+
+    if (existsSync(file.encryptedPath)) {
+      openFile(file);
+    } else {
+      downloadFile(file);
+    }
+  };
+
+  const loadFiles = (): Promise<null> => {
+    const filterMoreFiles = (moreFiles: File[]) => {
+      const {
+        showDownloadableFilesOnly: sdfo,
+        hideDownloadedFiles: hdf,
+      } = library;
+
+      if (!sdfo && !hdf) return moreFiles;
+
+      return moreFiles.filter(
+        (f: File) =>
+          (!sdfo || f.storageservice !== 'None') &&
+          (!hdf || !existsSync(f.encryptedPath))
+      );
+    };
+
+    const progressCallback = (moreFiles: File[]) => {
+      moreFiles.forEach((file: File) => {
+        file.encryptedPath = library.getEncryptedPath(file.fileid);
+        file.decryptedPath = library.getDecryptedPath(file.fileid);
+        file.filename = htmlDecode(file.filename);
+      });
+      renderBuffer.files = renderBuffer.files.concat(
+        filterMoreFiles(moreFiles)
+      );
+      setFiles(renderBuffer.files);
+    };
+
+    switch (library.view) {
+      case 'recent': {
+        const limit = 20000;
+        return corganizeClient.getRecentFilesWithPagination(
+          progressCallback,
+          limit
+        );
+      }
+      case 'active': {
+        return corganizeClient.getActiveFilesWithPagination(progressCallback);
+      }
+      case 'incomplete': {
+        return corganizeClient.getIncompleteFilesWithPagination(
+          progressCallback
+        );
+      }
+      default: {
+        const message = `Invalid view: ${library.view}`;
+        return Promise.reject({ message });
+      }
+    }
+  };
+
   useEffect(() => {
     if (!files) {
-      const filterMoreFiles = (moreFiles) => {
-        const {
-          showDownloadableFilesOnly: sdfo,
-          hideDownloadedFiles: hdf,
-        } = library;
-
-        if (!sdfo && !hdf) return moreFiles;
-
-        return moreFiles.filter(
-          (f: File) =>
-            (!sdfo || f.storageservice !== 'None') &&
-            (!hdf || !existsSync(f.encryptedPath))
-        );
-      };
-
-      const progressCallback = (moreFiles) => {
-        moreFiles.forEach((file) => {
-          file.encryptedPath = library.getEncryptedPath(file.fileid);
-          file.decryptedPath = library.getDecryptedPath(file.fileid);
-          file.filename = htmlDecode(file.filename);
-        });
-        renderBuffer.files = renderBuffer.files.concat(
-          filterMoreFiles(moreFiles)
-        );
-        setFiles(renderBuffer.files);
-      };
-
-      let promise;
-      switch (library.view) {
-        case 'recent': {
-          const limit = 20000;
-          promise = corganizeClient.getRecentFilesWithPagination(
-            progressCallback,
-            limit
-          );
-          break;
-        }
-        case 'active': {
-          promise = corganizeClient.getActiveFilesWithPagination(
-            progressCallback
-          );
-          break;
-        }
-        case 'incomplete': {
-          promise = corganizeClient.getIncompleteFilesWithPagination(
-            progressCallback
-          );
-          break;
-        }
-        default: {
-          showAlert(`Invalid view: ${library.view}`);
-          return;
-        }
-      }
-
-      promise?.then(() => setAllFilesLoaded(true));
+      loadFiles()
+        .then(() => setAllFilesLoaded(true))
+        .catch((error) => showAlert(error.message));
     }
-  }, [corganizeClient, files, library, showAlert]);
+  }, [files, loadFiles, showAlert]);
 
   if (!files) {
     return <h2 className="center">Loading...</h2>;
   }
 
+  const mainViewClassNames = classNames('mainview', {
+    hidden: !!fullscreenComponent,
+  });
+
   return (
     <>
       {fullscreenComponent && (
         <FullscreenView
-          title={fullscreenComponent.title}
-          content={fullscreenComponent.body}
+          fullscreenComponent={fullscreenComponent}
           onClose={() => setFullscreenComponent(null)}
         />
       )}
-      <AdminPanelLauncher
-        setFullscreenComponent={setFullscreenComponent}
-        isVisible={allFilesLoaded && !fullscreenComponent}
-        files={files}
-        localPath={library.config.local.path}
-      />
-      <GlobalFilter {...tableInstance} isVisible={!fullscreenComponent} />
-      <DownloadCenter isVisible={!fullscreenComponent} />
-      <TableView
-        tableInstance={tableInstance}
-        isVisible={!fullscreenComponent}
-        getConextMenuOptions={getConextMenuOptions}
-      />
+      <div className={mainViewClassNames}>
+        <AdminPanelLauncher
+          setFullscreenComponent={setFullscreenComponent}
+          allFilesLoaded={allFilesLoaded}
+          files={files}
+          localPath={library.config.local.path}
+        />
+        <GlobalFilter tableInstance={tableInstance} />
+        <DownloadCenter />
+        <TableView
+          downloadOrOpenFile={downloadOrOpenFile}
+          tableInstance={tableInstance}
+          getConextMenuOptions={getConextMenuOptions}
+        />
+      </div>
     </>
   );
 };

@@ -40,6 +40,10 @@ h2.center {
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 3px 10px 0 rgba(0, 0, 0, 0.1);
   text-align: center;
   cursor: pointer;
+
+  &.hidden {
+    display: none;
+  }
 }
 
 pre {

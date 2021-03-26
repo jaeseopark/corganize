@@ -43,6 +43,10 @@ class Library {
     }
   }
 
+  getAesPassword() {
+    return this.config.local.aes.password;
+  }
+
   getEncryptedPath(fileid: string) {
     return getPath(this.config.local.path, fileid, 'aes');
   }

@@ -5,26 +5,9 @@ import { existsSync } from 'fs';
 import React, { useEffect, useState } from 'react';
 
 import Button from './Button';
-import ContextMenuWrapper from './ContextMenuWrapper';
-import FileView from './FileView';
 
-const FileActions = ({
-  file,
-  aespassword,
-  setFullscreenComponent,
-  showAlert,
-  updateFile,
-  getConextMenuOptions,
-}) => {
-  const {
-    fileid,
-    locationref,
-    storageservice,
-    filename,
-    mimetype,
-    encryptedPath,
-    decryptedPath,
-  } = file;
+const FileActions = ({ file, downloadFile, openFile }) => {
+  const { fileid, locationref, storageservice, encryptedPath } = file;
   const [download] = useState({ percentage: null });
   const [, setRerenderTimestamp] = useState(null);
 
@@ -52,46 +35,9 @@ const FileActions = ({
     };
   });
 
-  const openInApp = () => {
-    const onDetectMimetype = (detected: string) => {
-      if (!mimetype) {
-        updateFile(fileid, { mimetype: detected });
-      }
-    };
-
-    const contextMenuOptions = getConextMenuOptions(file);
-
-    setFullscreenComponent({
-      title: (
-        <ContextMenuWrapper
-          id="fileview-title"
-          component={<span>{filename}</span>}
-          options={contextMenuOptions}
-        />
-      ),
-      body: (
-        <FileView
-          encryptedPath={encryptedPath}
-          decryptedPath={decryptedPath}
-          aespassword={aespassword}
-          onDetectMimetype={onDetectMimetype}
-          contextMenuOptions={contextMenuOptions}
-        />
-      ),
-    });
-  };
-
-  const downloadFile = () => {
-    if (fileid.length <= 128) {
-      ipcRenderer.invoke('download', file);
-    } else {
-      showAlert('fileid too long');
-    }
-  };
-
   let actionButton = null;
   if (existsSync(encryptedPath)) {
-    actionButton = <Button onClick={openInApp}>Open</Button>;
+    actionButton = <Button onClick={() => openFile(file)}>Open</Button>;
   } else if (download.percentage !== null) {
     actionButton = <Button disabled>{download.percentage}%</Button>;
   } else if (storageservice && storageservice !== 'None' && locationref) {
