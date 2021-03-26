@@ -15,7 +15,7 @@ export const getLocalActions = (
 
   if (existsSync(encryptedPath)) {
     localActions.push({
-      label: 'Reveal (R)',
+      label: 'Reveal',
       onClick: () => {
         switch (os.platform()) {
           case 'win32':
@@ -25,7 +25,6 @@ export const getLocalActions = (
             throw new Error('Not Implemented');
         }
       },
-      hotkey: 'r',
     });
     localActions.push({
       label: 'Delete Local File (E)',

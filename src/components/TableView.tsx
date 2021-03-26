@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable react/jsx-key */
-import React from 'react';
+import React, { useRef } from 'react';
 import { randomIntFromInterval } from '../utils/numberUtils';
 
 import PageControl from './PageControl';
@@ -26,6 +26,8 @@ const TableView = ({
     pageCount,
   } = tableInstance;
 
+  const tableRef = useRef(null);
+
   const downloadOrOpenFileByIndex = (visibleIndex: number) => {
     if (page.length > visibleIndex) {
       const row = page[visibleIndex];
@@ -37,22 +39,32 @@ const TableView = ({
   const goToRandomPage = () =>
     gotoPage(randomIntFromInterval(1, pageCount) - 1);
 
+  const focusTable = () => {
+    if (tableRef?.current) {
+      tableRef.current.focus();
+    }
+  };
+
   const onKeyUp = (event) => {
     const key = event.key.toLowerCase();
     if (key >= '0' && key <= '9') {
       downloadOrOpenFileByIndex(parseInt(key));
+      focusTable();
     } else if (key === 'arrowright') {
       nextPage();
+      focusTable();
     } else if (key === 'arrowleft') {
       previousPage();
+      focusTable();
     } else if (key === 'r') {
       goToRandomPage();
+      focusTable();
     }
   };
 
   return (
     <div className="tableview">
-      <table className="table" {...getTableProps()} onKeyUp={onKeyUp} tabIndex="1">
+      <table ref={tableRef} className="table" {...getTableProps()} onKeyUp={onKeyUp} tabIndex="1">
         <thead>
           {headerGroups.map((headerGroup: any) => (
             <TableHeaderGroup headerGroup={headerGroup} />
