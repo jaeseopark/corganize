@@ -1,13 +1,22 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
 
-type FullscreenViewProps = {
-  onClose: Function;
-  title: HTMLElement;
-  content: HTMLElement;
+type FullscreenComponent = {
+  title: string;
+  body: HTMLElement;
 };
 
-const FullscreenView = ({ onClose, title, content }: FullscreenViewProps) => {
+type FullscreenViewProps = {
+  onClose: Function;
+  fullscreenComponent: FullscreenComponent | null;
+};
+
+const FullscreenView = ({
+  onClose,
+  fullscreenComponent,
+}: FullscreenViewProps) => {
+  const { title, body } = fullscreenComponent;
+
   const onKeyUp = (event) => {
     const key = event.key.toLowerCase();
     if (key === 'q') {
@@ -29,7 +38,7 @@ const FullscreenView = ({ onClose, title, content }: FullscreenViewProps) => {
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div className="modal-body">{content}</div>
+      <div className="modal-body">{body}</div>
     </div>
   );
 };

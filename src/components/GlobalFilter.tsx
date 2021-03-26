@@ -6,7 +6,8 @@ import { useAsyncDebounce } from 'react-table';
 
 import clearIcon from '../../assets/backspace_119404.svg';
 
-const GlobalFilter = ({ setGlobalFilter, gotoPage, state }) => {
+const GlobalFilter = ({ tableInstance }) => {
+  const { setGlobalFilter, gotoPage, state } = tableInstance;
   const { globalFilter } = state;
 
   const [value, setValue] = useState(globalFilter);

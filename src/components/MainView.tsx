@@ -9,7 +9,6 @@ import {
 import { existsSync } from 'fs';
 import classNames from 'classnames';
 import { ipcRenderer } from 'electron';
-import format from '../cellformatter';
 
 import './MainView.scss';
 import GlobalFilter from './GlobalFilter';
@@ -32,13 +31,23 @@ import { htmlDecode } from '../utils/stringUtils';
 import ContextMenuWrapper from './ContextMenuWrapper';
 import FileView from './FileView';
 import { hiddenColumns, regularColumns } from '../uiutils/columnUtils';
+import Library from '../entity/Library';
+
+type MainViewRenderBuffer = {
+  files: File[];
+};
+
+type MainViewProps = {
+  library: Library;
+  showAlert: Function;
+};
 
 // MainView.state.files will grow in size as the data is retrieved via server side pagination.
 // Unfortunately, updating a state value within a React component can be slow at times; causing some chunks to be skipped, etc.
 // This array acts as the buffer so the UI can render reliably.
-const renderBuffer = { files: [] };
+const renderBuffer: MainViewRenderBuffer = { files: [] };
 
-const MainView = ({ library, showAlert }) => {
+const MainView = ({ library, showAlert }: MainViewProps) => {
   const [files, setFiles] = useState(null);
   const [allFilesLoaded, setAllFilesLoaded] = useState(false);
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
@@ -75,10 +84,15 @@ const MainView = ({ library, showAlert }) => {
 
   const updateFile = (fileid: string, props: File) => {
     const file = renderBuffer.files.find((f: File) => f.fileid === fileid);
+    if (!file) {
+      showAlert('File not found in renderBuffer');
+      return Promise.resolve(null);
+    }
+
     return corganizeClient
       .updateFile(fileid, props)
       .then((newFile: File) => {
-        if (file && newFile) return Object.assign(file, newFile);
+        if (newFile) return Object.assign(file, newFile);
         throw { message: 'File not found' };
       })
       .then(rerender)
@@ -139,7 +153,7 @@ const MainView = ({ library, showAlert }) => {
         <FileView
           encryptedPath={encryptedPath}
           decryptedPath={decryptedPath}
-          aespassword={library.config.local.aes.password}
+          aespassword={library.getAesPassword()}
           onDetectMimetype={onDetectMimetype}
           contextMenuOptions={contextMenuOptions}
         />
@@ -221,7 +235,7 @@ const MainView = ({ library, showAlert }) => {
   };
 
   const loadFiles = (): Promise<null> => {
-    const filterMoreFiles = (moreFiles) => {
+    const filterMoreFiles = (moreFiles: File[]) => {
       const {
         showDownloadableFilesOnly: sdfo,
         hideDownloadedFiles: hdf,
@@ -236,8 +250,8 @@ const MainView = ({ library, showAlert }) => {
       );
     };
 
-    const progressCallback = (moreFiles) => {
-      moreFiles.forEach((file) => {
+    const progressCallback = (moreFiles: File[]) => {
+      moreFiles.forEach((file: File) => {
         file.encryptedPath = library.getEncryptedPath(file.fileid);
         file.decryptedPath = library.getDecryptedPath(file.fileid);
         file.filename = htmlDecode(file.filename);
@@ -291,8 +305,7 @@ const MainView = ({ library, showAlert }) => {
     <>
       {fullscreenComponent && (
         <FullscreenView
-          title={fullscreenComponent.title}
-          content={fullscreenComponent.body}
+          fullscreenComponent={fullscreenComponent}
           onClose={() => setFullscreenComponent(null)}
         />
       )}
@@ -303,7 +316,7 @@ const MainView = ({ library, showAlert }) => {
           files={files}
           localPath={library.config.local.path}
         />
-        <GlobalFilter {...tableInstance} />
+        <GlobalFilter tableInstance={tableInstance} />
         <DownloadCenter />
         <TableView
           downloadOrOpenFile={downloadOrOpenFile}

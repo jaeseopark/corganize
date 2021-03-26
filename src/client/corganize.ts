@@ -33,7 +33,7 @@ class CorganizeClient {
     return fetch(url, { headers });
   }
 
-  getFilesWithPagination(path, cb, limit, paginationToken = null, total = 0) {
+  getFilesWithPagination(path, cb, limit, paginationToken = null, total = 0): Promise<null> {
     return new Promise((resolve, reject) =>
       this.getFiles(path, paginationToken)
         .then((r) => r.json())
