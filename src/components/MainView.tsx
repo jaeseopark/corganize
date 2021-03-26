@@ -8,13 +8,14 @@ import {
 } from 'react-table';
 import { existsSync } from 'fs';
 import classNames from 'classnames';
+import { ipcRenderer } from 'electron';
 import format from '../cellformatter';
 
 import './MainView.scss';
 import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 
-import DownloadCenter from './DownloadCenter';
+import DownloadCenter, { isBeingDownloaded } from './DownloadCenter';
 import FullscreenView from './FullscreenView';
 import Filename from './Filename';
 import TableView from './TableView';
@@ -28,32 +29,9 @@ import AdminPanelLauncher from './AdminPanelLauncher';
 import { File } from '../entity/File';
 import { ContextMenuOption } from '../entity/props';
 import { htmlDecode } from '../utils/stringUtils';
-
-const regularColumns = [
-  'ispublic',
-  'storageservice',
-  'size',
-  'lastupdated',
-  'sourceurl',
-  'mimetype',
-  'fileid',
-  'encryptedPath',
-].map((id) => {
-  return {
-    id,
-    accessor: id,
-    Header: id,
-    Cell: format,
-  };
-});
-const hiddenColumns = [
-  'sourceurl',
-  'storageservice',
-  'ispublic',
-  'mimetype',
-  'fileid',
-  'encryptedPath',
-];
+import ContextMenuWrapper from './ContextMenuWrapper';
+import FileView from './FileView';
+import { hiddenColumns, regularColumns } from '../uiutils/columnUtils';
 
 // MainView.state.files will grow in size as the data is retrieved via server side pagination.
 // Unfortunately, updating a state value within a React component can be slow at times; causing some chunks to be skipped, etc.
@@ -70,6 +48,15 @@ const MainView = ({ library, showAlert }) => {
   );
 
   const rerender = (_ = null) => setRerenderTimestamp(Date.now());
+
+  const downloadFile = (file: File) => {
+    const { fileid } = file;
+    if (fileid.length <= 128) {
+      ipcRenderer.invoke('download', file);
+    } else {
+      showAlert('fileid too long');
+    }
+  };
 
   const deleteFile = (fileid: string) => {
     corganizeClient
@@ -90,11 +77,14 @@ const MainView = ({ library, showAlert }) => {
     const file = renderBuffer.files.find((f: File) => f.fileid === fileid);
     return corganizeClient
       .updateFile(fileid, props)
-      .then((newFile: File) => Object.assign(file, newFile))
+      .then((newFile: File) => {
+        if (file && newFile) return Object.assign(file, newFile);
+        throw { message: 'File not found' };
+      })
       .then(rerender)
-      .then(() => {
-        return showAlert('File has been updated');
-      });
+      .then(() => 'File has been updated')
+      .then(showAlert)
+      .catch((error) => showAlert(error.message));
   };
 
   const toggleFav = (file: File) => {
@@ -127,16 +117,43 @@ const MainView = ({ library, showAlert }) => {
     ];
   };
 
+  const openFile = (file: File) => {
+    const { mimetype, fileid, encryptedPath, decryptedPath, filename } = file;
+    const onDetectMimetype = (detected: string) => {
+      if (!mimetype) {
+        updateFile(fileid, { mimetype: detected });
+      }
+    };
+
+    const contextMenuOptions = getConextMenuOptions(file);
+
+    setFullscreenComponent({
+      title: (
+        <ContextMenuWrapper
+          id="fileview-title"
+          component={<span>{filename}</span>}
+          options={contextMenuOptions}
+        />
+      ),
+      body: (
+        <FileView
+          encryptedPath={encryptedPath}
+          decryptedPath={decryptedPath}
+          aespassword={library.config.local.aes.password}
+          onDetectMimetype={onDetectMimetype}
+          contextMenuOptions={contextMenuOptions}
+        />
+      ),
+    });
+  };
+
   const renderActions = ({ row }) => {
     const { original: file } = row;
     return (
       <FileActions
         file={file}
-        aespassword={library.config.local.aes.password}
-        setFullscreenComponent={setFullscreenComponent}
-        getConextMenuOptions={getConextMenuOptions}
-        updateFile={updateFile}
-        showAlert={showAlert}
+        openFile={openFile}
+        downloadFile={downloadFile}
       />
     );
   };
@@ -191,8 +208,16 @@ const MainView = ({ library, showAlert }) => {
   );
 
   const downloadOrOpenFile = (file: File) => {
-    // TODO: download or open
-    showAlert(`fileid: ${file.fileid}`);
+    if (isBeingDownloaded(file.fileid)) {
+      showAlert('Download in progress');
+      return;
+    }
+
+    if (existsSync(file.encryptedPath)) {
+      openFile(file);
+    } else {
+      downloadFile(file);
+    }
   };
 
   const loadFiles = (): Promise<null> => {

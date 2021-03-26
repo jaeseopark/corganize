@@ -41,4 +41,9 @@ const DownloadCenter = () => {
   );
 };
 
+export const isBeingDownloaded = (fileid: string) => {
+  const percentage = downloads[fileid];
+  return percentage && percentage < 100;
+};
+
 export default DownloadCenter;
