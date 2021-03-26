@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable react/jsx-key */
 import React from 'react';
-import classNames from 'classnames';
+import { randomIntFromInterval } from '../utils/numberUtils';
 
 import PageControl from './PageControl';
 import TableHeaderGroup from './TableHeaderGroup';
@@ -9,28 +9,59 @@ import TableRow from './TableRow';
 
 import './TableView.scss';
 
-const TableView = ({ tableInstance, getConextMenuOptions }) => {
+const TableView = ({
+  downloadOrOpenFile,
+  tableInstance,
+  getConextMenuOptions,
+}) => {
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     page,
     prepareRow,
+    nextPage,
+    previousPage,
+    gotoPage,
+    pageCount,
   } = tableInstance;
 
-  const className = classNames('tableview');
+  const downloadOrOpenFileByIndex = (visibleIndex: number) => {
+    if (page.length > visibleIndex) {
+      const row = page[visibleIndex];
+      const { original: file } = row;
+      downloadOrOpenFile(file);
+    }
+  };
+
+  const goToRandomPage = () =>
+    gotoPage(randomIntFromInterval(1, pageCount) - 1);
+
+  const onKeyUp = (event) => {
+    const key = event.key.toLowerCase();
+    if (key >= '0' && key <= '9') {
+      downloadOrOpenFileByIndex(parseInt(key));
+    } else if (key === 'arrowright') {
+      nextPage();
+    } else if (key === 'arrowleft') {
+      previousPage();
+    } else if (key === 'r') {
+      goToRandomPage();
+    }
+  };
 
   return (
-    <div className={className}>
-      <table className="table" {...getTableProps()}>
+    <div className="tableview">
+      <table className="table" {...getTableProps()} onKeyUp={onKeyUp} tabIndex="1">
         <thead>
           {headerGroups.map((headerGroup: any) => (
             <TableHeaderGroup headerGroup={headerGroup} />
           ))}
         </thead>
         <tbody {...getTableBodyProps()}>
-          {page.map((row) => (
+          {page.map((row, i) => (
             <TableRow
+              index={i}
               row={row}
               prepareRow={prepareRow}
               getConextMenuOptions={getConextMenuOptions}
@@ -38,7 +69,7 @@ const TableView = ({ tableInstance, getConextMenuOptions }) => {
           ))}
         </tbody>
       </table>
-      <PageControl {...tableInstance} />
+      <PageControl {...tableInstance} goToRandomPage={goToRandomPage} />
     </div>
   );
 };

@@ -2,8 +2,31 @@ import { ipcRenderer } from 'electron';
 import React, { useEffect, useState } from 'react';
 import ContextMenuWrapper from './ContextMenuWrapper';
 
-const TableRow = ({ row, prepareRow, getConextMenuOptions }) => {
-  const [,setTimestamp] = useState(null);
+const getRenderComponent = (row, cell, index, getConextMenuOptions) => {
+  const renderedCell = cell.render('Cell');
+  switch (cell.column.id) {
+    case 'filename':
+      return (
+        <ContextMenuWrapper
+          id={row.original.fileid}
+          component={renderedCell}
+          options={getConextMenuOptions(row.original)}
+        />
+      );
+    case 'actions':
+      return (
+        <>
+          {renderedCell}
+          <span className="row-index">{index}</span>
+        </>
+      );
+    default:
+      return renderedCell;
+  }
+};
+
+const TableRow = ({ index, row, prepareRow, getConextMenuOptions }) => {
+  const [, setTimestamp] = useState(null);
   prepareRow(row);
 
   const rerender = () => {
@@ -26,22 +49,9 @@ const TableRow = ({ row, prepareRow, getConextMenuOptions }) => {
   return (
     <tr {...row.getRowProps()}>
       {row.cells.map((cell) => {
-        let component;
-        if (cell.column.id === 'filename') {
-          component = (
-            <ContextMenuWrapper
-              id={row.original.fileid}
-              component={cell.render('Cell')}
-              options={getConextMenuOptions(row.original)}
-            />
-          );
-        } else {
-          component = cell.render('Cell');
-        }
-
         return (
           <td {...cell.getCellProps()} className={cell?.column?.id}>
-            {component}
+            {getRenderComponent(row, cell, index, getConextMenuOptions)}
           </td>
         );
       })}

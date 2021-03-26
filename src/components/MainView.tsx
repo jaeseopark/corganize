@@ -128,7 +128,7 @@ const MainView = ({ library, showAlert }) => {
   };
 
   const renderActions = ({ row }) => {
-    const file = row.original;
+    const { original: file } = row;
     return (
       <FileActions
         file={file}
@@ -190,82 +190,69 @@ const MainView = ({ library, showAlert }) => {
     usePagination
   );
 
-  const downloadOrOpenFileByIndex = (visibleIndex: number) => {
-    const { page } = tableInstance;
-    if (page.length < visibleIndex) {
-      const row = page[visibleIndex];
-      const { original: file } = row;
-      showAlert(`fileid: ${file.fileid}`);
-    }
+  const downloadOrOpenFile = (file: File) => {
+    // TODO: download or open
+    showAlert(`fileid: ${file.fileid}`);
   };
 
-  const onKeyUp = (event) => {
-    const { key } = event;
-    if (key >= '0' && key <= '9') {
-      downloadOrOpenFileByIndex(parseInt(key));
+  const loadFiles = (): Promise<null> => {
+    const filterMoreFiles = (moreFiles) => {
+      const {
+        showDownloadableFilesOnly: sdfo,
+        hideDownloadedFiles: hdf,
+      } = library;
+
+      if (!sdfo && !hdf) return moreFiles;
+
+      return moreFiles.filter(
+        (f: File) =>
+          (!sdfo || f.storageservice !== 'None') &&
+          (!hdf || !existsSync(f.encryptedPath))
+      );
+    };
+
+    const progressCallback = (moreFiles) => {
+      moreFiles.forEach((file) => {
+        file.encryptedPath = library.getEncryptedPath(file.fileid);
+        file.decryptedPath = library.getDecryptedPath(file.fileid);
+        file.filename = htmlDecode(file.filename);
+      });
+      renderBuffer.files = renderBuffer.files.concat(
+        filterMoreFiles(moreFiles)
+      );
+      setFiles(renderBuffer.files);
+    };
+
+    switch (library.view) {
+      case 'recent': {
+        const limit = 20000;
+        return corganizeClient.getRecentFilesWithPagination(
+          progressCallback,
+          limit
+        );
+      }
+      case 'active': {
+        return corganizeClient.getActiveFilesWithPagination(progressCallback);
+      }
+      case 'incomplete': {
+        return corganizeClient.getIncompleteFilesWithPagination(
+          progressCallback
+        );
+      }
+      default: {
+        const message = `Invalid view: ${library.view}`;
+        return Promise.reject({ message });
+      }
     }
   };
 
   useEffect(() => {
     if (!files) {
-      const filterMoreFiles = (moreFiles) => {
-        const {
-          showDownloadableFilesOnly: sdfo,
-          hideDownloadedFiles: hdf,
-        } = library;
-
-        if (!sdfo && !hdf) return moreFiles;
-
-        return moreFiles.filter(
-          (f: File) =>
-            (!sdfo || f.storageservice !== 'None') &&
-            (!hdf || !existsSync(f.encryptedPath))
-        );
-      };
-
-      const progressCallback = (moreFiles) => {
-        moreFiles.forEach((file) => {
-          file.encryptedPath = library.getEncryptedPath(file.fileid);
-          file.decryptedPath = library.getDecryptedPath(file.fileid);
-          file.filename = htmlDecode(file.filename);
-        });
-        renderBuffer.files = renderBuffer.files.concat(
-          filterMoreFiles(moreFiles)
-        );
-        setFiles(renderBuffer.files);
-      };
-
-      let promise;
-      switch (library.view) {
-        case 'recent': {
-          const limit = 20000;
-          promise = corganizeClient.getRecentFilesWithPagination(
-            progressCallback,
-            limit
-          );
-          break;
-        }
-        case 'active': {
-          promise = corganizeClient.getActiveFilesWithPagination(
-            progressCallback
-          );
-          break;
-        }
-        case 'incomplete': {
-          promise = corganizeClient.getIncompleteFilesWithPagination(
-            progressCallback
-          );
-          break;
-        }
-        default: {
-          showAlert(`Invalid view: ${library.view}`);
-          return;
-        }
-      }
-
-      promise?.then(() => setAllFilesLoaded(true));
+      loadFiles()
+        .then(() => setAllFilesLoaded(true))
+        .catch((error) => showAlert(error.message));
     }
-  }, [corganizeClient, files, library, showAlert]);
+  }, [files, loadFiles, showAlert]);
 
   if (!files) {
     return <h2 className="center">Loading...</h2>;
@@ -294,6 +281,7 @@ const MainView = ({ library, showAlert }) => {
         <GlobalFilter {...tableInstance} />
         <DownloadCenter />
         <TableView
+          downloadOrOpenFile={downloadOrOpenFile}
           tableInstance={tableInstance}
           getConextMenuOptions={getConextMenuOptions}
         />
