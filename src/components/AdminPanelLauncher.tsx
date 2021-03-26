@@ -22,6 +22,7 @@ const AdminPanelLauncher = ({
           body: <AdminPanel files={files} localPath={localPath} />,
         })
       }
+      tabIndex="4"
     >
       Admin
     </Button>

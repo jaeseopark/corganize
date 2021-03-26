@@ -29,7 +29,7 @@ const PageControl = ({
           onChange={(e) => {
             setPageSize(Number(e.target.value));
           }}
-          tabIndex="-1"
+          tabIndex="2"
         >
           {[10, 20, 30, 40, 50].map((itemsPerPage) => (
             <option key={itemsPerPage} value={itemsPerPage}>
@@ -41,19 +41,20 @@ const PageControl = ({
       </div>
       <div className="page-nav">
         <div className="buttons">
-          <Button onClick={goToRandomPage}>Random</Button>
-          <Button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+          <Button onClick={goToRandomPage} tabIndex="3">Random</Button>
+          <Button onClick={() => gotoPage(0)} disabled={!canPreviousPage} tabIndex="3">
             &lt;&lt;
           </Button>
-          <Button onClick={() => previousPage()} disabled={!canPreviousPage}>
+          <Button onClick={() => previousPage()} disabled={!canPreviousPage} tabIndex="3">
             &lt;
           </Button>
-          <Button onClick={() => nextPage()} disabled={!canNextPage}>
+          <Button onClick={() => nextPage()} disabled={!canNextPage} tabIndex="3">
             &gt;
           </Button>
           <Button
             onClick={() => gotoPage(pageCount - 1)}
             disabled={!canNextPage}
+            tabIndex="3"
           >
             &gt;&gt;
           </Button>
@@ -71,6 +72,7 @@ const PageControl = ({
                   : 0;
                 gotoPage(targetPage);
               }}
+              tabIndex="2"
             />{' '}
             of {pageCount}
           </span>
