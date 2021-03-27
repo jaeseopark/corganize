@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   useTable,
   useSortBy,
@@ -35,6 +35,7 @@ import Library from '../entity/Library';
 
 type MainViewRenderBuffer = {
   files: File[];
+  shouldFocusTable: boolean;
 };
 
 type MainViewProps = {
@@ -45,7 +46,10 @@ type MainViewProps = {
 // MainView.state.files will grow in size as the data is retrieved via server side pagination.
 // Unfortunately, updating a state value within a React component can be slow at times; causing some chunks to be skipped, etc.
 // This array acts as the buffer so the UI can render reliably.
-const renderBuffer: MainViewRenderBuffer = { files: [] };
+const renderBuffer: MainViewRenderBuffer = {
+  files: [],
+  shouldFocusTable: false,
+};
 
 const MainView = ({ library, showAlert }: MainViewProps) => {
   const [files, setFiles] = useState(null);
@@ -55,6 +59,8 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   const [corganizeClient] = useState(
     new CorganizeClient(library.config.server)
   );
+
+  const tableRef = useRef(null);
 
   const rerender = (_ = null) => setRerenderTimestamp(Date.now());
 
@@ -285,11 +291,21 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     }
   };
 
+  const focusTable = () => {
+    if (tableRef?.current) {
+      tableRef.current.focus();
+    }
+  };
+
   useEffect(() => {
     if (!files) {
       loadFiles()
         .then(() => setAllFilesLoaded(true))
         .catch((error) => showAlert(error.message));
+    }
+    if (renderBuffer.shouldFocusTable) {
+      renderBuffer.shouldFocusTable = false;
+      focusTable();
     }
   }, [files, loadFiles, showAlert]);
 
@@ -306,7 +322,10 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       {fullscreenComponent && (
         <FullscreenView
           fullscreenComponent={fullscreenComponent}
-          onClose={() => setFullscreenComponent(null)}
+          onClose={() => {
+            renderBuffer.shouldFocusTable = true;
+            setFullscreenComponent(null);
+          }}
         />
       )}
       <div className={mainViewClassNames}>
@@ -322,6 +341,8 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
           downloadOrOpenFile={downloadOrOpenFile}
           tableInstance={tableInstance}
           getConextMenuOptions={getConextMenuOptions}
+          tableRef={tableRef}
+          focusTable={focusTable}
         />
       </div>
     </>

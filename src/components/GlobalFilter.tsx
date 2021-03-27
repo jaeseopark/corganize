@@ -33,13 +33,14 @@ const GlobalFilter = ({ tableInstance }) => {
   return (
     <div className={className}>
       <input
-        value={value || ''}
         placeholder="Search..."
+        tabIndex="4"
+        value={value || ''}
+        onKeyUp={onKeyUp}
         onChange={(e) => {
           setValue(e.target.value);
           onChange(e.target.value);
         }}
-        onKeyUp={onKeyUp}
       />
       <img className="clear" src={clearIcon} onClick={clear} />
     </div>

@@ -13,6 +13,8 @@ const TableView = ({
   downloadOrOpenFile,
   tableInstance,
   getConextMenuOptions,
+  tableRef,
+  focusTable,
 }) => {
   const {
     getTableProps,
@@ -26,8 +28,6 @@ const TableView = ({
     pageCount,
   } = tableInstance;
 
-  const tableRef = useRef(null);
-
   const downloadOrOpenFileByIndex = (visibleIndex: number) => {
     if (page.length > visibleIndex) {
       const row = page[visibleIndex];
@@ -38,12 +38,6 @@ const TableView = ({
 
   const goToRandomPage = () =>
     gotoPage(randomIntFromInterval(1, pageCount) - 1);
-
-  const focusTable = () => {
-    if (tableRef?.current) {
-      tableRef.current.focus();
-    }
-  };
 
   const onKeyUp = (event) => {
     const key = event.key.toLowerCase();
