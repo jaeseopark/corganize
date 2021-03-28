@@ -44,7 +44,7 @@ const TableView = ({
     if (key >= '0' && key <= '9') {
       downloadOrOpenFileByIndex(parseInt(key));
       focusTable();
-    } else if (key === 'arrowright') {
+    } else if (key === 'arrowright' || key === ' ') {
       nextPage();
       focusTable();
     } else if (key === 'arrowleft') {
