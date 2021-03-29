@@ -41,7 +41,7 @@ const FileActions = ({ file, downloadFile, openFile }) => {
   } else if (download.percentage !== null) {
     actionButton = <Button disabled>{download.percentage}%</Button>;
   } else if (storageservice && storageservice !== 'None' && locationref) {
-    actionButton = <Button onClick={downloadFile}>DL</Button>;
+    actionButton = <Button onClick={() => downloadFile(file)}>DL</Button>;
   }
 
   return <div className="fileactions">{actionButton}</div>;
