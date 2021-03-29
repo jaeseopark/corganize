@@ -235,8 +235,10 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
 
     if (existsSync(file.encryptedPath)) {
       openFile(file);
-    } else {
+    } else if (file.storageservice) {
       downloadFile(file);
+    } else {
+      showAlert('Nothing to open or download');
     }
   };
 
