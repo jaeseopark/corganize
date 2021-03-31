@@ -1,6 +1,8 @@
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable react/jsx-key */
-import React, { useRef } from 'react';
+import { existsSync } from 'fs';
+import React from 'react';
+import { File } from '../entity/File';
 import { randomIntFromInterval } from '../utils/numberUtils';
 
 import PageControl from './PageControl';
@@ -28,6 +30,26 @@ const TableView = ({
     pageCount,
   } = tableInstance;
 
+  const getFirstLocalFileWithoutMimetype = () => {
+    return page
+      .map((row) => row.original)
+      .find((file: File) => existsSync(file.encryptedPath) && !file.mimetype);
+  };
+
+  const downloadAllRemoteFiles = () => {
+    page
+      .map((row) => row.original)
+      .filter(
+        (file: File) =>
+          !existsSync(file.encryptedPath) &&
+          file.storageservice &&
+          file.storageservice != 'None'
+      )
+      .forEach((file: File) => {
+        downloadOrOpenFile(file);
+      });
+  };
+
   const downloadOrOpenFileByIndex = (visibleIndex: number) => {
     if (page.length > visibleIndex) {
       const row = page[visibleIndex];
@@ -43,7 +65,10 @@ const TableView = ({
     const key = event.key.toLowerCase();
     if (key >= '0' && key <= '9') {
       downloadOrOpenFileByIndex(parseInt(key));
-      focusTable();
+    } else if (key === '`') {
+      const file = getFirstLocalFileWithoutMimetype();
+      if (file) downloadOrOpenFile(file);
+      else downloadAllRemoteFiles();
     } else if (key === 'arrowright' || key === ' ') {
       nextPage();
       focusTable();
