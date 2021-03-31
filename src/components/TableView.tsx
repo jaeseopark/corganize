@@ -43,7 +43,7 @@ const TableView = ({
         (file: File) =>
           !existsSync(file.encryptedPath) &&
           file.storageservice &&
-          file.storageservice != 'None'
+          file.storageservice !== 'None'
       )
       .forEach((file: File) => {
         downloadOrOpenFile(file);
