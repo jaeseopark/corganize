@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import fs from 'fs';
 import Library from '../entity/Library';
+import Button from './Button';
 
 const LibrarySelector = ({ onLibraryChange }) => {
   const hiddenFileInput = useRef(null);
@@ -68,15 +69,13 @@ const LibrarySelector = ({ onLibraryChange }) => {
         </span>
       </div>
       <div className="button-container">
-        <button
-          type="button"
-          className="btn btn-primary"
+        <Button
           onClick={() => {
             hiddenFileInput.current.click();
           }}
         >
           Choose File
-        </button>
+        </Button>
         <input
           type="file"
           ref={hiddenFileInput}

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { File } from '../entity/File';
 import { deleteAllAsync, listDirAsync } from '../utils/fileUtils';
-import { humanFileSize } from '../utils/numberUtils';
 import Button from './Button';
 
 type AdminPanelProps = {
@@ -49,13 +48,8 @@ const AdminPanel = ({ files, localPath }: AdminPanelProps) => {
     ? `Purege ${lfnil.length} file(s)`
     : 'Local files not in library';
 
-  const total_bytes = files.reduce((sum, f: File) => sum + (f.size || 0), 0);
-
   return (
     <div>
-      <div>
-        <span>{humanFileSize(total_bytes)}</span>
-      </div>
       <Button onClick={handleLfnilClick} disabled={lfnil && lfnil.length === 0}>
         {lfnilLabel}
       </Button>

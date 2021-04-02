@@ -1,0 +1,34 @@
+:global {
+  .input-bar {
+    margin-bottom: 16px;
+
+    input[type='text'] {
+      width: calc(100% - 84px);
+      margin: 4px 10px 0 0;
+    }
+
+    .btn {
+      float: right;
+    }
+  }
+
+  .files {
+    width: 100%;
+    height: calc(100vh - 145px);
+    display: block;
+    overflow-y: scroll;
+    font-size: .8rem;
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      background-size: 12px 12px;
+      background-repeat: no-repeat;
+      background-image: url('../../assets/loading-svgrepo-com.svg');
+
+      &.complete {
+        background-image: url('../../assets/iconmonstr-check-mark.svg');
+      }
+    }
+  }
+}
