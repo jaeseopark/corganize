@@ -8,6 +8,7 @@ import './ScrapePanel.scss';
 import { randomIntFromInterval } from '../utils/numberUtils';
 import { ignoreEvent } from '../uiutils/eventUtils';
 import Button from './Button';
+import { ipcRenderer } from 'electron';
 
 type ScrapePanelProps = {
   corganizeClient: CorganizeClient;
@@ -51,6 +52,13 @@ const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
   const [scrapedFiles, setScrapedFiles] = useState<File[] | null>(null);
   const urlRef = useRef(null);
 
+  const getUrlFromSecondWindow = () => {
+    ipcRenderer.invoke('getUrl').then((url) => {
+      if (urlRef?.current)
+        urlRef.current.value = url;
+    });
+  };
+
   const scrape = (event) => {
     event.preventDefault();
     hsClient.scrapeAsync(urlRef?.current.value).then(setScrapedFiles);
@@ -72,6 +80,9 @@ const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
         <form onSubmit={scrape}>
           <input required ref={urlRef} type="text" onKeyUp={ignoreEvent} />
           <Button type="submit">Scrape</Button>
+          <Button onClick={getUrlFromSecondWindow}>
+            Get from the second window
+          </Button>
         </form>
       </div>
       {table}

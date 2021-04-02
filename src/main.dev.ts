@@ -32,6 +32,7 @@ export default class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null;
+let secondaryWindow: BrowserWindow | null = null;
 
 let library: Library | null = null;
 let gdriveClient: GdriveClient | null = null;
@@ -69,7 +70,16 @@ const appQuitWrapper = () => {
   }
 };
 
-const openExternal = (url: string) => { new BrowserWindow(DEFAULT_WINDOW_SIZE).loadURL(url) };
+const openExternal = (url: string) => {
+  if (!secondaryWindow || secondaryWindow.isDestroyed())
+    secondaryWindow = new BrowserWindow({
+      ...DEFAULT_WINDOW_SIZE,
+      show: false,
+    });
+
+  secondaryWindow.loadURL(url);
+  secondaryWindow.show();
+};
 
 const createWindow = async () => {
   if (
@@ -165,3 +175,14 @@ ipcMain.on('changeLibraryConfig', (_event, libraryConfig) => {
 });
 
 ipcMain.handle('openUrl', (_event, url: string) => openExternal(url));
+
+ipcMain.handle(
+  'getUrl',
+  async () =>
+    new Promise((resolve) => {
+      if (secondaryWindow && !secondaryWindow.isDestroyed()) {
+        resolve(secondaryWindow.webContents.getURL());
+      }
+      resolve(null);
+    })
+);
