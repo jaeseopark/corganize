@@ -9,8 +9,8 @@ import { ContextMenuOption } from '../entity/props';
 
 export const getLocalActions = (
   { encryptedPath }: File,
-  rerenderRowData,
-  showAlert
+  rerenderRowData: Function,
+  showAlert: Function
 ): ContextMenuOption[] => {
   const localActions: ContextMenuOption[] = [];
 

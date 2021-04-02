@@ -1,4 +1,11 @@
+import { File } from '../entity/File';
+
 const fetch = require('node-fetch');
+
+const doesPrimaryKeyExist = (responseBody) => {
+  const { message } = responseBody;
+  return message && message === 'Primary Key already exists';
+};
 
 class CorganizeClient {
   host: string;
@@ -60,7 +67,28 @@ class CorganizeClient {
     );
   }
 
-  updateFile(fileid, props) {
+  createFile(file: File, forceCreate = false) {
+    const url = new URL('/Prod/files', this.host);
+
+    return fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(file),
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: this.apikey,
+      },
+    }).then((res) => {
+      const responseBody = res.json();
+      if (res.status === 200) return responseBody;
+      if (forceCreate && doesPrimaryKeyExist(responseBody)) {
+        const { fileid } = file;
+        return this.updateFile(fileid, { isactive: true });
+      }
+      throw responseBody;
+    });
+  }
+
+  updateFile(fileid: string, props: File) {
     const url = new URL('/Prod/files', this.host);
     const body = { ...props, fileid };
     return fetch(url, {

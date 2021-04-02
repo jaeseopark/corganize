@@ -261,6 +261,7 @@
     "node-aescrypt": "1.0.8",
     "node-fetch": "^2.6.1",
     "react": "^17.0.1",
+    "react-burger-menu": "^3.0.6",
     "react-contextmenu": "^2.14.0",
     "react-dom": "^17.0.1",
     "react-images": "^1.1.7",

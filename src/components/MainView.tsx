@@ -23,8 +23,7 @@ import {
   getCommonActions,
   getLocalActions,
   getRemoteActions,
-} from '../utils/contextMenuUtils';
-import AdminPanelLauncher from './AdminPanelLauncher';
+} from '../uiutils/contextMenuUtils';
 import { File } from '../entity/File';
 import { ContextMenuOption } from '../entity/props';
 import { htmlDecode } from '../utils/stringUtils';
@@ -32,6 +31,12 @@ import ContextMenuWrapper from './ContextMenuWrapper';
 import FileView from './FileView';
 import { hiddenColumns, regularColumns } from '../uiutils/columnUtils';
 import Library from '../entity/Library';
+import BurgerMenu, { BurgerMenuSpacer } from './BurgerMenu';
+import HyperSquirrelClient from '../client/hypersquirrel';
+
+import { getBurgerMenuOptions as getAllBurgerMenuOptions } from '../uiutils/burgerMenuUtils';
+import AdminPanel from './AdminPanel';
+import ScrapePanel from './ScrapePanel';
 
 type MainViewRenderBuffer = {
   files: File[];
@@ -59,6 +64,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   const [corganizeClient] = useState(
     new CorganizeClient(library.config.server)
   );
+  const [hsClient] = useState(new HyperSquirrelClient());
 
   const tableRef = useRef(null);
 
@@ -125,6 +131,28 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       .then(rerender)
       .catch(showAlert);
   };
+
+  const openAdminPanel = () => {
+    setFullscreenComponent({
+      title: 'Admin Panel',
+      body: <AdminPanel files={files} localPath={library.config.local.path} />,
+    });
+  };
+
+  const openScrapePanel = () => {
+    setFullscreenComponent({
+      title: 'Scrape',
+      body: <ScrapePanel corganizeClient={corganizeClient} hsClient={hsClient} />,
+    });
+  };
+
+  const getBurgerMenuOptions = () =>
+    getAllBurgerMenuOptions(
+      files,
+      allFilesLoaded,
+      openScrapePanel,
+      openAdminPanel
+    );
 
   const getConextMenuOptions = (inputFile: File): ContextMenuOption[] => {
     const file =
@@ -315,9 +343,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     return <h2 className="center">Loading...</h2>;
   }
 
-  const mainViewClassNames = classNames('mainview', {
-    hidden: !!fullscreenComponent,
-  });
+  const isFullscreenActive = !!fullscreenComponent;
 
   return (
     <>
@@ -330,13 +356,11 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
           }}
         />
       )}
-      <div className={mainViewClassNames}>
-        <AdminPanelLauncher
-          setFullscreenComponent={setFullscreenComponent}
-          allFilesLoaded={allFilesLoaded}
-          files={files}
-          localPath={library.config.local.path}
-        />
+      {!fullscreenComponent && (
+        <BurgerMenu getBurgerMenuOptions={getBurgerMenuOptions} />
+      )}
+      <div className={classNames('mainview', { hidden: isFullscreenActive })}>
+        <BurgerMenuSpacer />
         <GlobalFilter tableInstance={tableInstance} />
         <DownloadCenter />
         <TableView
