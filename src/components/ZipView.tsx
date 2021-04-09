@@ -1,3 +1,4 @@
+/* eslint-disable radix */
 import React, { useEffect, useRef, useState } from 'react';
 import Carousel, { Modal, ModalGateway } from 'react-images';
 import { listDirAsync } from '../utils/fileUtils';
@@ -38,7 +39,7 @@ const ZipView = ({ path }: { path: string }) => {
             return img;
           });
         })
-        .then((imgs: Image[]) => setImages(imgs))
+        .then(setImages)
         .catch(setErrorMessage);
     }
 
@@ -57,7 +58,13 @@ const ZipView = ({ path }: { path: string }) => {
     }
   };
 
-  const onKeyUp = ({ key }: { key: string }) => {
+  const onKeyUp = (event) => {
+    const { key } = event;
+    if (key >= '0' && key <= '9') {
+      const i = Math.floor((images?.length * parseInt(key)) / 10);
+      setCurrentIndexWithBounds(i);
+    }
+
     switch (key) {
       case 'z':
         setCurrentIndexWithBounds(currentIndex - 10);
