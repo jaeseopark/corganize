@@ -3,12 +3,16 @@
     margin-bottom: 16px;
 
     input[type='text'] {
-      width: calc(100% - 84px);
+      width: calc(100% - 324px);
       margin: 4px 10px 0 0;
     }
 
     .btn {
       float: right;
+
+      &[type='submit'] {
+        margin-left: 10px;
+      }
     }
   }
 
