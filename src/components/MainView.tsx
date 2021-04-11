@@ -265,8 +265,6 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       openFile(file);
     } else if (file.storageservice) {
       downloadFile(file);
-    } else {
-      showAlert('Nothing to open or download');
     }
   };
 
