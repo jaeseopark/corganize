@@ -64,7 +64,9 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   const [corganizeClient] = useState(
     new CorganizeClient(library.config.server)
   );
-  const [hsClient] = useState(new HyperSquirrelClient());
+  const [hsClient] = useState(
+    new HyperSquirrelClient(library.config.hypersquirrel)
+  );
 
   const tableRef = useRef(null);
 

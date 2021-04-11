@@ -38,7 +38,7 @@ const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
     );
   };
 
-  const [rows, setRows] = useState([]);
+  const [rows] = useState([]);
   const urlRef = useRef(null);
   const [, setRerenderTimestamp] = useState(null);
 
@@ -52,7 +52,6 @@ const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
 
   const createFile = (row: RowData) =>
     new Promise((resolve) => {
-      // eslint-disable-next-line promise/catch-or-return
       corganizeClient
         .createFile(row.file)
         .then(() => {
@@ -66,6 +65,7 @@ const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
           rerender();
           resolve(null);
         });
+      resolve(null);
     });
 
   const scrape = (event) => {
@@ -83,6 +83,10 @@ const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
           rows.push(row);
           createFile(row);
         });
+        rerender();
+      })
+      .catch((error) => {
+        alert(`Error: ${JSON.stringify(error)}`);
       });
   };
 

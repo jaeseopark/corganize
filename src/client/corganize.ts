@@ -3,11 +3,6 @@ import { File } from '../entity/File';
 
 const fetch = require('node-fetch');
 
-const doesPrimaryKeyExist = (responseBody) => {
-  const { message } = responseBody;
-  return message && message === 'Primary Key already exists';
-};
-
 class CorganizeClient {
   host: string;
 
