@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-throw-literal */
 import { File } from '../entity/File';
 
 const fetch = require('node-fetch');
@@ -67,7 +68,7 @@ class CorganizeClient {
     );
   }
 
-  createFile(file: File, forceCreate = false) {
+  createFile(file: File) {
     const url = new URL('/Prod/files', this.host);
 
     return fetch(url, {
@@ -77,14 +78,13 @@ class CorganizeClient {
         'Content-Type': 'application/json',
         apikey: this.apikey,
       },
-    }).then((res) => {
-      const responseBody = res.json();
-      if (res.status === 200) return responseBody;
-      if (forceCreate && doesPrimaryKeyExist(responseBody)) {
-        const { fileid } = file;
-        return this.updateFile(fileid, { isactive: true });
-      }
-      throw responseBody;
+    }).then(async (res) => {
+      if (res.status === 200) return res.json();
+
+      throw {
+        status: res.status,
+        json: await res.json(),
+      };
     });
   }
 

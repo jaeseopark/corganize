@@ -1,74 +1,96 @@
-import React, { useEffect, useRef, useState } from 'react';
+/* eslint-disable promise/always-return */
+import React, { useRef, useState } from 'react';
 import classNames from 'classnames';
+import { ipcRenderer } from 'electron';
 import CorganizeClient from '../client/corganize';
 import HyperSquirrelClient from '../client/hypersquirrel';
-import { File } from '../entity/File';
 
 import './ScrapePanel.scss';
-import { randomIntFromInterval } from '../utils/numberUtils';
 import { ignoreEvent } from '../uiutils/eventUtils';
 import Button from './Button';
-import { ipcRenderer } from 'electron';
+import { File } from '../entity/File';
+
+const DEFAULT_STATUS = 'pending';
 
 type ScrapePanelProps = {
   corganizeClient: CorganizeClient;
   hsClient: HyperSquirrelClient;
 };
 
+type RowData = {
+  file: File;
+  status: string;
+  error?: string;
+};
+
 const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
-  const Row = ({ file }) => {
-    const [isSubmitted, setIsSubmitted] = useState(false);
-    const [isComplete, setIsComplete] = useState(false);
-
-    useEffect(() => {
-      if (!isSubmitted && !isComplete) {
-        setTimeout(() => {
-          Promise.resolve()
-            .then(() => setIsSubmitted(true))
-            .then(() => corganizeClient.createFile(file, true))
-            .then(() => setIsComplete(true));
-        }, randomIntFromInterval(1, 5000));
-      }
-    });
-
+  const Row = ({ file, status, error }: RowData) => {
     const { fileid, filename, sourceurl } = file;
-
-    const getStatus = () => {
-      if (isComplete) return 'complete';
-      if (isSubmitted) return 'submitted';
-      return 'pending';
-    };
 
     return (
       <tr>
-        <td className={classNames('icon', getStatus())} />
+        <td className={classNames('icon', status)} />
         <td>{fileid}</td>
         <td>{filename}</td>
         <td>{sourceurl}</td>
+        <td>{error}</td>
       </tr>
     );
   };
 
-  const [scrapedFiles, setScrapedFiles] = useState<File[] | null>(null);
+  const [rows, setRows] = useState([]);
   const urlRef = useRef(null);
+  const [, setRerenderTimestamp] = useState(null);
+
+  const rerender = () => setRerenderTimestamp(Date.now());
 
   const getUrlFromSecondWindow = () => {
     ipcRenderer.invoke('getUrl').then((url) => {
-      if (urlRef?.current)
-        urlRef.current.value = url;
+      if (urlRef?.current) urlRef.current.value = url;
     });
   };
 
+  const createFile = (row: RowData) =>
+    new Promise((resolve) => {
+      // eslint-disable-next-line promise/catch-or-return
+      corganizeClient
+        .createFile(row.file)
+        .then(() => {
+          row.status = 'complete';
+        })
+        .catch((error) => {
+          row.status = 'error';
+          row.error = JSON.stringify(error);
+        })
+        .finally(() => {
+          rerender();
+          resolve(null);
+        });
+    });
+
   const scrape = (event) => {
     event.preventDefault();
-    hsClient.scrapeAsync(urlRef?.current.value).then(setScrapedFiles);
+    hsClient
+      .scrapeAsync(urlRef?.current.value)
+      .then((files) =>
+        files.map((file) => {
+          return { file, status: DEFAULT_STATUS };
+        })
+      )
+      .then((newRows) => {
+        rows.length = 0; // clear the exisitng rows;
+        newRows.forEach((row) => {
+          rows.push(row);
+          createFile(row);
+        });
+      });
   };
 
-  const table = scrapedFiles && (
+  const table = rows && (
     <table className="files">
       <tbody>
-        {scrapedFiles.map((f: File) => (
-          <Row file={f} />
+        {rows.map((rowData) => (
+          <Row {...rowData} />
         ))}
       </tbody>
     </table>

@@ -30,6 +30,10 @@
       background-repeat: no-repeat;
       background-image: url('../../assets/loading-svgrepo-com.svg');
 
+      &.error {
+        background-image: url('../../assets/error.svg');
+      }
+
       &.complete {
         background-image: url('../../assets/iconmonstr-check-mark.svg');
       }
