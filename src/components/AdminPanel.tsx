@@ -11,9 +11,17 @@ type AdminPanelProps = {
 const AdminPanel = ({ files, localPath }: AdminPanelProps) => {
   const [lfnil, setLfnil] = useState<string[] | null>(null);
   const [errorObj, setErrorObj] = useState(null);
+  const [inProgress, setProgressFlag] = useState(false);
+
+  const setProgressTrueAsync = () =>
+    new Promise((resolve) => {
+      setProgressFlag(true);
+      resolve(null);
+    });
 
   const calculateLfnil = () => {
-    return listDirAsync(localPath, false)
+    return setProgressTrueAsync()
+      .then(() => listDirAsync(localPath, false))
       .then((localFilePaths: string[]) => {
         const pathsInLibrary = files
           .filter((f) => f.storageservice && f.storageservice !== 'None')
@@ -22,36 +30,37 @@ const AdminPanel = ({ files, localPath }: AdminPanelProps) => {
           (p) => p.endsWith('.aes') && !pathsInLibrary.includes(p)
         );
       })
-      .then((tmpLfnil) => setLfnil(tmpLfnil))
+      .then(setLfnil)
+      .then(() => setProgressFlag(false))
       .catch(setErrorObj);
   };
+
   const purgeLfnil = () => {
-    const p = lfnil ? Promise.resolve() : calculateLfnil();
-    p.then(() => deleteAllAsync(lfnil))
+    setProgressTrueAsync()
+      .then(() => (lfnil ? null : calculateLfnil()))
+      .then(() => deleteAllAsync(lfnil))
       .then(() => setLfnil([]))
+      .then(() => setProgressFlag(false))
       .catch(setErrorObj);
   };
 
   const handleLfnilClick = () => {
-    if (lfnil) {
-      purgeLfnil();
-    } else {
-      calculateLfnil();
-    }
+    if (lfnil) purgeLfnil();
+    else calculateLfnil();
   };
 
   if (errorObj) {
     return <span>{JSON.stringify(errorObj, null, 2)}</span>;
   }
 
-  const lfnilLabel = lfnil
-    ? `Purege ${lfnil.length} file(s)`
-    : 'Local files not in library';
+  if (inProgress) return 'Progressing...';
 
   return (
     <div>
       <Button onClick={handleLfnilClick} disabled={lfnil && lfnil.length === 0}>
-        {lfnilLabel}
+        {lfnil
+          ? `Purege ${lfnil.length} file(s) not in library`
+          : 'Caclculate Local files not in library'}
       </Button>
     </div>
   );
