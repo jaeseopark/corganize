@@ -89,7 +89,7 @@ export const getCommonActions = (
     {
       label: 'Toggle Favourite (A)',
       onClick: () => toggleFav(file),
-      hotkey: 'a',
+      hotkey: 'w',
     },
     {
       label: 'Show Metadata',
