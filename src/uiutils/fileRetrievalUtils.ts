@@ -34,8 +34,8 @@ export const retrieveFilesAsync = (
   };
 
   const callbackWrapper = (files: File[]) => {
-    const filteredAndDecorated = files.filter(shouldKeep).map(decorateFile);
-    progressCallback(filteredAndDecorated);
+    const decoratedAndFiltered = files.map(decorateFile).filter(shouldKeep);
+    progressCallback(decoratedAndFiltered);
   };
 
   switch (view) {
