@@ -50,7 +50,8 @@ export const getRemoteActions = (
   { fileid, sourceurl, storageservice }: File,
   updateFile: Function,
   rerenderRowData: Function,
-  showAlert: Function
+  showAlert: Function,
+  openScrapePanel: Function,
 ): ContextMenuOption[] => {
   const remoetActions: ContextMenuOption[] = [];
   if (sourceurl) {
@@ -64,8 +65,11 @@ export const getRemoteActions = (
             .then(showAlert('Copied to clipboard')),
       },
       {
-        label: 'Open Source URL',
-        onClick: () => ipcRenderer.invoke('openUrl', sanitizedSourceurl),
+        label: 'Scrape Source URL',
+        onClick: () => {
+          openScrapePanel();
+          ipcRenderer.invoke('openUrl', sanitizedSourceurl);
+        },
       }
     );
   }

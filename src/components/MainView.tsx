@@ -162,7 +162,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       inputFile;
     return [
       ...getLocalActions(file, rerender, showAlert),
-      ...getRemoteActions(file, updateFile, rerender, showAlert),
+      ...getRemoteActions(file, updateFile, rerender, showAlert, openScrapePanel),
       ...getCommonActions(file, setFullscreenComponent, toggleFav, deleteFile),
     ];
   };
