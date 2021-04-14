@@ -32,8 +32,10 @@ h2.center {
 
 .alert {
   position: absolute;
+  top: calc(100vh - 65px);
   left: 30px;
-  bottom: 10px;
+  right: unset;
+  bottom: unset;
   z-index: 9999;
   width: 50%;
   padding: .4rem;
