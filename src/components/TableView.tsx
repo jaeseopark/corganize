@@ -3,6 +3,7 @@
 import { existsSync } from 'fs';
 import React from 'react';
 import { File } from '../entity/File';
+import { shuffle } from '../utils/arrayUtils';
 import { randomIntFromInterval } from '../utils/numberUtils';
 
 import PageControl from './PageControl';
@@ -34,6 +35,14 @@ const TableView = ({
     return page
       .map((row) => row.original)
       .find((file: File) => existsSync(file.encryptedPath) && !file.mimetype);
+  };
+
+  const isActiveAndLocal = (f: File) => f.dateactivated && existsSync(f.encryptedPath);
+
+  const getRandomActiveLocalFile = () => {
+    const files = page.map((row) => row.original).filter(isActiveAndLocal);
+    const [firstFile] = shuffle(files);
+    return firstFile;
   };
 
   const downloadAllRemoteFiles = () => {
@@ -78,6 +87,11 @@ const TableView = ({
     } else if (key === 'r') {
       goToRandomPage();
       focusTable();
+    } else if (key === 'g') {
+      const file = getRandomActiveLocalFile();
+      if (file) {
+        downloadOrOpenFile(file);
+      }
     }
   };
 
