@@ -41,16 +41,13 @@ export const retrieveFilesAsync = (
   switch (view) {
     case 'recent': {
       const limit = 20000;
-      return corganizeClient.getRecentFilesWithPagination(
-        callbackWrapper,
-        limit
-      );
+      return corganizeClient.getRecentFiles(callbackWrapper, limit);
     }
     case 'active': {
-      return corganizeClient.getActiveFilesWithPagination(callbackWrapper);
+      return corganizeClient.getActiveFiles(callbackWrapper);
     }
     case 'incomplete': {
-      return corganizeClient.getIncompleteFilesWithPagination(callbackWrapper);
+      return corganizeClient.getIncompleteFiles(callbackWrapper);
     }
     default: {
       const message = `Invalid view: ${view}`;

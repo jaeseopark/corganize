@@ -13,15 +13,15 @@ class CorganizeClient {
     this.apikey = apikey;
   }
 
-  getRecentFilesWithPagination(cb, limit = null) {
+  getRecentFiles(cb, limit = null) {
     return this.getFilesWithPagination('/Prod/files', cb, limit);
   }
 
-  getActiveFilesWithPagination(cb, limit = null) {
+  getActiveFiles(cb, limit = null) {
     return this.getFilesWithPagination('/Prod/files/active', cb, limit);
   }
 
-  getIncompleteFilesWithPagination(cb, limit = null) {
+  getIncompleteFiles(cb, limit = null) {
     return this.getFilesWithPagination('/Prod/files/incomplete', cb, limit);
   }
 
