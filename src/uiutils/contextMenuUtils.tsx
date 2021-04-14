@@ -91,7 +91,7 @@ export const getCommonActions = (
 ): ContextMenuOption[] => {
   return [
     {
-      label: 'Toggle Favourite (A)',
+      label: 'Toggle Favourite (W)',
       onClick: () => toggleFav(file),
       hotkey: 'w',
     },
