@@ -26,7 +26,6 @@ import {
 } from '../uiutils/contextMenuUtils';
 import { File } from '../entity/File';
 import { ContextMenuOption } from '../entity/props';
-import { htmlDecode } from '../utils/stringUtils';
 import ContextMenuWrapper from './ContextMenuWrapper';
 import FileView from './FileView';
 import { hiddenColumns, regularColumns } from '../uiutils/columnUtils';
@@ -37,6 +36,7 @@ import HyperSquirrelClient from '../client/hypersquirrel';
 import { getBurgerMenuOptions as getAllBurgerMenuOptions } from '../uiutils/burgerMenuUtils';
 import AdminPanel from './AdminPanel';
 import ScrapePanel from './ScrapePanel';
+import { retrieveFilesAsync } from '../uiutils/fileRetrievalUtils';
 
 type MainViewRenderBuffer = {
   files: File[];
@@ -270,55 +270,13 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     }
   };
 
-  const loadFiles = (): Promise<null> => {
-    const filterMoreFiles = (moreFiles: File[]) => {
-      const {
-        showDownloadableFilesOnly: sdfo,
-        hideDownloadedFiles: hdf,
-      } = library;
-
-      if (!sdfo && !hdf) return moreFiles;
-
-      return moreFiles.filter(
-        (f: File) =>
-          (!sdfo || f.storageservice !== 'None') &&
-          (!hdf || !existsSync(f.encryptedPath))
-      );
-    };
-
+  const populateFileBuffer = (): Promise<null> => {
     const progressCallback = (moreFiles: File[]) => {
-      moreFiles.forEach((file: File) => {
-        file.encryptedPath = library.getEncryptedPath(file.fileid);
-        file.decryptedPath = library.getDecryptedPath(file.fileid);
-        file.filename = htmlDecode(file.filename);
-      });
-      renderBuffer.files = renderBuffer.files.concat(
-        filterMoreFiles(moreFiles)
-      );
+      renderBuffer.files = renderBuffer.files.concat(moreFiles);
       setFiles(renderBuffer.files);
     };
 
-    switch (library.view) {
-      case 'recent': {
-        const limit = 20000;
-        return corganizeClient.getRecentFilesWithPagination(
-          progressCallback,
-          limit
-        );
-      }
-      case 'active': {
-        return corganizeClient.getActiveFilesWithPagination(progressCallback);
-      }
-      case 'incomplete': {
-        return corganizeClient.getIncompleteFilesWithPagination(
-          progressCallback
-        );
-      }
-      default: {
-        const message = `Invalid view: ${library.view}`;
-        return Promise.reject({ message });
-      }
-    }
+    return retrieveFilesAsync(corganizeClient, library, progressCallback);
   };
 
   const focusTable = () => {
@@ -329,7 +287,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
 
   useEffect(() => {
     if (!files) {
-      loadFiles()
+      populateFileBuffer()
         .then(() => setAllFilesLoaded(true))
         .catch((error) => showAlert(error.message));
     }
@@ -337,7 +295,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       renderBuffer.shouldFocusTable = false;
       focusTable();
     }
-  }, [files, loadFiles, showAlert]);
+  }, [files, populateFileBuffer, showAlert]);
 
   if (!files) {
     return <h2 className="center">Loading...</h2>;
