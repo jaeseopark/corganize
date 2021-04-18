@@ -33,7 +33,6 @@ const OrphanAnalysisPanel = ({ files, localPath }: OrphanAnalysisPanelProps) => 
   const deleteOrphans = () => {
     deleteAllAsync(orphans)
       .then(() => setOrphans([]))
-      .then(() => setProgressFlag(false))
       .catch(setErrorObj);
   };
 
