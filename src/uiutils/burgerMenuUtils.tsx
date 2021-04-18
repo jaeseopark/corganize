@@ -6,7 +6,8 @@ export const getBurgerMenuOptions = (
   files: File[],
   allFilesLoaded: boolean,
   openScrapePanel: Function,
-  openAdminPanel: Function,
+  openOrphanAnalysisPanel: Function,
+  openDuplicateAnalysisPanel: Function,
 ) => {
   const libSize = files.reduce((sum, f: File) => sum + (f.size || 0), 0);
   const libSizeStr = humanFileSize(libSize);
@@ -17,9 +18,13 @@ export const getBurgerMenuOptions = (
       onClick: openScrapePanel,
     },
     {
-      label: 'Admin Panel',
-      onClick: openAdminPanel,
+      label: 'Orphan Analysis',
+      onClick: openOrphanAnalysisPanel,
       disabled: !allFilesLoaded,
+    },
+    {
+      label: 'Duplicate Analysis',
+      onClick: openDuplicateAnalysisPanel,
     },
     { label: `Library Size ${libSizeStr}`, className: 'footer' },
   ];

@@ -34,9 +34,10 @@ import BurgerMenu, { BurgerMenuSpacer } from './BurgerMenu';
 import HyperSquirrelClient from '../client/hypersquirrel';
 
 import { getBurgerMenuOptions as getAllBurgerMenuOptions } from '../uiutils/burgerMenuUtils';
-import AdminPanel from './AdminPanel';
+import OrphanAnalysisPanel from './OrphanAnalysisPanel';
 import ScrapePanel from './ScrapePanel';
 import { retrieveFilesAsync } from '../uiutils/fileRetrievalUtils';
+import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
 
 type MainViewRenderBuffer = {
   files: File[];
@@ -134,17 +135,53 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       .catch(showAlert);
   };
 
-  const openAdminPanel = () => {
+  const openOrphanPanel = () => {
     setFullscreenComponent({
-      title: 'Admin Panel',
-      body: <AdminPanel files={files} localPath={library.config.local.path} />,
+      title: 'Delete Orphan Files',
+      body: (
+        <OrphanAnalysisPanel
+          files={files}
+          localPath={library.config.local.path}
+        />
+      ),
     });
   };
 
   const openScrapePanel = () => {
     setFullscreenComponent({
       title: 'Scrape',
-      body: <ScrapePanel corganizeClient={corganizeClient} hsClient={hsClient} />,
+      body: (
+        <ScrapePanel corganizeClient={corganizeClient} hsClient={hsClient} />
+      ),
+    });
+  };
+
+  const getContextMenuOptions = (inputFile: File): ContextMenuOption[] => {
+    const file =
+      renderBuffer.files.find((f: File) => f.fileid === inputFile.fileid) ||
+      inputFile;
+    return [
+      ...getLocalActions(file, rerender, showAlert),
+      ...getRemoteActions(
+        file,
+        updateFile,
+        rerender,
+        showAlert,
+        openScrapePanel
+      ),
+      ...getCommonActions(file, setFullscreenComponent, toggleFav, deleteFile),
+    ];
+  };
+
+  const openDuplicateAnalysisPanel = () => {
+    setFullscreenComponent({
+      title: 'Duplicate Analysis',
+      body: (
+        <DuplicateAnalysisPanel
+          files={files}
+          getContextMenuOptions={getContextMenuOptions}
+        />
+      ),
     });
   };
 
@@ -153,19 +190,9 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       files,
       allFilesLoaded,
       openScrapePanel,
-      openAdminPanel
+      openOrphanPanel,
+      openDuplicateAnalysisPanel
     );
-
-  const getConextMenuOptions = (inputFile: File): ContextMenuOption[] => {
-    const file =
-      renderBuffer.files.find((f: File) => f.fileid === inputFile.fileid) ||
-      inputFile;
-    return [
-      ...getLocalActions(file, rerender, showAlert),
-      ...getRemoteActions(file, updateFile, rerender, showAlert, openScrapePanel),
-      ...getCommonActions(file, setFullscreenComponent, toggleFav, deleteFile),
-    ];
-  };
 
   const openFile = (file: File) => {
     const { mimetype, fileid, encryptedPath, decryptedPath, filename } = file;
@@ -175,7 +202,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       }
     };
 
-    const contextMenuOptions = getConextMenuOptions(file);
+    const contextMenuOptions = getContextMenuOptions(file);
 
     setFullscreenComponent({
       title: (
@@ -324,7 +351,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
         <TableView
           downloadOrOpenFile={downloadOrOpenFile}
           tableInstance={tableInstance}
-          getConextMenuOptions={getConextMenuOptions}
+          getConextMenuOptions={getContextMenuOptions}
           tableRef={tableRef}
           focusTable={focusTable}
         />

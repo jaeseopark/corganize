@@ -1,0 +1,18 @@
+:global {
+  .duplicate-analysis {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+
+    table {
+      .filename {
+        max-width: 70vw;
+        overflow: hidden;
+      }
+
+      .fileid {
+        max-width: 15vw;
+        overflow: hidden;
+      }
+    }
+  }
+}
