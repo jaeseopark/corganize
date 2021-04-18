@@ -16,7 +16,7 @@ const FileActions = ({ file, downloadFile, openFile }) => {
   useEffect(() => {
     const channel = `download${fileid}`;
     const downloadListener = (_event, { percentage, isInitial }) => {
-      if (isInitial || percentage > download.percentage) {
+      if (isInitial || percentage >= download.percentage + 10) {
         download.percentage = percentage;
         if (percentage !== 100) {
           rerender();
