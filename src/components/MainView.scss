@@ -1,4 +1,13 @@
 :global {
+  .mainview {
+    margin-left: 10px;
+    margin-right: 10px;
+
+    &.hidden {
+      display: none;
+    }
+  }
+
   .globalfilter {
     float: right;
     margin-bottom: 5px;

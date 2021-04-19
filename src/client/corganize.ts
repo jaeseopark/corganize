@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-throw-literal */
+import { File } from '../entity/File';
+
 const fetch = require('node-fetch');
 
 class CorganizeClient {
@@ -10,15 +13,15 @@ class CorganizeClient {
     this.apikey = apikey;
   }
 
-  getRecentFilesWithPagination(cb, limit = null) {
+  getRecentFiles(cb, limit = null) {
     return this.getFilesWithPagination('/Prod/files', cb, limit);
   }
 
-  getActiveFilesWithPagination(cb, limit = null) {
+  getActiveFiles(cb, limit = null) {
     return this.getFilesWithPagination('/Prod/files/active', cb, limit);
   }
 
-  getIncompleteFilesWithPagination(cb, limit = null) {
+  getIncompleteFiles(cb, limit = null) {
     return this.getFilesWithPagination('/Prod/files/incomplete', cb, limit);
   }
 
@@ -33,7 +36,7 @@ class CorganizeClient {
     return fetch(url, { headers });
   }
 
-  getFilesWithPagination(path, cb, limit, paginationToken = null, total = 0) {
+  getFilesWithPagination(path, cb, limit, paginationToken = null, total = 0): Promise<null> {
     return new Promise((resolve, reject) =>
       this.getFiles(path, paginationToken)
         .then((r) => r.json())
@@ -60,7 +63,27 @@ class CorganizeClient {
     );
   }
 
-  updateFile(fileid, props) {
+  createFile(file: File) {
+    const url = new URL('/Prod/files', this.host);
+
+    return fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(file),
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: this.apikey,
+      },
+    }).then(async (res) => {
+      if (res.status === 200) return res.json();
+
+      throw {
+        status: res.status,
+        json: await res.json(),
+      };
+    });
+  }
+
+  updateFile(fileid: string, props: File) {
     const url = new URL('/Prod/files', this.host);
     const body = { ...props, fileid };
     return fetch(url, {

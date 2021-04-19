@@ -1,5 +1,5 @@
 #root {
-  margin: 10px;
+  margin: 0;
 }
 
 .hidden {
@@ -32,14 +32,20 @@ h2.center {
 
 .alert {
   position: absolute;
-  left: 25%;
-  top: 20px;
+  top: calc(100vh - 65px);
+  left: 30px;
+  right: unset;
+  bottom: unset;
   z-index: 9999;
   width: 50%;
   padding: .4rem;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 3px 10px 0 rgba(0, 0, 0, 0.1);
   text-align: center;
   cursor: pointer;
+
+  &.hidden {
+    display: none;
+  }
 }
 
 pre {

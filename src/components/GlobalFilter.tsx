@@ -6,7 +6,8 @@ import { useAsyncDebounce } from 'react-table';
 
 import clearIcon from '../../assets/backspace_119404.svg';
 
-const GlobalFilter = ({ setGlobalFilter, gotoPage, state, isVisible }) => {
+const GlobalFilter = ({ tableInstance }) => {
+  const { setGlobalFilter, gotoPage, state } = tableInstance;
   const { globalFilter } = state;
 
   const [value, setValue] = useState(globalFilter);
@@ -27,20 +28,19 @@ const GlobalFilter = ({ setGlobalFilter, gotoPage, state, isVisible }) => {
     }
   };
 
-  const className = classNames('globalfilter', {
-    hidden: !isVisible,
-  });
+  const className = classNames('globalfilter');
 
   return (
     <div className={className}>
       <input
-        value={value || ''}
         placeholder="Search..."
+        tabIndex="4"
+        value={value || ''}
+        onKeyUp={onKeyUp}
         onChange={(e) => {
           setValue(e.target.value);
           onChange(e.target.value);
         }}
-        onKeyUp={onKeyUp}
       />
       <img className="clear" src={clearIcon} onClick={clear} />
     </div>

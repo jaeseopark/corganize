@@ -11,7 +11,7 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { existsSync } from 'fs';
@@ -20,6 +20,8 @@ import GdriveClient from './client/gdrive';
 import Library from './entity/Library';
 import { removeTmpFiles } from './utils/fileUtils';
 import { handleDecrypt, handleDownload } from './main.dev.handlers';
+
+const DEFAULT_WINDOW_SIZE = { width: 1150, height: 650 };
 
 export default class AppUpdater {
   constructor() {
@@ -30,6 +32,7 @@ export default class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null;
+let secondaryWindow: BrowserWindow | null = null;
 
 let library: Library | null = null;
 let gdriveClient: GdriveClient | null = null;
@@ -67,6 +70,17 @@ const appQuitWrapper = () => {
   }
 };
 
+const openExternal = (url: string) => {
+  if (!secondaryWindow || secondaryWindow.isDestroyed())
+    secondaryWindow = new BrowserWindow({
+      ...DEFAULT_WINDOW_SIZE,
+      show: false,
+    });
+
+  secondaryWindow.loadURL(url);
+  secondaryWindow.show();
+};
+
 const createWindow = async () => {
   if (
     process.env.NODE_ENV === 'development' ||
@@ -84,9 +98,8 @@ const createWindow = async () => {
   };
 
   mainWindow = new BrowserWindow({
+    ...DEFAULT_WINDOW_SIZE,
     show: false,
-    width: 1150,
-    height: 650,
     icon: getAssetPath('icon.png'),
     webPreferences: {
       nodeIntegration: true,
@@ -120,7 +133,7 @@ const createWindow = async () => {
   // Open urls in the user's browser
   mainWindow.webContents.on('new-window', (event, url) => {
     event.preventDefault();
-    shell.openExternal(url);
+    openExternal(url);
   });
 
   // Remove this if your app does not use auto updates
@@ -160,3 +173,16 @@ ipcMain.on('changeLibraryConfig', (_event, libraryConfig) => {
   handleDownload(mainWindow, library, gdriveClient);
   handleDecrypt(mainWindow);
 });
+
+ipcMain.handle('openUrl', (_event, url: string) => openExternal(url));
+
+ipcMain.handle(
+  'getUrl',
+  async () =>
+    new Promise((resolve) => {
+      if (secondaryWindow && !secondaryWindow.isDestroyed()) {
+        resolve(secondaryWindow.webContents.getURL());
+      }
+      resolve(null);
+    })
+);

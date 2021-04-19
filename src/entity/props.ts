@@ -3,6 +3,10 @@ export type CorganizeClientProps = {
   apikey: string;
 };
 
+export type HypersquirrelClientProps = {
+  host: string;
+};
+
 export type ContextMenuOption = {
   label: string;
   onClick: Function;

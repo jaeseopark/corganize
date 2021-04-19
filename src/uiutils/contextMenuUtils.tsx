@@ -2,20 +2,21 @@ import React from 'react';
 import os from 'os';
 import { exec } from 'child_process';
 import { existsSync, unlink } from 'fs';
+import { ipcRenderer } from 'electron';
 import { copyTextToClipboard } from './clipboardUtils';
 import { File } from '../entity/File';
 import { ContextMenuOption } from '../entity/props';
 
 export const getLocalActions = (
   { encryptedPath }: File,
-  rerenderRowData,
-  showAlert
+  rerenderRowData: Function,
+  showAlert: Function
 ): ContextMenuOption[] => {
   const localActions: ContextMenuOption[] = [];
 
   if (existsSync(encryptedPath)) {
     localActions.push({
-      label: 'Reveal (R)',
+      label: 'Reveal',
       onClick: () => {
         switch (os.platform()) {
           case 'win32':
@@ -25,7 +26,6 @@ export const getLocalActions = (
             throw new Error('Not Implemented');
         }
       },
-      hotkey: 'r',
     });
     localActions.push({
       label: 'Delete Local File (E)',
@@ -48,19 +48,31 @@ export const getLocalActions = (
 
 export const getRemoteActions = (
   { fileid, sourceurl, storageservice }: File,
-  updateFile,
-  rerenderRowData,
-  showAlert
+  updateFile: Function,
+  rerenderRowData: Function,
+  showAlert: Function,
+  openScrapePanel: Function,
 ): ContextMenuOption[] => {
   const remoetActions: ContextMenuOption[] = [];
-  if (sourceurl)
-    remoetActions.push({
-      label: 'Copy Source URL',
-      onClick: () =>
-        copyTextToClipboard(sourceurl.split('://').slice(-1).pop())
-          .then(rerenderRowData)
-          .then(showAlert('Copied to clipboard')),
-    });
+  if (sourceurl) {
+    const sanitizedSourceurl = `https://${sourceurl.split('://').slice(-1).pop()}`;
+    remoetActions.push(
+      {
+        label: 'Copy Source URL',
+        onClick: () =>
+          copyTextToClipboard(sanitizedSourceurl)
+            .then(rerenderRowData)
+            .then(showAlert('Copied to clipboard')),
+      },
+      {
+        label: 'Scrape Source URL',
+        onClick: () => {
+          openScrapePanel();
+          ipcRenderer.invoke('openUrl', sanitizedSourceurl);
+        },
+      }
+    );
+  }
   if (storageservice !== 'None')
     remoetActions.push({
       label: 'Delete Remote File (D)',
@@ -73,15 +85,15 @@ export const getRemoteActions = (
 
 export const getCommonActions = (
   file: File,
-  setFullscreenComponent,
-  toggleFav,
-  deleteFile
+  setFullscreenComponent: Function,
+  toggleFav: Function,
+  deleteFile: Function
 ): ContextMenuOption[] => {
   return [
     {
-      label: 'Toggle Favourite (A)',
+      label: 'Toggle Favourite (W)',
       onClick: () => toggleFav(file),
-      hotkey: 'a',
+      hotkey: 'w',
     },
     {
       label: 'Show Metadata',

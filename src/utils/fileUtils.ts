@@ -48,7 +48,7 @@ export const listDirAsync = (
   dir: string,
   recursively: boolean,
   includeFolders = false
-) => {
+): Promise<string[]> => {
   return new Promise((resolve, reject) => {
     glob(recursively ? `${dir}/**/*` : `${dir}/*`, (error, response) => {
       if (error) reject(error);

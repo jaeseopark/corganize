@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   useTable,
   useSortBy,
@@ -7,13 +7,14 @@ import {
   useColumnOrder,
 } from 'react-table';
 import { existsSync } from 'fs';
-import format from '../cellformatter';
+import classNames from 'classnames';
+import { ipcRenderer } from 'electron';
 
 import './MainView.scss';
 import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 
-import DownloadCenter from './DownloadCenter';
+import DownloadCenter, { isBeingDownloaded } from './DownloadCenter';
 import FullscreenView from './FullscreenView';
 import Filename from './Filename';
 import TableView from './TableView';
@@ -22,44 +23,41 @@ import {
   getCommonActions,
   getLocalActions,
   getRemoteActions,
-} from '../utils/contextMenuUtils';
-import AdminPanelLauncher from './AdminPanelLauncher';
+} from '../uiutils/contextMenuUtils';
 import { File } from '../entity/File';
 import { ContextMenuOption } from '../entity/props';
-import { htmlDecode } from '../utils/stringUtils';
+import ContextMenuWrapper from './ContextMenuWrapper';
+import FileView from './FileView';
+import { hiddenColumns, regularColumns } from '../uiutils/columnUtils';
+import Library from '../entity/Library';
+import BurgerMenu, { BurgerMenuSpacer } from './BurgerMenu';
+import HyperSquirrelClient from '../client/hypersquirrel';
 
-const regularColumns = [
-  'ispublic',
-  'storageservice',
-  'size',
-  'lastupdated',
-  'sourceurl',
-  'mimetype',
-  'fileid',
-  'encryptedPath',
-].map((id) => {
-  return {
-    id,
-    accessor: id,
-    Header: id,
-    Cell: format,
-  };
-});
-const hiddenColumns = [
-  'sourceurl',
-  'storageservice',
-  'ispublic',
-  'mimetype',
-  'fileid',
-  'encryptedPath',
-];
+import { getBurgerMenuOptions as getAllBurgerMenuOptions } from '../uiutils/burgerMenuUtils';
+import OrphanAnalysisPanel from './OrphanAnalysisPanel';
+import ScrapePanel from './ScrapePanel';
+import { retrieveFilesAsync } from '../uiutils/fileRetrievalUtils';
+import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
+
+type MainViewRenderBuffer = {
+  files: File[];
+  shouldFocusTable: boolean;
+};
+
+type MainViewProps = {
+  library: Library;
+  showAlert: Function;
+};
 
 // MainView.state.files will grow in size as the data is retrieved via server side pagination.
 // Unfortunately, updating a state value within a React component can be slow at times; causing some chunks to be skipped, etc.
 // This array acts as the buffer so the UI can render reliably.
-const renderBuffer = { files: [] };
+const renderBuffer: MainViewRenderBuffer = {
+  files: [],
+  shouldFocusTable: false,
+};
 
-const MainView = ({ library, showAlert }) => {
+const MainView = ({ library, showAlert }: MainViewProps) => {
   const [files, setFiles] = useState(null);
   const [allFilesLoaded, setAllFilesLoaded] = useState(false);
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
@@ -67,8 +65,22 @@ const MainView = ({ library, showAlert }) => {
   const [corganizeClient] = useState(
     new CorganizeClient(library.config.server)
   );
+  const [hsClient] = useState(
+    new HyperSquirrelClient(library.config.hypersquirrel)
+  );
+
+  const tableRef = useRef(null);
 
   const rerender = (_ = null) => setRerenderTimestamp(Date.now());
+
+  const downloadFile = (file: File) => {
+    const { fileid } = file;
+    if (fileid.length <= 128) {
+      ipcRenderer.invoke('download', file);
+    } else {
+      showAlert('fileid too long');
+    }
+  };
 
   const deleteFile = (fileid: string) => {
     corganizeClient
@@ -87,13 +99,21 @@ const MainView = ({ library, showAlert }) => {
 
   const updateFile = (fileid: string, props: File) => {
     const file = renderBuffer.files.find((f: File) => f.fileid === fileid);
+    if (!file) {
+      showAlert('File not found in renderBuffer');
+      return Promise.resolve(null);
+    }
+
     return corganizeClient
       .updateFile(fileid, props)
-      .then((newFile: File) => Object.assign(file, newFile))
+      .then((newFile: File) => {
+        if (newFile) return Object.assign(file, newFile);
+        throw { message: 'File not found' };
+      })
       .then(rerender)
-      .then(() => {
-        return showAlert('File has been updated');
-      });
+      .then(() => 'File has been updated')
+      .then(showAlert)
+      .catch((error) => showAlert(error.message));
   };
 
   const toggleFav = (file: File) => {
@@ -115,27 +135,102 @@ const MainView = ({ library, showAlert }) => {
       .catch(showAlert);
   };
 
-  const getConextMenuOptions = (inputFile: File): ContextMenuOption[] => {
+  const openOrphanPanel = () => {
+    setFullscreenComponent({
+      title: 'Delete Orphan Files',
+      body: (
+        <OrphanAnalysisPanel
+          files={files}
+          localPath={library.config.local.path}
+        />
+      ),
+    });
+  };
+
+  const openScrapePanel = () => {
+    setFullscreenComponent({
+      title: 'Scrape',
+      body: (
+        <ScrapePanel corganizeClient={corganizeClient} hsClient={hsClient} />
+      ),
+    });
+  };
+
+  const getContextMenuOptions = (inputFile: File): ContextMenuOption[] => {
     const file =
       renderBuffer.files.find((f: File) => f.fileid === inputFile.fileid) ||
       inputFile;
     return [
       ...getLocalActions(file, rerender, showAlert),
-      ...getRemoteActions(file, updateFile, rerender, showAlert),
+      ...getRemoteActions(
+        file,
+        updateFile,
+        rerender,
+        showAlert,
+        openScrapePanel
+      ),
       ...getCommonActions(file, setFullscreenComponent, toggleFav, deleteFile),
     ];
   };
 
+  const openDuplicateAnalysisPanel = () => {
+    setFullscreenComponent({
+      title: 'Duplicate Analysis',
+      body: (
+        <DuplicateAnalysisPanel
+          files={files}
+          getContextMenuOptions={getContextMenuOptions}
+        />
+      ),
+    });
+  };
+
+  const getBurgerMenuOptions = () =>
+    getAllBurgerMenuOptions(
+      files,
+      allFilesLoaded,
+      openScrapePanel,
+      openOrphanPanel,
+      openDuplicateAnalysisPanel
+    );
+
+  const openFile = (file: File) => {
+    const { mimetype, fileid, encryptedPath, decryptedPath, filename } = file;
+    const onDetectMimetype = (detected: string) => {
+      if (!mimetype) {
+        updateFile(fileid, { mimetype: detected });
+      }
+    };
+
+    const contextMenuOptions = getContextMenuOptions(file);
+
+    setFullscreenComponent({
+      title: (
+        <ContextMenuWrapper
+          id="fileview-title"
+          component={<span>{filename}</span>}
+          options={contextMenuOptions}
+        />
+      ),
+      body: (
+        <FileView
+          encryptedPath={encryptedPath}
+          decryptedPath={decryptedPath}
+          aespassword={library.getAesPassword()}
+          onDetectMimetype={onDetectMimetype}
+          contextMenuOptions={contextMenuOptions}
+        />
+      ),
+    });
+  };
+
   const renderActions = ({ row }) => {
-    const file = row.original;
+    const { original: file } = row;
     return (
       <FileActions
         file={file}
-        aespassword={library.config.local.aes.password}
-        setFullscreenComponent={setFullscreenComponent}
-        getConextMenuOptions={getConextMenuOptions}
-        updateFile={updateFile}
-        showAlert={showAlert}
+        openFile={openFile}
+        downloadFile={downloadFile}
       />
     );
   };
@@ -189,93 +284,78 @@ const MainView = ({ library, showAlert }) => {
     usePagination
   );
 
+  const downloadOrOpenFile = (file: File) => {
+    if (isBeingDownloaded(file.fileid)) {
+      showAlert('Download in progress');
+      return;
+    }
+
+    if (existsSync(file.encryptedPath)) {
+      openFile(file);
+    } else if (file.storageservice) {
+      downloadFile(file);
+    }
+  };
+
+  const populateFileBuffer = (): Promise<null> => {
+    const progressCallback = (moreFiles: File[]) => {
+      renderBuffer.files = renderBuffer.files.concat(moreFiles);
+      setFiles(renderBuffer.files);
+    };
+
+    return retrieveFilesAsync(corganizeClient, library, progressCallback);
+  };
+
+  const focusTable = () => {
+    if (tableRef?.current) {
+      tableRef.current.focus();
+    }
+  };
+
   useEffect(() => {
     if (!files) {
-      const filterMoreFiles = (moreFiles) => {
-        const {
-          showDownloadableFilesOnly: sdfo,
-          hideDownloadedFiles: hdf,
-        } = library;
-
-        if (!sdfo && !hdf) return moreFiles;
-
-        return moreFiles.filter(
-          (f: File) =>
-            (!sdfo || f.storageservice !== 'None') &&
-            (!hdf || !existsSync(f.encryptedPath))
-        );
-      };
-
-      const progressCallback = (moreFiles) => {
-        moreFiles.forEach((file) => {
-          file.encryptedPath = library.getEncryptedPath(file.fileid);
-          file.decryptedPath = library.getDecryptedPath(file.fileid);
-          file.filename = htmlDecode(file.filename);
-        });
-        renderBuffer.files = renderBuffer.files.concat(
-          filterMoreFiles(moreFiles)
-        );
-        setFiles(renderBuffer.files);
-      };
-
-      let promise;
-      switch (library.view) {
-        case 'recent': {
-          const limit = 20000;
-          promise = corganizeClient.getRecentFilesWithPagination(
-            progressCallback,
-            limit
-          );
-          break;
-        }
-        case 'active': {
-          promise = corganizeClient.getActiveFilesWithPagination(
-            progressCallback
-          );
-          break;
-        }
-        case 'incomplete': {
-          promise = corganizeClient.getIncompleteFilesWithPagination(
-            progressCallback
-          );
-          break;
-        }
-        default: {
-          showAlert(`Invalid view: ${library.view}`);
-          return;
-        }
-      }
-
-      promise?.then(() => setAllFilesLoaded(true));
+      populateFileBuffer()
+        .then(() => setAllFilesLoaded(true))
+        .catch((error) => showAlert(error.message));
     }
-  }, [corganizeClient, files, library, showAlert]);
+    if (renderBuffer.shouldFocusTable) {
+      renderBuffer.shouldFocusTable = false;
+      focusTable();
+    }
+  }, [files, populateFileBuffer, showAlert]);
 
   if (!files) {
     return <h2 className="center">Loading...</h2>;
   }
 
+  const isFullscreenActive = !!fullscreenComponent;
+
   return (
     <>
       {fullscreenComponent && (
         <FullscreenView
-          title={fullscreenComponent.title}
-          content={fullscreenComponent.body}
-          onClose={() => setFullscreenComponent(null)}
+          fullscreenComponent={fullscreenComponent}
+          onClose={() => {
+            renderBuffer.shouldFocusTable = true;
+            setFullscreenComponent(null);
+          }}
         />
       )}
-      <AdminPanelLauncher
-        setFullscreenComponent={setFullscreenComponent}
-        isVisible={allFilesLoaded && !fullscreenComponent}
-        files={files}
-        localPath={library.config.local.path}
-      />
-      <GlobalFilter {...tableInstance} isVisible={!fullscreenComponent} />
-      <DownloadCenter isVisible={!fullscreenComponent} />
-      <TableView
-        tableInstance={tableInstance}
-        isVisible={!fullscreenComponent}
-        getConextMenuOptions={getConextMenuOptions}
-      />
+      {!fullscreenComponent && (
+        <BurgerMenu getBurgerMenuOptions={getBurgerMenuOptions} />
+      )}
+      <div className={classNames('mainview', { hidden: isFullscreenActive })}>
+        <BurgerMenuSpacer />
+        <GlobalFilter tableInstance={tableInstance} />
+        <DownloadCenter />
+        <TableView
+          downloadOrOpenFile={downloadOrOpenFile}
+          tableInstance={tableInstance}
+          getConextMenuOptions={getContextMenuOptions}
+          tableRef={tableRef}
+          focusTable={focusTable}
+        />
+      </div>
     </>
   );
 };

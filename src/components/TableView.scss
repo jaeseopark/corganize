@@ -2,6 +2,7 @@
   .tableview {
 
     .table {
+      outline: none;
 
       td,
       th {
@@ -121,9 +122,15 @@
           float: right;
 
           .btn {
-            float: right;
             padding: 1px 6px;
           }
+        }
+
+        .row-index {
+          font-size: 0.6rem;
+          float: right;
+          margin-right: -7px;
+          color: rgba(255, 255, 255, 0.7);
         }
       }
     }

@@ -1,10 +1,11 @@
-import { CorganizeClientProps } from './props';
+import { CorganizeClientProps, HypersquirrelClientProps } from './props';
 
 const fs = require('fs');
 const path = require('path');
 
 type LibraryConfig = {
   server: CorganizeClientProps;
+  hypersquirrel: HypersquirrelClientProps;
   storageservice: {
     gdrive: {
       creds: {
@@ -41,6 +42,10 @@ class Library {
     if (!fs.existsSync(config.local.path)) {
       fs.mkdirSync(config.local.path);
     }
+  }
+
+  getAesPassword() {
+    return this.config.local.aes.password;
   }
 
   getEncryptedPath(fileid: string) {

@@ -8,7 +8,7 @@ import './DownloadCenter.scss';
 
 const downloads = {};
 
-const DownloadCenter = ({ isVisible }) => {
+const DownloadCenter = () => {
   const [activeDownloadCount, setActiveDownloadCount] = useState(0);
 
   useEffect(() => {
@@ -29,7 +29,6 @@ const DownloadCenter = ({ isVisible }) => {
 
   const className = classNames('download-center', {
     zero: activeDownloadCount === 0,
-    hidden: !isVisible,
   });
 
   return (
@@ -40,6 +39,11 @@ const DownloadCenter = ({ isVisible }) => {
       </div>
     </div>
   );
+};
+
+export const isBeingDownloaded = (fileid: string) => {
+  const percentage = downloads[fileid];
+  return percentage && percentage < 100;
 };
 
 export default DownloadCenter;
