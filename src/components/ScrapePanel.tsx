@@ -30,10 +30,10 @@ const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
     return (
       <tr>
         <td className={classNames('icon', status)} />
-        <td>{fileid}</td>
-        <td>{filename}</td>
-        <td>{sourceurl}</td>
-        <td>{error}</td>
+        <td className="fileid">{fileid}</td>
+        <td className="filename">{filename}</td>
+        <td className="sourceurl">{sourceurl}</td>
+        <td className="error">{error}</td>
       </tr>
     );
   };

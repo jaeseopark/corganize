@@ -23,9 +23,21 @@
     overflow-y: scroll;
     font-size: .8rem;
 
+    .filename {
+      max-width: 35vw;
+    }
+
+    .sourceurl {
+      max-width: 35vw;
+    }
+
     tr {
       border-bottom: 1px solid #f0f0f0;
       height: 28px;
+    }
+
+    td {
+      overflow: hidden;
     }
 
     .icon {
