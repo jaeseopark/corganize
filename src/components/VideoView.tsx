@@ -18,9 +18,11 @@ const VideoView = ({ path, updateFile }) => {
     const { videoWidth, videoHeight, duration } = e.target;
     if (!videoWidth || !videoHeight || !duration) return;
     updateFile({
-      width: videoWidth,
-      height: videoHeight,
-      duration,
+      multimedia: {
+        width: videoWidth,
+        height: videoHeight,
+        duration: Math.ceil(duration),
+      },
     });
   };
 

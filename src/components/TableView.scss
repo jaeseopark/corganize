@@ -69,6 +69,18 @@
           background-repeat: no-repeat;
         }
 
+        .tag {
+          float: left;
+          font-weight: bold;
+          font-size: 0.6rem;
+          color: #707070;
+          background-color: #f4f4f4;
+          border-radius: 5px;
+          margin-top: 4px;
+          margin-right: 4px;
+          padding: 2px 4px;
+        }
+
         .filename {
           .icon {
             float: left;
@@ -83,6 +95,15 @@
             &.video-mp4, &.video-x-matroska {
               background-image: url('../../assets/iconfinder_movie-alt2_285634.svg');
             }
+
+            &.orientation {
+              display: none;
+
+              &.vertical {
+                display: block;
+                background-image: url('../../assets/phone.svg');
+              }
+            }
           }
 
           textarea.filename {
@@ -91,7 +112,7 @@
             border: 0;
             overflow: hidden;
             resize: none;
-            width: calc(100% - 21px);
+            width: calc(100% - 70px);
             height: 22px;
             background-color: transparent;
           }

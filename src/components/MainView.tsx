@@ -109,8 +109,6 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
         throw { message: 'File not found' };
       })
       .then(rerender)
-      .then(() => 'File has been updated')
-      .then(showAlert)
       .catch((error) => showAlert(error.message));
   };
 

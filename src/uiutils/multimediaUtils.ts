@@ -1,4 +1,7 @@
 /* eslint-disable import/prefer-default-export */
+
+import { closeEnough } from '../utils/numberUtils';
+
 export const getMetadata = (width, height, durationInSeconds, sizeInBytes) => {
   const dimensions = [height, width];
   const isVertical = height > width;
@@ -9,12 +12,11 @@ export const getMetadata = (width, height, durationInSeconds, sizeInBytes) => {
   if (isVertical) dimensions.reverse();
 
   const [short] = dimensions;
+  const isCommonAspectRatio = closeEnough(width / height, 16 / 9, 0.15);
 
-  const displayProps = {
+  return {
     isVertical,
-    width,
-    height,
-    resolutionShorthand: `${short}p`,
+    resolution: isCommonAspectRatio ? `${short}p` : null,
     bitrate,
   };
 };
