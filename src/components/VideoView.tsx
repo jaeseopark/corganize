@@ -15,14 +15,18 @@ const VideoView = ({ path }) => {
   const el = useRef(null);
 
   const jumpTimeByDelta = (deltaInSeconds) => {
-    el.current.currentTime += deltaInSeconds;
+    try {
+      el.current.currentTime += deltaInSeconds;
+    } catch (e) {}
   };
 
   /**
    * @param percentage 0-1.0
    */
   const jumpTimeByPercentage = (percentage: number) => {
-    el.current.currentTime = el.current.duration * percentage;
+    try {
+      el.current.currentTime = el.current.duration * percentage;
+    } catch (e) {}
   };
 
   const onKeyUp = (event) => {
