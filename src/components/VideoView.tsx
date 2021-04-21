@@ -11,8 +11,18 @@ const TIME_HOTKEY_MAP = {
 
 const isHotkey = (key: string) => Object.keys(TIME_HOTKEY_MAP).includes(key);
 
-const VideoView = ({ path }) => {
+const VideoView = ({ path, updateFile }) => {
   const el = useRef(null);
+
+  const onMetadata = (e) => {
+    const { videoWidth, videoHeight, duration } = e.target;
+    if (!videoWidth || !videoHeight || !duration) return;
+    updateFile({
+      width: videoWidth,
+      height: videoHeight,
+      duration,
+    });
+  };
 
   const jumpTimeByDelta = (deltaInSeconds) => {
     el.current.currentTime += deltaInSeconds;
@@ -41,7 +51,16 @@ const VideoView = ({ path }) => {
   };
 
   return (
-    <video muted autoPlay loop controls ref={el} onKeyUp={onKeyUp} src={path} />
+    <video
+      muted
+      autoPlay
+      loop
+      controls
+      ref={el}
+      onKeyUp={onKeyUp}
+      onLoadedMetadata={onMetadata}
+      src={path}
+    />
   );
 };
 

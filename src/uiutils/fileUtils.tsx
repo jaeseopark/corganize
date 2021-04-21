@@ -16,20 +16,7 @@ export function openFileFullscreen(
   setFullscreenComponent: React.Dispatch<React.SetStateAction<null>>,
   library: Library
 ) {
-  const {
-    mimetype,
-    fileid,
-    encryptedPath,
-    decryptedPath,
-    filename,
-    size,
-  } = file;
-  const onDetectMimetype = (detected: string) => {
-    if (!mimetype) {
-      updateFile(fileid, { mimetype: detected });
-    }
-  };
-
+  const { encryptedPath, decryptedPath, filename, size } = file;
   const contextMenuOptions = getContextMenuOptions(file);
 
   const sizeTag = <span className="size">{`${humanFileSize(size)}`}</span>;
@@ -50,7 +37,7 @@ export function openFileFullscreen(
       encryptedPath={encryptedPath}
       decryptedPath={decryptedPath}
       aespassword={library.getAesPassword()}
-      onDetectMimetype={onDetectMimetype}
+      updateFile={updateFile}
       contextMenuOptions={contextMenuOptions}
     />
   );
