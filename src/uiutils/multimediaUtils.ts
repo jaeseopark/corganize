@@ -2,12 +2,12 @@
 
 import { closeEnough } from '../utils/numberUtils';
 
-export const getMetadata = (width, height, durationInSeconds, sizeInBytes) => {
+export const getMetadata = (width, height, duration, size) => {
   const dimensions = [height, width];
   const isVertical = height > width;
 
   // Expressed in Megabits per second.
-  const bitrate = Math.ceil((sizeInBytes / 1024 ** 2 / durationInSeconds) * 8);
+  const bitrate = Math.ceil((size / 1024 ** 2 / duration) * 8);
 
   if (isVertical) dimensions.reverse();
 

@@ -15,3 +15,10 @@ export function randomIntFromInterval(min, max) {
 
 export const closeEnough = (val1, val2, margin) =>
   Math.abs(val1 - val2) < margin;
+
+export const toHumanDuration = (seconds: number): string =>
+  new Date(seconds * 1000)
+    .toISOString()
+    .substr(seconds < 3600 ? 14 : 11, seconds < 3600 ? 5 : 8)
+    .replace(/^0+/, '')
+    .replaceAll('-', ':');
