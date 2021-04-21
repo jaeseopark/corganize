@@ -35,7 +35,7 @@ import OrphanAnalysisPanel from './OrphanAnalysisPanel';
 import ScrapePanel from './ScrapePanel';
 import { retrieveFilesAsync } from '../uiutils/fileRetrievalUtils';
 import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
-import { getAllColumns, openFileFullscreen } from '../uiutils/fileUtils';
+import { getAllColumns, openFileFullscreen } from '../uiutils/mainViewUtils';
 
 type MainViewRenderBuffer = {
   files: File[];
