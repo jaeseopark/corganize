@@ -35,7 +35,7 @@ import OrphanAnalysisPanel from './OrphanAnalysisPanel';
 import ScrapePanel from './ScrapePanel';
 import { retrieveFilesAsync } from '../uiutils/fileRetrievalUtils';
 import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
-import { getAllColumns, openFileFullscreen } from '../uiutils/fileUtils';
+import { getAllColumns, openFileFullscreen } from '../uiutils/mainViewUtils';
 
 type MainViewRenderBuffer = {
   files: File[];
@@ -109,8 +109,6 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
         throw { message: 'File not found' };
       })
       .then(rerender)
-      .then(() => 'File has been updated')
-      .then(showAlert)
       .catch((error) => showAlert(error.message));
   };
 

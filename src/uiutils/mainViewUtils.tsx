@@ -6,7 +6,8 @@ import FileView from '../components/FileView';
 import { File } from '../entity/File';
 import Library from '../entity/Library';
 import { ContextMenuOption } from '../entity/props';
-import { humanFileSize } from '../utils/numberUtils';
+import { toHumanFileSize } from '../utils/numberUtils';
+import { hasAtLeast1Change } from '../utils/objectUtils';
 import { regularColumns } from './columnUtils';
 
 export function openFileFullscreen(
@@ -16,23 +17,15 @@ export function openFileFullscreen(
   setFullscreenComponent: React.Dispatch<React.SetStateAction<null>>,
   library: Library
 ) {
-  const {
-    mimetype,
-    fileid,
-    encryptedPath,
-    decryptedPath,
-    filename,
-    size,
-  } = file;
-  const onDetectMimetype = (detected: string) => {
-    if (!mimetype) {
-      updateFile(fileid, { mimetype: detected });
+  const { encryptedPath, decryptedPath, filename, size, fileid } = file;
+  const contextMenuOptions = getContextMenuOptions(file);
+  const updateFileWrapper = (newFile) => {
+    if (hasAtLeast1Change(file, newFile)) {
+      updateFile(fileid, newFile);
     }
   };
 
-  const contextMenuOptions = getContextMenuOptions(file);
-
-  const sizeTag = <span className="size">{`${humanFileSize(size)}`}</span>;
+  const sizeTag = <span className="size">{`${toHumanFileSize(size)}`}</span>;
   const title = (
     <ContextMenuWrapper
       id="fileview-title"
@@ -50,7 +43,7 @@ export function openFileFullscreen(
       encryptedPath={encryptedPath}
       decryptedPath={decryptedPath}
       aespassword={library.getAesPassword()}
-      onDetectMimetype={onDetectMimetype}
+      updateFile={updateFileWrapper}
       contextMenuOptions={contextMenuOptions}
     />
   );

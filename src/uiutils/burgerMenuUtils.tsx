@@ -1,6 +1,6 @@
 /* eslint-disable import/prefer-default-export */
 import { File } from '../entity/File';
-import { humanFileSize } from '../utils/numberUtils';
+import { toHumanFileSize } from '../utils/numberUtils';
 
 export const getBurgerMenuOptions = (
   files: File[],
@@ -10,7 +10,7 @@ export const getBurgerMenuOptions = (
   openDuplicateAnalysisPanel: Function,
 ) => {
   const libSize = files.reduce((sum, f: File) => sum + (f.size || 0), 0);
-  const libSizeStr = humanFileSize(libSize);
+  const libSizeStr = toHumanFileSize(libSize);
 
   return [
     {
