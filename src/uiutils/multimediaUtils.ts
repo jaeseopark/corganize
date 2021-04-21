@@ -7,7 +7,7 @@ export const getMetadata = (width, height, durationInSeconds, sizeInBytes) => {
   const isVertical = height > width;
 
   // Expressed in Megabits per second.
-  const bitrate = Math.floor((sizeInBytes / 1024 ** 2 / durationInSeconds) * 8);
+  const bitrate = Math.ceil((sizeInBytes / 1024 ** 2 / durationInSeconds) * 8);
 
   if (isVertical) dimensions.reverse();
 
@@ -17,6 +17,6 @@ export const getMetadata = (width, height, durationInSeconds, sizeInBytes) => {
   return {
     isVertical,
     resolution: isCommonAspectRatio ? `${short}p` : null,
-    bitrate,
+    bitrate: `${bitrate}Mbps`,
   };
 };

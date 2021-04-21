@@ -7,11 +7,10 @@ const renderMultimediaIcons = (...props) => {
   const { isVertical: vertical, resolution, bitrate } = getMetadata(...props);
   const ortCls = cls('icon', 'orientation', { vertical });
 
-  // TODO
-  // <div className="tag bitrate">{bitrate}</div>
   return (
     <>
       {resolution && <div className="tag resolution">{resolution}</div>}
+      {bitrate && <div className="tag bitrate">{bitrate}</div>}
       <div className={ortCls} />
     </>
   );
