@@ -11,8 +11,8 @@ export const getMetadata = (width, height, duration, size) => {
 
   if (isVertical) dimensions.reverse();
 
-  const [short] = dimensions;
-  const isCommonAspectRatio = closeEnough(width / height, 16 / 9, 0.15);
+  const [short, long] = dimensions;
+  const isCommonAspectRatio = closeEnough(long / short, 16 / 9, 0.15);
 
   return {
     isVertical,
