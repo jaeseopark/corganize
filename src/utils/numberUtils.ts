@@ -12,3 +12,6 @@ export function randomIntFromInterval(min, max) {
   // min and max included
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
+
+export const closeEnough = (val1, val2, margin) =>
+  Math.abs(val1 - val2) < margin;

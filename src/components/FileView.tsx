@@ -86,7 +86,7 @@ const FileView = ({
       const child = getInnermostChild(contentRef.current);
       child.focus();
     }
-  }, [aespassword, content, decryptedPath, encryptedPath, onDetectMimetype]);
+  }, [aespassword, content, decryptedPath, encryptedPath, updateFile]);
 
   const contentToDisplay: HTMLElement = content || <span>Decrypting...</span>;
   const contentWrapper = <div ref={contentRef}>{contentToDisplay}</div>;

@@ -7,6 +7,7 @@ import { File } from '../entity/File';
 import Library from '../entity/Library';
 import { ContextMenuOption } from '../entity/props';
 import { humanFileSize } from '../utils/numberUtils';
+import { hasAtLeast1Change } from '../utils/objectUtils';
 import { regularColumns } from './columnUtils';
 
 export function openFileFullscreen(
@@ -16,8 +17,13 @@ export function openFileFullscreen(
   setFullscreenComponent: React.Dispatch<React.SetStateAction<null>>,
   library: Library
 ) {
-  const { encryptedPath, decryptedPath, filename, size } = file;
+  const { encryptedPath, decryptedPath, filename, size, fileid } = file;
   const contextMenuOptions = getContextMenuOptions(file);
+  const updateFileWrapper = (newFile) => {
+    if (hasAtLeast1Change(file, newFile)) {
+      updateFile(fileid, newFile);
+    }
+  }
 
   const sizeTag = <span className="size">{`${humanFileSize(size)}`}</span>;
   const title = (
@@ -37,7 +43,7 @@ export function openFileFullscreen(
       encryptedPath={encryptedPath}
       decryptedPath={decryptedPath}
       aespassword={library.getAesPassword()}
-      updateFile={updateFile}
+      updateFile={updateFileWrapper}
       contextMenuOptions={contextMenuOptions}
     />
   );
