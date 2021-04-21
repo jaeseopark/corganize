@@ -1,11 +1,11 @@
 const UNITS = ['B', 'kB', 'MB', 'GB', 'TB', 'PB'];
 
-export function humanFileSize(sizeInBytes: number) {
+export const toHumanFileSize = (sizeInBytes: number): string => {
   const i = Math.floor(Math.log(sizeInBytes) / Math.log(1024));
   // eslint-disable-next-line no-restricted-properties
   const value = (sizeInBytes / Math.pow(1024, i)).toFixed(i < 3 ? 0 : 2);
   return `${value} ${UNITS[i]}`;
-}
+};
 
 export function randomIntFromInterval(min, max) {
   // https://stackoverflow.com/a/7228322

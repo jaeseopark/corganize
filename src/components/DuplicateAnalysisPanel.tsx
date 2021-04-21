@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { File } from '../entity/File';
-import { humanFileSize } from '../utils/numberUtils';
+import { toHumanFileSize } from '../utils/numberUtils';
 import ContextMenuWrapper from './ContextMenuWrapper';
 
 import './DuplicateAnalysisPanel.scss';
@@ -57,7 +57,7 @@ const DuplicateAnalysisPanel = ({
             options={getContextMenuOptions(file)}
           />
         </td>
-        <td>{humanFileSize(file.size)}</td>
+        <td>{toHumanFileSize(file.size)}</td>
       </tr>
     ));
 
