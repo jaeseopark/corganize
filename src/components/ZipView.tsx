@@ -108,6 +108,7 @@ const ZipView = ({ path }: { path: string }) => {
               trackProps={{
                 onViewChange: (newIndex: number) => setCurrentIndex(newIndex),
               }}
+              frameProps={{ accessibility: false }}
             />
           </Modal>
         )}
