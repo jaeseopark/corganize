@@ -14,6 +14,11 @@ const TableHeaderGroup = ({ headerGroup }) => (
       const { onClick, ...columnHeaderProps } = column.getHeaderProps(
         column.getSortByToggleProps()
       );
+
+      const maybeFilter = column.canFilter && column.Filter && (
+        <div>{column.render('Filter')}</div>
+      );
+
       return (
         <th
           key={column.id}
@@ -25,6 +30,7 @@ const TableHeaderGroup = ({ headerGroup }) => (
             {column.render('Header')}
           </span>
           {sortClassName && <span className={sortClassName} />}
+          {maybeFilter}
         </th>
       );
     })}

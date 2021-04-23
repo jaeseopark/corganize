@@ -1,14 +1,12 @@
 /* eslint-disable import/prefer-default-export */
 import React from 'react';
 import ContextMenuWrapper from '../components/ContextMenuWrapper';
-import Filename from '../components/Filename';
 import FileView from '../components/FileView';
 import { File } from '../entity/File';
 import Library from '../entity/Library';
 import { ContextMenuOption } from '../entity/props';
 import { toHumanFileSize } from '../utils/numberUtils';
 import { hasAtLeast1Change } from '../utils/objectUtils';
-import { regularColumns } from './columnUtils';
 
 export function openFileFullscreen(
   file: File,
@@ -49,29 +47,4 @@ export function openFileFullscreen(
   );
 
   setFullscreenComponent({ title, body });
-}
-
-export function getAllColumns(
-  setFullscreenComponent: React.Dispatch<React.SetStateAction<null>>,
-  renderActions: ({ row }: { row: any }) => JSX.Element,
-  renderFav: ({ value, row }: { value: any; row: any }) => JSX.Element
-) {
-  return regularColumns.concat([
-    {
-      id: 'filename',
-      accessor: 'filename',
-      Header: 'filename',
-      Cell: (props) => Filename({ ...props, setFullscreenComponent }),
-    },
-    {
-      id: 'actions',
-      Cell: renderActions,
-    },
-    {
-      id: 'dateactivated',
-      accessor: 'dateactivated',
-      Header: 'fav',
-      Cell: renderFav,
-    },
-  ]);
 }
