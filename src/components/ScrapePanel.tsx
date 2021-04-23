@@ -1,8 +1,8 @@
 /* eslint-disable promise/always-return */
 import React, { useEffect, useRef, useState } from 'react';
-import classNames from 'classnames';
 import CorganizeClient from '../client/corganize';
 import HyperSquirrelClient from '../client/hypersquirrel';
+import classnames from 'classnames';
 
 import './ScrapePanel.scss';
 import { ignoreEvent } from '../uiutils/eventUtils';
@@ -16,21 +16,25 @@ type ScrapePanelProps = {
   defaultUrl: string | null;
 };
 
-const Card = ({ card, onSend }) => {
+const Card = ({ card, onSend, onScape }) => {
   const { file, status, error } = card;
-  const { filename, thumbnailurl } = file;
+  const { sourceurl, thumbnailurl } = file;
+
+  const isComplete = status === 'complete';
+  const onSendCard = () => {
+    if (!isComplete) onSend(card);
+  };
 
   return (
     <div className="card">
-      {thumbnailurl && (
-        <img className="thumbnail" src={thumbnailurl} alt={filename} />
-      )}
-      {status === 'complete' ? (
-        <SuccessButton disabled>Sent</SuccessButton>
-      ) : (
-        <Button onClick={() => onSend(card)}>Send</Button>
-      )}
-      <span className="error">{error}</span>
+      <img
+        className={classnames('thumbnail', { clickable: !isComplete })}
+        src={thumbnailurl || 'not.found.jpg'}
+        onClick={onSendCard}
+      />
+      <Button onClick={() => onScape(sourceurl)}>Scrape</Button>
+      {isComplete && <SuccessButton disabled>Sent</SuccessButton>}
+      {error && <span className="error">{error}</span>}
     </div>
   );
 };
@@ -69,6 +73,11 @@ const ScrapePanel = ({
     }
   });
 
+  const scrapeUrl = (url) => {
+    urlRef.current.value = url;
+    scrape();
+  };
+
   const createFile = (card) =>
     corganizeClient
       .createFile(card.file)
@@ -93,7 +102,7 @@ const ScrapePanel = ({
       </div>
       <div className="grid">
         {cards.map((card) => (
-          <Card card={card} onSend={createFile} />
+          <Card card={card} onSend={createFile} onScape={scrapeUrl} />
         ))}
       </div>
     </div>
