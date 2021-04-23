@@ -3,7 +3,7 @@
     margin-bottom: 16px;
 
     input[type='text'] {
-      width: calc(100% - 324px);
+      width: calc(100% - 95px);
       margin: 4px 10px 0 0;
     }
 
@@ -16,45 +16,43 @@
     }
   }
 
-  .files {
+  .grid {
     width: 100%;
     height: calc(100vh - 145px);
     display: block;
     overflow-y: scroll;
     font-size: .8rem;
 
-    .filename {
-      width: 50vw;
-      max-width: 50vw;
+    .card {
+      display: inline-block;
+      width: 250px;
+      height: 140px;
+      overflow: hidden;
+      padding: 5px;
+      border: none;
+    }
+
+    .btn {
+      width: 60px;
+      margin-left: -68px;
+      margin-top: 95px;
     }
 
     img.thumbnail {
-      width: 150px;
+      float: left;
+      width: 100%;
     }
 
-    tr {
-      border-bottom: 1px solid #f0f0f0;
-      height: 28px;
+    .error {
+      float: left;
+      width: 250px;
+      margin-left: -250px;
+      background-color: rgba(0, 0, 0, .5);
+      color: white;
     }
 
     td {
       overflow: hidden;
-    }
-
-    .icon {
-      width: 24px;
-      height: 18px;
-      background-size: 12px 12px;
-      background-repeat: no-repeat;
-      background-position: 3px 8px;
-
-      &.error {
-        background-image: url('../../assets/error.svg');
-      }
-
-      &.complete {
-        background-image: url('../../assets/iconmonstr-check-mark.svg');
-      }
     }
   }
 }

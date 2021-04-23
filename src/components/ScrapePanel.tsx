@@ -1,13 +1,12 @@
 /* eslint-disable promise/always-return */
 import React, { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
-import { ipcRenderer } from 'electron';
 import CorganizeClient from '../client/corganize';
 import HyperSquirrelClient from '../client/hypersquirrel';
 
 import './ScrapePanel.scss';
 import { ignoreEvent } from '../uiutils/eventUtils';
-import Button from './Button';
+import Button, { SuccessButton } from './Button';
 
 const DEFAULT_STATUS = 'idle';
 
@@ -17,24 +16,22 @@ type ScrapePanelProps = {
   defaultUrl: string | null;
 };
 
-const Row = ({ row, onSend }) => {
-  const { file, status, error } = row;
+const Card = ({ card, onSend }) => {
+  const { file, status, error } = card;
   const { filename, thumbnailurl } = file;
 
-  const shouldShowSend = status !== 'complete';
-
   return (
-    <tr>
-      <td className={classNames('icon', status)} />
-      <td className="thumbnail">
-        {thumbnailurl && <img className="thumbnail" src={thumbnailurl} />}
-      </td>
-      <td className="send">
-        {shouldShowSend && <Button onClick={() => onSend(row)}>Send</Button>}
-      </td>
-      <td className="filename">{filename}</td>
-      <td className="error-or-status">{error || status}</td>
-    </tr>
+    <div className="card">
+      {thumbnailurl && (
+        <img className="thumbnail" src={thumbnailurl} alt={filename} />
+      )}
+      {status === 'complete' ? (
+        <SuccessButton disabled>Sent</SuccessButton>
+      ) : (
+        <Button onClick={() => onSend(card)}>Send</Button>
+      )}
+      <span className="error">{error}</span>
+    </div>
   );
 };
 
@@ -43,7 +40,7 @@ const ScrapePanel = ({
   hsClient,
   defaultUrl,
 }: ScrapePanelProps) => {
-  const [rows, setRows] = useState([]);
+  const [cards, setCards] = useState([]);
   const urlRef = useRef(null);
   const [, setRerenderTimestamp] = useState(null);
 
@@ -55,21 +52,15 @@ const ScrapePanel = ({
     }
   });
 
-  const getUrlFromSecondWindow = () => {
-    ipcRenderer.invoke('getUrl').then((url) => {
-      if (urlRef?.current) urlRef.current.value = url;
-    });
-  };
-
-  const createFile = (row: RowData) =>
+  const createFile = (card) =>
     corganizeClient
-      .createFile(row.file)
+      .createFile(card.file)
       .then(() => {
-        row.status = 'complete';
+        card.status = 'complete';
       })
       .catch((error) => {
-        row.status = 'error';
-        row.error = JSON.stringify(error);
+        card.status = 'error';
+        card.error = JSON.stringify(error);
       })
       .finally(() => {
         rerender();
@@ -84,21 +75,11 @@ const ScrapePanel = ({
           return { file, status: DEFAULT_STATUS };
         })
       )
-      .then(setRows)
+      .then(setCards)
       .catch((error) => {
         alert(`Error: ${JSON.stringify(error)}`);
       });
   };
-
-  const table = rows && (
-    <table className="files">
-      <tbody>
-        {rows.map((row) => (
-          <Row row={row} onSend={createFile} />
-        ))}
-      </tbody>
-    </table>
-  );
 
   return (
     <div>
@@ -106,12 +87,13 @@ const ScrapePanel = ({
         <form onSubmit={scrape}>
           <input required ref={urlRef} type="text" onKeyUp={ignoreEvent} />
           <Button type="submit">Scrape</Button>
-          <Button onClick={getUrlFromSecondWindow}>
-            Get from the second window
-          </Button>
         </form>
       </div>
-      {table}
+      <div className="grid">
+        {cards.map((card) => (
+          <Card card={card} onSend={createFile} />
+        ))}
+      </div>
     </div>
   );
 };

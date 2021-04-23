@@ -2,7 +2,6 @@ import React from 'react';
 import os from 'os';
 import { exec } from 'child_process';
 import { existsSync, unlink } from 'fs';
-import { ipcRenderer } from 'electron';
 import { copyTextToClipboard } from './clipboardUtils';
 import { File } from '../entity/File';
 import { ContextMenuOption } from '../entity/props';
@@ -68,13 +67,6 @@ export const getRemoteActions = (
         label: 'Scrape',
         onClick: () => {
           openScrapePanel(sanitizedSourceurl);
-        },
-      },
-      {
-        label: 'Scrape+',
-        onClick: () => {
-          openScrapePanel(sanitizedSourceurl);
-          ipcRenderer.invoke('openUrl', sanitizedSourceurl);
         },
       }
     );
