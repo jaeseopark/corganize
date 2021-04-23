@@ -143,11 +143,15 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     });
   };
 
-  const openScrapePanel = () => {
+  const openScrapePanel = (url: string | null = null) => {
     setFullscreenComponent({
       title: 'Scrape',
       body: (
-        <ScrapePanel corganizeClient={corganizeClient} hsClient={hsClient} />
+        <ScrapePanel
+          corganizeClient={corganizeClient}
+          hsClient={hsClient}
+          defaultUrl={url}
+        />
       ),
     });
   };

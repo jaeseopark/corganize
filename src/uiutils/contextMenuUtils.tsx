@@ -65,9 +65,15 @@ export const getRemoteActions = (
             .then(showAlert('Copied to clipboard')),
       },
       {
-        label: 'Scrape Source URL',
+        label: 'Scrape',
         onClick: () => {
-          openScrapePanel();
+          openScrapePanel(sanitizedSourceurl);
+        },
+      },
+      {
+        label: 'Scrape+',
+        onClick: () => {
+          openScrapePanel(sanitizedSourceurl);
           ipcRenderer.invoke('openUrl', sanitizedSourceurl);
         },
       }

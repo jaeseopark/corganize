@@ -1,5 +1,5 @@
 /* eslint-disable promise/always-return */
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 import { ipcRenderer } from 'electron';
 import CorganizeClient from '../client/corganize';
@@ -14,6 +14,7 @@ const DEFAULT_STATUS = 'idle';
 type ScrapePanelProps = {
   corganizeClient: CorganizeClient;
   hsClient: HyperSquirrelClient;
+  defaultUrl: string | null;
 };
 
 const Row = ({ row, onSend }) => {
@@ -37,12 +38,22 @@ const Row = ({ row, onSend }) => {
   );
 };
 
-const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
+const ScrapePanel = ({
+  corganizeClient,
+  hsClient,
+  defaultUrl,
+}: ScrapePanelProps) => {
   const [rows, setRows] = useState([]);
   const urlRef = useRef(null);
   const [, setRerenderTimestamp] = useState(null);
 
   const rerender = () => setRerenderTimestamp(Date.now());
+
+  useEffect(() => {
+    if (defaultUrl && urlRef?.current && !urlRef?.current.value) {
+      urlRef.current.value = defaultUrl;
+    }
+  });
 
   const getUrlFromSecondWindow = () => {
     ipcRenderer.invoke('getUrl').then((url) => {
