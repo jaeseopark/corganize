@@ -77,7 +77,7 @@ const ScrapePanel = ({
       })
       .catch((error) => {
         card.status = 'error';
-        card.error = JSON.stringify(error);
+        card.error = JSON.stringify({ ...error, fileid: card.file.fileid });
       })
       .finally(() => {
         rerender();
