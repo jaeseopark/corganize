@@ -8,37 +8,37 @@ import HyperSquirrelClient from '../client/hypersquirrel';
 import './ScrapePanel.scss';
 import { ignoreEvent } from '../uiutils/eventUtils';
 import Button from './Button';
-import { File } from '../entity/File';
 
-const DEFAULT_STATUS = 'pending';
+const DEFAULT_STATUS = 'idle';
 
 type ScrapePanelProps = {
   corganizeClient: CorganizeClient;
   hsClient: HyperSquirrelClient;
 };
 
-type RowData = {
-  file: File;
-  status: string;
-  error?: string;
+const Row = ({ row, onSend }) => {
+  const { file, status, error } = row;
+  const { filename, thumbnailurl } = file;
+
+  const shouldShowSend = status !== 'complete';
+
+  return (
+    <tr>
+      <td className={classNames('icon', status)} />
+      <td className="thumbnail">
+        {thumbnailurl && <img className="thumbnail" src={thumbnailurl} />}
+      </td>
+      <td className="send">
+        {shouldShowSend && <Button onClick={() => onSend(row)}>Send</Button>}
+      </td>
+      <td className="filename">{filename}</td>
+      <td className="error-or-status">{error || status}</td>
+    </tr>
+  );
 };
 
 const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
-  const Row = ({ file, status, error }: RowData) => {
-    const { fileid, filename, sourceurl } = file;
-
-    return (
-      <tr>
-        <td className={classNames('icon', status)} />
-        <td className="fileid">{fileid}</td>
-        <td className="filename">{filename}</td>
-        <td className="sourceurl">{sourceurl}</td>
-        <td className="error">{error}</td>
-      </tr>
-    );
-  };
-
-  const [rows] = useState([]);
+  const [rows, setRows] = useState([]);
   const urlRef = useRef(null);
   const [, setRerenderTimestamp] = useState(null);
 
@@ -51,22 +51,18 @@ const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
   };
 
   const createFile = (row: RowData) =>
-    new Promise((resolve) => {
-      corganizeClient
-        .createFile(row.file)
-        .then(() => {
-          row.status = 'complete';
-        })
-        .catch((error) => {
-          row.status = 'error';
-          row.error = JSON.stringify(error);
-        })
-        .finally(() => {
-          rerender();
-          resolve(null);
-        });
-      resolve(null);
-    });
+    corganizeClient
+      .createFile(row.file)
+      .then(() => {
+        row.status = 'complete';
+      })
+      .catch((error) => {
+        row.status = 'error';
+        row.error = JSON.stringify(error);
+      })
+      .finally(() => {
+        rerender();
+      });
 
   const scrape = (event) => {
     event.preventDefault();
@@ -77,14 +73,7 @@ const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
           return { file, status: DEFAULT_STATUS };
         })
       )
-      .then((newRows) => {
-        rows.length = 0; // clear the exisitng rows;
-        newRows.forEach((row) => {
-          rows.push(row);
-          createFile(row);
-        });
-        rerender();
-      })
+      .then(setRows)
       .catch((error) => {
         alert(`Error: ${JSON.stringify(error)}`);
       });
@@ -93,8 +82,8 @@ const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
   const table = rows && (
     <table className="files">
       <tbody>
-        {rows.map((rowData) => (
-          <Row {...rowData} />
+        {rows.map((row) => (
+          <Row row={row} onSend={createFile} />
         ))}
       </tbody>
     </table>

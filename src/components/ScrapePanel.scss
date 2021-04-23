@@ -24,11 +24,12 @@
     font-size: .8rem;
 
     .filename {
-      max-width: 35vw;
+      width: 50vw;
+      max-width: 50vw;
     }
 
-    .sourceurl {
-      max-width: 35vw;
+    img.thumbnail {
+      width: 150px;
     }
 
     tr {
@@ -45,7 +46,6 @@
       height: 18px;
       background-size: 12px 12px;
       background-repeat: no-repeat;
-      background-image: url('../../assets/loading-svgrepo-com.svg');
       background-position: 3px 8px;
 
       &.error {
