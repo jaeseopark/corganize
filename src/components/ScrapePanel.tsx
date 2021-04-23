@@ -42,13 +42,30 @@ const ScrapePanel = ({
 }: ScrapePanelProps) => {
   const [cards, setCards] = useState([]);
   const urlRef = useRef(null);
-  const [, setRerenderTimestamp] = useState(null);
 
+  const [, setRerenderTimestamp] = useState(null);
   const rerender = () => setRerenderTimestamp(Date.now());
+
+  const scrape = (event = null) => {
+    if (event) event.preventDefault();
+
+    hsClient
+      .scrapeAsync(urlRef?.current.value)
+      .then((files) =>
+        files.map((file) => {
+          return { file, status: DEFAULT_STATUS };
+        })
+      )
+      .then(setCards)
+      .catch((error) => {
+        alert(`Error: ${JSON.stringify(error)}`);
+      });
+  };
 
   useEffect(() => {
     if (defaultUrl && urlRef?.current && !urlRef?.current.value) {
       urlRef.current.value = defaultUrl;
+      scrape();
     }
   });
 
@@ -65,21 +82,6 @@ const ScrapePanel = ({
       .finally(() => {
         rerender();
       });
-
-  const scrape = (event) => {
-    event.preventDefault();
-    hsClient
-      .scrapeAsync(urlRef?.current.value)
-      .then((files) =>
-        files.map((file) => {
-          return { file, status: DEFAULT_STATUS };
-        })
-      )
-      .then(setCards)
-      .catch((error) => {
-        alert(`Error: ${JSON.stringify(error)}`);
-      });
-  };
 
   return (
     <div>
