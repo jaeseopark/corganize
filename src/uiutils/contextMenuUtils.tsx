@@ -64,10 +64,11 @@ export const getRemoteActions = (
             .then(showAlert('Copied to clipboard')),
       },
       {
-        label: 'Scrape',
+        label: 'Scrape (S)',
         onClick: () => {
           openScrapePanel(sanitizedSourceurl);
         },
+        hotkey: 's'
       }
     );
   }
