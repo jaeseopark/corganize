@@ -3,6 +3,7 @@ import {
   useTable,
   useSortBy,
   usePagination,
+  useFilters,
   useGlobalFilter,
   useColumnOrder,
 } from 'react-table';
@@ -25,7 +26,7 @@ import {
 } from '../uiutils/contextMenuUtils';
 import { File } from '../entity/File';
 import { ContextMenuOption } from '../entity/props';
-import { hiddenColumns } from '../uiutils/columnUtils';
+import { getAllColumns, hiddenColumns } from '../uiutils/columnUtils';
 import Library from '../entity/Library';
 import BurgerMenu, { BurgerMenuSpacer } from './BurgerMenu';
 import HyperSquirrelClient from '../client/hypersquirrel';
@@ -35,7 +36,7 @@ import OrphanAnalysisPanel from './OrphanAnalysisPanel';
 import ScrapePanel from './ScrapePanel';
 import { retrieveFilesAsync } from '../uiutils/fileRetrievalUtils';
 import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
-import { getAllColumns, openFileFullscreen } from '../uiutils/mainViewUtils';
+import { openFileFullscreen } from '../uiutils/mainViewUtils';
 
 type MainViewRenderBuffer = {
   files: File[];
@@ -234,6 +235,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       },
       autoResetPage: false,
     },
+    useFilters,
     useGlobalFilter,
     useSortBy,
     useColumnOrder,

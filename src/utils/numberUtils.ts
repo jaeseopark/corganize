@@ -22,3 +22,25 @@ export const toHumanDuration = (seconds: number): string =>
     .substr(seconds < 3600 ? 14 : 11, seconds < 3600 ? 5 : 8)
     .substr(seconds < 600 ? 1 : 0)
     .replaceAll('-', ':');
+
+export const toRelativeHumanTime = (timestamp: number) => {
+  // Assume 'timestamp' is always > Year 2001 (min. 13 digits)
+  const multiplier = timestamp >= 10 ** 13 ? 1 : 1000;
+  const diff = Math.abs(Date.now() / multiplier - timestamp);
+  if (diff < 60) {
+    return `${Math.ceil(diff).toString()}s`;
+  }
+  if (diff < 3600) {
+    // up to 60min
+    return `${Math.floor(diff / 60).toString()}m`;
+  }
+  if (diff < 3600 * 36) {
+    // up to 36 hours
+    return `${Math.floor(diff / 3600).toString()}h`;
+  }
+  if (diff < 3600 * 24 * 90) {
+    // up to 90 days
+    return `${Math.floor(diff / 86400).toString()}d`;
+  }
+  return `${Math.floor(diff / 2592000).toString()}mo`;
+};
