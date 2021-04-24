@@ -5,7 +5,7 @@ import {
   nullableSelectColumnFilter,
   SelectColumnFilter,
 } from './SelectColumnFilter';
-import { toRelativeHumanTime } from '../utils/numberUtils';
+import { toHumanFileSize, toRelativeHumanTime } from '../utils/numberUtils';
 
 export const hiddenColumns = [
   'sourceurl',
@@ -25,32 +25,30 @@ export function getAllColumns(
   renderActions: ({ row }: { row: any }) => JSX.Element,
   renderFav: ({ value, row }: { value: any; row: any }) => JSX.Element
 ) {
-  const hidden = hiddenColumns.map((id) => {
+  const hidden = hiddenColumns.map((accessor) => {
     return {
-      id,
-      accessor: id,
+      accessor,
     };
   });
 
   const custom = [
     {
-      id: 'lastupdated',
       accessor: 'lastupdated',
       Header: 'modded',
       Cell: ({ value }) => toRelativeHumanTime(value),
     },
     {
-      id: 'mimetype',
+      accessor: 'size',
+      Cell: ({ value }) => toHumanFileSize(value),
+    },
+    {
       accessor: 'mimetype',
-      Header: 'mimetype',
       Filter: SelectColumnFilter,
       filter: nullableSelectColumnFilter,
       Cell: ({ value }) => valueAsMimetypeIcon((value || '').replace('/', '-')),
     },
     {
-      id: 'filename',
       accessor: 'filename',
-      Header: 'filename',
       Cell: (props) => Filename({ ...props, setFullscreenComponent }),
     },
     {
@@ -58,12 +56,15 @@ export function getAllColumns(
       Cell: renderActions,
     },
     {
-      id: 'dateactivated',
       accessor: 'dateactivated',
       Header: 'fav',
       Cell: renderFav,
     },
   ];
 
-  return [...hidden, ...custom];
+  return [...hidden, ...custom].map((column) => {
+    if (!column.id) { column.id = column.accessor };
+    if (!column.Header && column.accessor) { column.Header = column.accessor; }
+    return column;
+  });
 }
