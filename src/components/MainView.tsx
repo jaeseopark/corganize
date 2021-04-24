@@ -15,7 +15,7 @@ import './MainView.scss';
 import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 
-import DownloadCenter, { isBeingDownloaded } from './DownloadCenter';
+import DownloadBadge from './DownloadBadge';
 import FullscreenView from './FullscreenView';
 import TableView from './TableView';
 import FileActions from './FileActions';
@@ -37,6 +37,7 @@ import ScrapePanel from './ScrapePanel';
 import { retrieveFilesAsync } from '../uiutils/fileRetrievalUtils';
 import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
 import { openFileFullscreen } from '../uiutils/mainViewUtils';
+import DownloadManager from '../uiutils/DownloadManager';
 
 type MainViewRenderBuffer = {
   files: File[];
@@ -67,6 +68,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   const [hsClient] = useState(
     new HyperSquirrelClient(library.config.hypersquirrel)
   );
+  const [downloadManager] = useState<DownloadManager>(new DownloadManager());
 
   const tableRef = useRef(null);
 
@@ -206,6 +208,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
         file={file}
         openFile={openFile}
         downloadFile={downloadFile}
+        downloadManager={downloadManager}
       />
     );
   };
@@ -243,7 +246,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   );
 
   const downloadOrOpenFile = (file: File) => {
-    if (isBeingDownloaded(file.fileid)) {
+    if (downloadManager.isActive(file.fileid)) {
       showAlert('Download in progress');
       return;
     }
@@ -305,7 +308,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       <div className={classNames('mainview', { hidden: isFullscreenActive })}>
         <BurgerMenuSpacer />
         <GlobalFilter tableInstance={tableInstance} />
-        <DownloadCenter />
+        <DownloadBadge activeCount={downloadManager.getActiveDownloadCount()} />
         <TableView
           downloadOrOpenFile={downloadOrOpenFile}
           tableInstance={tableInstance}

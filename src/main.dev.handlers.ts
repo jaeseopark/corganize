@@ -12,7 +12,6 @@ export const handleDownload = (mainWindow, library, gdriveClient) => {
     const respond = (percentage: number, isInitial = false) => {
       const payload = { fileid, percentage, isInitial };
       mainWindow?.webContents.send('downloadProgress', payload);
-      mainWindow?.webContents.send(`download${fileid}`, payload);
     };
 
     console.log(`Download event received: ${fileid}`);
