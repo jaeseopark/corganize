@@ -18,7 +18,6 @@ type FileDecryptViewProps = {
 };
 
 const FileDecryptView = ({
-  fileid,
   encryptedPath,
   decryptedPath,
   aespassword,
@@ -65,15 +64,7 @@ const FileDecryptView = ({
 
       decryptPromise.then(onDecrypt);
     }
-  }, [
-    aespassword,
-    decrypt,
-    decryptedPath,
-    encryptedPath,
-    fileid,
-    isDecrypting,
-    onDecrypt,
-  ]);
+  }, [isDecrypting, decryptedPath, onDecrypt, decrypt]);
 
   return (
     <span>

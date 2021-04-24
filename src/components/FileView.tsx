@@ -21,7 +21,6 @@ const getInnermostChild = (el: HTMLElement) => {
 };
 
 type FileViewProps = {
-  fileid: string;
   encryptedPath: string;
   decryptedPath: string;
   aespassword: string;
@@ -30,7 +29,6 @@ type FileViewProps = {
 };
 
 const FileView = ({
-  fileid,
   encryptedPath,
   decryptedPath,
   aespassword,
@@ -71,7 +69,7 @@ const FileView = ({
 
   const onDecrypt = () => {
     getContent()
-      .then((value) => setContent(value))
+      .then(setContent)
       .catch((error) => {
         const preformatted = (
           <pre tabIndex="1">{JSON.stringify(error, null, 2)}</pre>
@@ -90,7 +88,6 @@ const FileView = ({
   if (!content) {
     return (
       <FileDecryptView
-        fileid={fileid}
         encryptedPath={encryptedPath}
         decryptedPath={decryptedPath}
         aespassword={aespassword}
