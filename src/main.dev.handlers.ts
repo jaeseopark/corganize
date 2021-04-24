@@ -46,13 +46,13 @@ export const handleDecrypt = (mainWindow) => {
   ipcMain.removeHandler('decrypt');
   ipcMain.handle(
     'decrypt',
-    async (_event, { encryptedPath, decryptedPath, aespassword }) => {
+    async (_event, { fileid, encryptedPath, decryptedPath, aespassword }) => {
       createParentPath(decryptedPath);
 
       const size = getFilesizeInBytes(encryptedPath);
       const progressCallback = ({ decryptedBytes }) => {
         const percentage = Math.floor((decryptedBytes * 100) / size);
-        mainWindow?.webContents.send(`decrypt${encryptedPath}`, { percentage });
+        mainWindow?.webContents.send(`decrypt${fileid}`, { percentage });
       };
 
       const streamIn = createReadStream(encryptedPath);

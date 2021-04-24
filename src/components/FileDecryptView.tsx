@@ -3,6 +3,7 @@ import { existsSync } from 'fs';
 import React, { useEffect, useState } from 'react';
 
 type FileDecryptViewProps = {
+  fileid: string;
   encryptedPath: string;
   decryptedPath: string;
   aespassword: string;
@@ -14,6 +15,7 @@ type DecryptProgressPayload = {
 };
 
 const FileDecryptView = ({
+  fileid,
   encryptedPath,
   decryptedPath,
   aespassword,
@@ -23,7 +25,7 @@ const FileDecryptView = ({
   const renderBuffer = { percentage: 0 };
 
   useEffect(() => {
-    const channel = `decrypt${encryptedPath}`;
+    const channel = `decrypt${fileid}`;
     const downloadListener = (
       _event,
       { percentage }: DecryptProgressPayload
@@ -42,6 +44,7 @@ const FileDecryptView = ({
         decryptPromise = Promise.resolve();
       } else {
         decryptPromise = ipcRenderer.invoke('decrypt', {
+          fileid,
           encryptedPath,
           decryptedPath,
           aespassword,

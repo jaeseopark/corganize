@@ -21,6 +21,7 @@ const getInnermostChild = (el: HTMLElement) => {
 };
 
 type FileViewProps = {
+  fileid: string;
   encryptedPath: string;
   decryptedPath: string;
   aespassword: string;
@@ -29,6 +30,7 @@ type FileViewProps = {
 };
 
 const FileView = ({
+  fileid,
   encryptedPath,
   decryptedPath,
   aespassword,
@@ -88,6 +90,7 @@ const FileView = ({
   if (!content) {
     return (
       <FileDecryptView
+        fileid={fileid}
         encryptedPath={encryptedPath}
         decryptedPath={decryptedPath}
         aespassword={aespassword}
