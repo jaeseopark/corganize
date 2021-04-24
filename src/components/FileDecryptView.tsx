@@ -35,7 +35,6 @@ const FileDecryptView = ({
     });
 
     ps.on('progress', ({ percentage }) => {
-      console.log(percentage);
       setPercentage(percentage);
     });
 
