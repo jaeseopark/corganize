@@ -25,7 +25,7 @@ type FileViewProps = {
   encryptedPath: string;
   decryptedPath: string;
   aespassword: string;
-  onDetectMimetype: Function;
+  updateFile: Function;
   contextMenuOptions: ContextMenuOption[];
 };
 
@@ -34,7 +34,7 @@ const FileView = ({
   encryptedPath,
   decryptedPath,
   aespassword,
-  onDetectMimetype,
+  updateFile,
   contextMenuOptions,
 }: FileViewProps) => {
   const [content, setContent] = useState<HTMLElement | null>(null);
@@ -44,7 +44,7 @@ const FileView = ({
     return guessMimetypeAsync(decryptedPath)
       .then((mimetype: string) => {
         if (mimetype) {
-          onDetectMimetype(mimetype);
+          updateFile({ mimetype });
         }
         return mimetype;
       })
@@ -52,7 +52,7 @@ const FileView = ({
         switch (mimetype) {
           case 'video/mp4':
           case 'video/x-matroska':
-            return <VideoView path={decryptedPath} />;
+            return <VideoView path={decryptedPath} updateFile={updateFile} />;
           case 'text/plain':
             return <pre>{readFileSync(decryptedPath)}</pre>;
           case 'application/pdf':

@@ -1,6 +1,13 @@
-import { ipcRenderer } from 'electron';
-import { existsSync } from 'fs';
+import { createReadStream, createWriteStream, existsSync } from 'fs';
 import React, { useEffect, useState } from 'react';
+import { decryptAes256Cbc } from '../utils/cryptoUtils';
+import {
+  createParentPath,
+  getFileSizeInBytes,
+  moveFileAsync,
+} from '../utils/fileUtils';
+
+const ProgressStream = require('progress-stream');
 
 type FileDecryptViewProps = {
   fileid: string;
@@ -10,10 +17,6 @@ type FileDecryptViewProps = {
   onDecrypt: Function;
 };
 
-type DecryptProgressPayload = {
-  percentage: number;
-};
-
 const FileDecryptView = ({
   fileid,
   encryptedPath,
@@ -21,49 +24,64 @@ const FileDecryptView = ({
   aespassword,
   onDecrypt,
 }: FileDecryptViewProps) => {
-  const [_, setPercentage] = useState(0);
-  const renderBuffer = { percentage: 0 };
+  const [percentage, setPercentage] = useState(0);
+  const [isDecrypting, setIsDecrypting] = useState(false);
+
+  const decrypt = () => {
+    createParentPath(decryptedPath);
+
+    const ps = ProgressStream({
+      length: getFileSizeInBytes(encryptedPath),
+      time: 100,
+    });
+
+    ps.on('progress', ({ percentage }) => {
+      console.log(percentage);
+      setPercentage(percentage);
+    });
+
+    const tmpDecryptedPath = `${decryptedPath}.tmp`;
+    const streamIn = createReadStream(encryptedPath);
+    const streamOut = createWriteStream(tmpDecryptedPath);
+    return decryptAes256Cbc(streamIn, streamOut, aespassword, ps)
+      .then(() => {
+        streamIn.close();
+        streamOut.close();
+        return null;
+      })
+      .then(() => moveFileAsync(tmpDecryptedPath, decryptedPath));
+  };
 
   useEffect(() => {
-    const channel = `decrypt${fileid}`;
-    const downloadListener = (
-      _event,
-      { percentage }: DecryptProgressPayload
-    ) => {
-      if (percentage > renderBuffer.percentage) {
-        renderBuffer.percentage = percentage;
-        setPercentage(percentage);
-      }
-    };
-
-    if (!renderBuffer.percentage) {
-      ipcRenderer.on(channel, downloadListener);
+    if (!isDecrypting) {
+      setIsDecrypting(true);
 
       let decryptPromise = null;
       if (existsSync(decryptedPath)) {
         decryptPromise = Promise.resolve();
       } else {
-        decryptPromise = ipcRenderer.invoke('decrypt', {
-          fileid,
-          encryptedPath,
-          decryptedPath,
-          aespassword,
-        });
+        decryptPromise = decrypt();
       }
+
       decryptPromise.then(onDecrypt);
     }
+  }, [
+    aespassword,
+    decrypt,
+    decryptedPath,
+    encryptedPath,
+    fileid,
+    isDecrypting,
+    onDecrypt,
+  ]);
 
-    return () => {
-      ipcRenderer.removeListener(channel, downloadListener);
-    };
-  }, [aespassword, decryptedPath, encryptedPath, onDecrypt, renderBuffer]);
-
-  if (renderBuffer.percentage) {
-    const progressString = `Decrypting... ${renderBuffer.percentage}%`;
-    return <span>{progressString}</span>;
-  }
-
-  return null;
+  return (
+    <span>
+      {percentage < 100
+        ? `Decrypting... ${percentage.toFixed(1)}%`
+        : 'Removing tmp file...'}
+    </span>
+  );
 };
 
 export default FileDecryptView;

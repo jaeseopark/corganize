@@ -1,33 +1,20 @@
 /* eslint-disable import/prefer-default-export */
+import { ReadStream, WriteStream } from 'fs';
 import { Decrypt } from 'node-aescrypt';
 
 export async function decryptAes256Cbc(
-  streamIn,
-  streamOut,
+  streamIn: ReadStream,
+  streamOut: WriteStream,
   password: string,
-  progressCallback: Function = null
+  progressStream = null
 ) {
   return new Promise((resolve, reject) => {
     const through = new Decrypt(password);
-    let decryptedBytes = 0;
-
-    streamIn.on('data', (d) => {
-      if (progressCallback) {
-        decryptedBytes += d.length;
-        progressCallback({
-          decryptedBytes,
-        });
-      }
-    });
-
     streamIn
       .pipe(through)
+      .pipe(progressStream)
       .pipe(streamOut)
-      .on('error', (error) => {
-        throw error;
-      })
-      .on('finish', () => {
-        resolve(null);
-      });
+      .on('error', reject)
+      .on('finish', resolve);
   });
 }

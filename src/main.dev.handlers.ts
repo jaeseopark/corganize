@@ -1,9 +1,7 @@
+/* eslint-disable import/prefer-default-export */
 /* eslint-disable no-console */
 import { ipcMain } from 'electron';
-import { createReadStream, createWriteStream } from 'fs';
 import { File } from './entity/File';
-import { decryptAes256Cbc } from './utils/cryptoUtils';
-import { createParentPath, getFilesizeInBytes } from './utils/fileUtils';
 
 export const handleDownload = (mainWindow, library, gdriveClient) => {
   ipcMain.removeHandler('download');
@@ -40,33 +38,4 @@ export const handleDownload = (mainWindow, library, gdriveClient) => {
       }
     }
   });
-};
-
-export const handleDecrypt = (mainWindow) => {
-  ipcMain.removeHandler('decrypt');
-  ipcMain.handle(
-    'decrypt',
-    async (_event, { fileid, encryptedPath, decryptedPath, aespassword }) => {
-      createParentPath(decryptedPath);
-
-      const size = getFilesizeInBytes(encryptedPath);
-      const progressCallback = ({ decryptedBytes }) => {
-        const percentage = Math.floor((decryptedBytes * 100) / size);
-        mainWindow?.webContents.send(`decrypt${fileid}`, { percentage });
-      };
-
-      const streamIn = createReadStream(encryptedPath);
-      const streamOut = createWriteStream(decryptedPath);
-      return decryptAes256Cbc(
-        streamIn,
-        streamOut,
-        aespassword,
-        progressCallback
-      ).then(() => {
-        streamIn.close();
-        streamOut.close();
-        return null;
-      });
-    }
-  );
 };

@@ -38,6 +38,7 @@ export function openFileFullscreen(
   );
   const body = (
     <FileView
+      fileid={fileid}
       encryptedPath={encryptedPath}
       decryptedPath={decryptedPath}
       aespassword={library.getAesPassword()}

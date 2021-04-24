@@ -19,7 +19,7 @@ import MenuBuilder from './menu';
 import GdriveClient from './client/gdrive';
 import Library from './entity/Library';
 import { removeTmpFiles } from './utils/fileUtils';
-import { handleDecrypt, handleDownload } from './main.dev.handlers';
+import { handleDownload } from './main.dev.handlers';
 
 const DEFAULT_WINDOW_SIZE = { width: 1150, height: 670 };
 
@@ -171,7 +171,6 @@ ipcMain.on('changeLibraryConfig', (_event, libraryConfig) => {
   gdriveClient = new GdriveClient(library.config.storageservice.gdrive);
 
   handleDownload(mainWindow, library, gdriveClient);
-  handleDecrypt(mainWindow);
 });
 
 ipcMain.handle('openUrl', (_event, url: string) => openExternal(url));

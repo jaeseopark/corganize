@@ -260,6 +260,7 @@
     "history": "^5.0.0",
     "node-aescrypt": "1.0.8",
     "node-fetch": "^2.6.1",
+    "progress-stream": "^2.0.0",
     "react": "^17.0.1",
     "react-burger-menu": "^3.0.6",
     "react-contextmenu": "^2.14.0",
