@@ -8,6 +8,7 @@ import './ScrapePanel.scss';
 import { ignoreEvent } from '../uiutils/eventUtils';
 import Button from './Button';
 
+const FILENAME_LENGTH = 10;
 const DEFAULT_STATUS = 'idle';
 
 type ScrapePanelProps = {
@@ -20,7 +21,7 @@ const Card = ({ card, onSend, onScape }) => {
   const { file, status, error } = card;
   const { sourceurl, thumbnailurl, filename, fileid } = file;
 
-  const title = `${fileid}: ${filename}`;
+  const title = `${fileid}: ${filename.substring(0, FILENAME_LENGTH)}`;
   const complete = status === 'complete';
   const clickable = status === 'idle';
   const onSendCard = () => {
