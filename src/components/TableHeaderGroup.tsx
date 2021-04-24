@@ -7,14 +7,12 @@ import React from 'react';
 const TableHeaderGroup = ({ headerGroup }) => (
   <tr {...headerGroup.getHeaderGroupProps()}>
     {headerGroup.headers.map((column) => {
-      let sortClassName = null;
-      if (column.isSorted) {
-        sortClassName = column.isSortedDesc ? 'sorted desc' : 'sorted asc';
-      }
       const { onClick, ...columnHeaderProps } = column.getHeaderProps(
         column.getSortByToggleProps()
       );
-
+      const maybeSort = column.isSorted && (
+        <span className={column.isSortedDesc ? 'sorted desc' : 'sorted asc'} />
+      );
       const maybeFilter = column.canFilter && column.Filter && (
         <div>{column.render('Filter')}</div>
       );
@@ -29,7 +27,7 @@ const TableHeaderGroup = ({ headerGroup }) => (
           <span role="button" onClick={onClick}>
             {column.render('Header')}
           </span>
-          {sortClassName && <span className={sortClassName} />}
+          {maybeSort}
           {maybeFilter}
         </th>
       );

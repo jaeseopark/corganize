@@ -21,7 +21,7 @@ import Library from './entity/Library';
 import { removeTmpFiles } from './utils/fileUtils';
 import { handleDecrypt, handleDownload } from './main.dev.handlers';
 
-const DEFAULT_WINDOW_SIZE = { width: 1150, height: 650 };
+const DEFAULT_WINDOW_SIZE = { width: 1150, height: 670 };
 
 export default class AppUpdater {
   constructor() {

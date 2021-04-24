@@ -1,39 +1,52 @@
 import React from 'react';
-import format from '../cellformatter';
+import classnames from 'classnames';
 import Filename from '../components/Filename';
-import { nullableSelectColumnFilter, SelectColumnFilter } from './SelectColumnFilter';
-
-export const regularColumns = [
-  'ispublic',
-  'storageservice',
-  'size',
-  'lastupdated',
-  'sourceurl',
-  'fileid',
-  'encryptedPath',
-].map((id) => {
-  return {
-    id,
-    accessor: id,
-    Header: id,
-    Cell: format,
-  };
-});
+import {
+  nullableSelectColumnFilter,
+  SelectColumnFilter,
+} from './SelectColumnFilter';
+import { toRelativeHumanTime } from '../utils/numberUtils';
 
 export const hiddenColumns = [
   'sourceurl',
   'storageservice',
-  'ispublic',
   'fileid',
   'encryptedPath',
 ];
+
+const valueAsDivClass = (...baseClassname) => (value) => {
+  return <div className={classnames(...baseClassname, value)} />;
+};
+
+const valueAsMimetypeIcon = valueAsDivClass('icon', 'mimetype');
 
 export function getAllColumns(
   setFullscreenComponent: React.Dispatch<React.SetStateAction<null>>,
   renderActions: ({ row }: { row: any }) => JSX.Element,
   renderFav: ({ value, row }: { value: any; row: any }) => JSX.Element
 ) {
-  return regularColumns.concat([
+  const hidden = hiddenColumns.map((id) => {
+    return {
+      id,
+      accessor: id,
+    };
+  });
+
+  const custom = [
+    {
+      id: 'lastupdated',
+      accessor: 'lastupdated',
+      Header: 'modded',
+      Cell: ({ value }) => toRelativeHumanTime(value),
+    },
+    {
+      id: 'mimetype',
+      accessor: 'mimetype',
+      Header: 'mimetype',
+      Filter: SelectColumnFilter,
+      filter: nullableSelectColumnFilter,
+      Cell: ({ value }) => valueAsMimetypeIcon((value || '').replace('/', '-')),
+    },
     {
       id: 'filename',
       accessor: 'filename',
@@ -50,13 +63,7 @@ export function getAllColumns(
       Header: 'fav',
       Cell: renderFav,
     },
-    {
-      id: 'mimetype',
-      accessor: 'mimetype',
-      Header: 'mimetype',
-      Filter: SelectColumnFilter,
-      filter: nullableSelectColumnFilter,
-      Cell: format,
-    },
-  ]);
+  ];
+
+  return [...hidden, ...custom];
 }

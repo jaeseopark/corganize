@@ -1,8 +1,8 @@
 import React from 'react';
 import cls from 'classnames';
-import format from '../cellformatter';
 import { getMetadata } from '../uiutils/multimediaUtils';
 import { toHumanDuration } from '../utils/numberUtils';
+import { htmlDecode } from '../utils/stringUtils';
 
 const renderMultimediaIcons = (width, height, duration, size) => {
   const { isVertical: vertical, resolution, bitrate } = getMetadata(
@@ -34,17 +34,15 @@ const maybeRenderMultimediaIcons = (file) => {
   return null;
 };
 
-const Filename = ({ row, column, value }) => {
-  const { mimetype: mt } = row.original;
+const Filename = ({ row, value }) => {
   return (
     <>
-      {mt && <div className={`icon mimetype ${mt.replace('/', '-')}`} />}
       {maybeRenderMultimediaIcons(row.original)}
       <textarea
         className="filename"
         readOnly
         tabIndex="-1"
-        value={format({ column, value })}
+        value={htmlDecode(String(value))}
       />
     </>
   );
