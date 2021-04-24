@@ -1,12 +1,12 @@
 /* eslint-disable promise/always-return */
 import React, { useEffect, useRef, useState } from 'react';
+import classnames from 'classnames';
 import CorganizeClient from '../client/corganize';
 import HyperSquirrelClient from '../client/hypersquirrel';
-import classnames from 'classnames';
 
 import './ScrapePanel.scss';
 import { ignoreEvent } from '../uiutils/eventUtils';
-import Button, { SuccessButton } from './Button';
+import Button from './Button';
 
 const DEFAULT_STATUS = 'idle';
 
@@ -18,23 +18,26 @@ type ScrapePanelProps = {
 
 const Card = ({ card, onSend, onScape }) => {
   const { file, status, error } = card;
-  const { sourceurl, thumbnailurl } = file;
+  const { sourceurl, thumbnailurl, filename, fileid } = file;
 
-  const isComplete = status === 'complete';
+  const title = `${fileid}: ${filename}`;
+  const complete = status === 'complete';
+  const clickable = status === 'idle';
   const onSendCard = () => {
-    if (!isComplete) onSend(card);
+    if (clickable) onSend(card);
   };
 
   return (
     <div className="card">
       <img
-        className={classnames('thumbnail', { clickable: !isComplete })}
+        className={classnames('thumbnail', { clickable })}
         src={thumbnailurl || 'not.found.jpg'}
         onClick={onSendCard}
       />
       <Button onClick={() => onScape(sourceurl)}>Scrape</Button>
-      {isComplete && <SuccessButton disabled>Sent</SuccessButton>}
-      {error && <span className="error">{error}</span>}
+      <span className={classnames('caption', { error, complete })}>
+        {error || title}
+      </span>
     </div>
   );
 };
@@ -86,7 +89,7 @@ const ScrapePanel = ({
       })
       .catch((error) => {
         card.status = 'error';
-        card.error = JSON.stringify({ ...error, fileid: card.file.fileid });
+        card.error = JSON.stringify(error);
       })
       .finally(() => {
         rerender();
