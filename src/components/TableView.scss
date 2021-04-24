@@ -19,8 +19,17 @@
             cursor: pointer;
           }
 
+          &.mimetype {
+            width: 100px;
+
+            select {
+              width: 80px;
+              font-size: .7rem;
+            }
+          }
+
           &.lastupdated {
-            width: 135px;
+            width: 85px;
           }
 
           &.size {
@@ -29,10 +38,6 @@
 
           &.dateactivated {
             width: 42px;
-          }
-
-          &.ispublic {
-            width: 80px;
           }
 
           &.actions {
@@ -66,22 +71,46 @@
           width: 18px;
           height: 18px;
           background-size: 18px 18px;
+          margin-top: 4px;
+          margin-left: -2px;
+          margin-right: 5px;
           background-repeat: no-repeat;
-        }
 
-        .filename {
-          .icon {
-            float: left;
-            margin-top: 4px;
-            margin-left: -2px;
-            margin-right: 5px;
-
+          &.mimetype {
             &.application-zip {
               background-image: url('../../assets/iconfinder_file-zip-alt_285690.svg');
             }
 
-            &.video-mp4, &.video-x-matroska {
+            &.video-mp4,
+            &.video-x-matroska {
               background-image: url('../../assets/iconfinder_movie-alt2_285634.svg');
+            }
+          }
+        }
+
+        .filename {
+          .tag {
+            float: left;
+            font-weight: bold;
+            font-size: 0.6rem;
+            color: #707070;
+            background-color: #f4f4f4;
+            border-radius: 5px;
+            margin-top: 4px;
+            margin-right: 4px;
+            padding: 2px 4px;
+          }
+
+          .icon {
+            float: left;
+
+            &.orientation {
+              display: none;
+
+              &.vertical {
+                display: block;
+                background-image: url('../../assets/phone.svg');
+              }
             }
           }
 
@@ -91,7 +120,7 @@
             border: 0;
             overflow: hidden;
             resize: none;
-            width: calc(100% - 21px);
+            width: calc(100% - 165px);
             height: 22px;
             background-color: transparent;
           }
@@ -99,10 +128,6 @@
 
         .storageservice>.gdrive {
           background-image: url('../../assets/gdrive.svg');
-        }
-
-        .ispublic>.false {
-          background-image: url('../../assets/lock-svgrepo-com.svg');
         }
 
         .dateactivated {

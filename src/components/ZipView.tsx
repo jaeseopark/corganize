@@ -59,33 +59,26 @@ const ZipView = ({ path }: { path: string }) => {
   };
 
   const onKeyUp = (event) => {
-    const { key } = event;
+    const key = event.key.toLowerCase();
     if (key >= '0' && key <= '9') {
       const i = Math.floor((images?.length * parseInt(key)) / 10);
       setCurrentIndexWithBounds(i);
-    }
-
-    switch (key) {
-      case 'z':
-        setCurrentIndexWithBounds(currentIndex - 10);
-        break;
-      case 'x':
-        setCurrentIndexWithBounds(currentIndex - 5);
-        break;
-      case 'c':
-        setCurrentIndexWithBounds(currentIndex + 5);
-        break;
-      case 'v':
-        setCurrentIndexWithBounds(currentIndex + 10);
-        break;
-      case '[':
-        setCurrentIndex(0);
-        break;
-      case ']':
-        setCurrentIndex(images.length - 1);
-        break;
-      default:
-        break;
+    } else if (key === 'z') {
+      setCurrentIndexWithBounds(currentIndex - 10);
+    } else if (key === 'x') {
+      setCurrentIndexWithBounds(currentIndex - 5);
+    } else if (key === 'arrowleft') {
+      setCurrentIndexWithBounds(currentIndex - 1);
+    } else if (key === 'arrowright' || key === ' ') {
+      setCurrentIndexWithBounds(currentIndex + 1);
+    } else if (key === 'c') {
+      setCurrentIndexWithBounds(currentIndex + 5);
+    } else if (key === 'v') {
+      setCurrentIndexWithBounds(currentIndex + 10);
+    } else if (key === '[') {
+      setCurrentIndex(0);
+    } else if (key === ']') {
+      setCurrentIndex(images.length - 1);
     }
   };
 
@@ -108,6 +101,7 @@ const ZipView = ({ path }: { path: string }) => {
               trackProps={{
                 onViewChange: (newIndex: number) => setCurrentIndex(newIndex),
               }}
+              frameProps={{ accessibility: false }}
             />
           </Modal>
         )}

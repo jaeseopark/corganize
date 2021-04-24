@@ -1,75 +1,58 @@
 /* eslint-disable promise/always-return */
-import React, { useRef, useState } from 'react';
-import classNames from 'classnames';
-import { ipcRenderer } from 'electron';
+import React, { useEffect, useRef, useState } from 'react';
 import CorganizeClient from '../client/corganize';
 import HyperSquirrelClient from '../client/hypersquirrel';
+import classnames from 'classnames';
 
 import './ScrapePanel.scss';
 import { ignoreEvent } from '../uiutils/eventUtils';
-import Button from './Button';
-import { File } from '../entity/File';
+import Button, { SuccessButton } from './Button';
 
-const DEFAULT_STATUS = 'pending';
+const DEFAULT_STATUS = 'idle';
 
 type ScrapePanelProps = {
   corganizeClient: CorganizeClient;
   hsClient: HyperSquirrelClient;
+  defaultUrl: string | null;
 };
 
-type RowData = {
-  file: File;
-  status: string;
-  error?: string;
-};
+const Card = ({ card, onSend, onScape }) => {
+  const { file, status, error } = card;
+  const { sourceurl, thumbnailurl } = file;
 
-const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
-  const Row = ({ file, status, error }: RowData) => {
-    const { fileid, filename, sourceurl } = file;
-
-    return (
-      <tr>
-        <td className={classNames('icon', status)} />
-        <td>{fileid}</td>
-        <td>{filename}</td>
-        <td>{sourceurl}</td>
-        <td>{error}</td>
-      </tr>
-    );
+  const isComplete = status === 'complete';
+  const onSendCard = () => {
+    if (!isComplete) onSend(card);
   };
 
-  const [rows] = useState([]);
-  const urlRef = useRef(null);
-  const [, setRerenderTimestamp] = useState(null);
+  return (
+    <div className="card">
+      <img
+        className={classnames('thumbnail', { clickable: !isComplete })}
+        src={thumbnailurl || 'not.found.jpg'}
+        onClick={onSendCard}
+      />
+      <Button onClick={() => onScape(sourceurl)}>Scrape</Button>
+      {isComplete && <SuccessButton disabled>Sent</SuccessButton>}
+      {error && <span className="error">{error}</span>}
+    </div>
+  );
+};
 
+const ScrapePanel = ({
+  corganizeClient,
+  hsClient,
+  defaultUrl,
+}: ScrapePanelProps) => {
+  const [cards, setCards] = useState([]);
+  const urlRef = useRef(null);
+
+  const [, setRerenderTimestamp] = useState(null);
   const rerender = () => setRerenderTimestamp(Date.now());
 
-  const getUrlFromSecondWindow = () => {
-    ipcRenderer.invoke('getUrl').then((url) => {
-      if (urlRef?.current) urlRef.current.value = url;
-    });
-  };
+  const scrape = (event = null) => {
+    if (event) event.preventDefault();
 
-  const createFile = (row: RowData) =>
-    new Promise((resolve) => {
-      corganizeClient
-        .createFile(row.file)
-        .then(() => {
-          row.status = 'complete';
-        })
-        .catch((error) => {
-          row.status = 'error';
-          row.error = JSON.stringify(error);
-        })
-        .finally(() => {
-          rerender();
-          resolve(null);
-        });
-      resolve(null);
-    });
-
-  const scrape = (event) => {
-    event.preventDefault();
     hsClient
       .scrapeAsync(urlRef?.current.value)
       .then((files) =>
@@ -77,28 +60,37 @@ const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
           return { file, status: DEFAULT_STATUS };
         })
       )
-      .then((newRows) => {
-        rows.length = 0; // clear the exisitng rows;
-        newRows.forEach((row) => {
-          rows.push(row);
-          createFile(row);
-        });
-        rerender();
-      })
+      .then(setCards)
       .catch((error) => {
         alert(`Error: ${JSON.stringify(error)}`);
       });
   };
 
-  const table = rows && (
-    <table className="files">
-      <tbody>
-        {rows.map((rowData) => (
-          <Row {...rowData} />
-        ))}
-      </tbody>
-    </table>
-  );
+  useEffect(() => {
+    if (defaultUrl && urlRef?.current && !urlRef?.current.value) {
+      urlRef.current.value = defaultUrl;
+      scrape();
+    }
+  });
+
+  const scrapeUrl = (url) => {
+    urlRef.current.value = url;
+    scrape();
+  };
+
+  const createFile = (card) =>
+    corganizeClient
+      .createFile(card.file)
+      .then(() => {
+        card.status = 'complete';
+      })
+      .catch((error) => {
+        card.status = 'error';
+        card.error = JSON.stringify({ ...error, fileid: card.file.fileid });
+      })
+      .finally(() => {
+        rerender();
+      });
 
   return (
     <div>
@@ -106,12 +98,13 @@ const ScrapePanel = ({ corganizeClient, hsClient }: ScrapePanelProps) => {
         <form onSubmit={scrape}>
           <input required ref={urlRef} type="text" onKeyUp={ignoreEvent} />
           <Button type="submit">Scrape</Button>
-          <Button onClick={getUrlFromSecondWindow}>
-            Get from the second window
-          </Button>
         </form>
       </div>
-      {table}
+      <div className="grid">
+        {cards.map((card) => (
+          <Card card={card} onSend={createFile} onScape={scrapeUrl} />
+        ))}
+      </div>
     </div>
   );
 };

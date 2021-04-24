@@ -3,6 +3,7 @@ import {
   useTable,
   useSortBy,
   usePagination,
+  useFilters,
   useGlobalFilter,
   useColumnOrder,
 } from 'react-table';
@@ -16,7 +17,6 @@ import CorganizeClient from '../client/corganize';
 
 import DownloadCenter, { isBeingDownloaded } from './DownloadCenter';
 import FullscreenView from './FullscreenView';
-import Filename from './Filename';
 import TableView from './TableView';
 import FileActions from './FileActions';
 import {
@@ -26,9 +26,7 @@ import {
 } from '../uiutils/contextMenuUtils';
 import { File } from '../entity/File';
 import { ContextMenuOption } from '../entity/props';
-import ContextMenuWrapper from './ContextMenuWrapper';
-import FileView from './FileView';
-import { hiddenColumns, regularColumns } from '../uiutils/columnUtils';
+import { getAllColumns, hiddenColumns } from '../uiutils/columnUtils';
 import Library from '../entity/Library';
 import BurgerMenu, { BurgerMenuSpacer } from './BurgerMenu';
 import HyperSquirrelClient from '../client/hypersquirrel';
@@ -38,6 +36,7 @@ import OrphanAnalysisPanel from './OrphanAnalysisPanel';
 import ScrapePanel from './ScrapePanel';
 import { retrieveFilesAsync } from '../uiutils/fileRetrievalUtils';
 import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
+import { openFileFullscreen } from '../uiutils/mainViewUtils';
 
 type MainViewRenderBuffer = {
   files: File[];
@@ -111,8 +110,6 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
         throw { message: 'File not found' };
       })
       .then(rerender)
-      .then(() => 'File has been updated')
-      .then(showAlert)
       .catch((error) => showAlert(error.message));
   };
 
@@ -147,11 +144,15 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     });
   };
 
-  const openScrapePanel = () => {
+  const openScrapePanel = (url: string | null = null) => {
     setFullscreenComponent({
       title: 'Scrape',
       body: (
-        <ScrapePanel corganizeClient={corganizeClient} hsClient={hsClient} />
+        <ScrapePanel
+          corganizeClient={corganizeClient}
+          hsClient={hsClient}
+          defaultUrl={url}
+        />
       ),
     });
   };
@@ -195,33 +196,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     );
 
   const openFile = (file: File) => {
-    const { mimetype, fileid, encryptedPath, decryptedPath, filename } = file;
-    const onDetectMimetype = (detected: string) => {
-      if (!mimetype) {
-        updateFile(fileid, { mimetype: detected });
-      }
-    };
-
-    const contextMenuOptions = getContextMenuOptions(file);
-
-    setFullscreenComponent({
-      title: (
-        <ContextMenuWrapper
-          id="fileview-title"
-          component={<span>{filename}</span>}
-          options={contextMenuOptions}
-        />
-      ),
-      body: (
-        <FileView
-          encryptedPath={encryptedPath}
-          decryptedPath={decryptedPath}
-          aespassword={library.getAesPassword()}
-          onDetectMimetype={onDetectMimetype}
-          contextMenuOptions={contextMenuOptions}
-        />
-      ),
-    });
+    openFileFullscreen(file, updateFile, getContextMenuOptions, setFullscreenComponent, library);
   };
 
   const renderActions = ({ row }) => {
@@ -247,25 +222,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
 
   const data = useMemo(() => files || [], [files]);
   const columns = useMemo(() => {
-    const computedColumns = [
-      {
-        id: 'filename',
-        accessor: 'filename',
-        Header: 'filename',
-        Cell: (props) => Filename({ ...props, setFullscreenComponent }),
-      },
-      {
-        id: 'actions',
-        Cell: renderActions,
-      },
-      {
-        id: 'dateactivated',
-        accessor: 'dateactivated',
-        Header: 'fav',
-        Cell: renderFav,
-      },
-    ];
-    return regularColumns.concat(computedColumns);
+    return getAllColumns(setFullscreenComponent, renderActions, renderFav);
   }, [rerenderTimestamp]);
 
   const tableInstance = useTable(
@@ -278,6 +235,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       },
       autoResetPage: false,
     },
+    useFilters,
     useGlobalFilter,
     useSortBy,
     useColumnOrder,

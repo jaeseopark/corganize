@@ -90,8 +90,7 @@ export const moveFileAsync = (srcPath: string, destPath: string) => {
   });
 };
 
-export function getFilesizeInBytes(filepath) {
-  const stats = statSync(filepath);
-  const fileSizeInBytes = stats.size;
-  return fileSizeInBytes;
-}
+export const getFileSizeInBytes = (path: string) => statSync(path).size;
+
+export const getFileSizeInMegaBytes = (path) =>
+  getFileSizeInBytes(path) / 1024 ** 2;
