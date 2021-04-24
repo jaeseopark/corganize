@@ -40,9 +40,14 @@ const FileDecryptView = ({
 
   return (
     <span>
-      {percentage < 100
-        ? `Decrypting... ${percentage.toFixed(1)}%`
-        : 'Removing tmp file...'}
+      {percentage < 100 ? (
+        <div>
+          <span>Decrypting...</span>
+          <span>{percentage.toFixed(1)}%</span>
+        </div>
+      ) : (
+        'Removing tmp file...'
+      )}
     </span>
   );
 };
