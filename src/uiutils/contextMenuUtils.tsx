@@ -50,11 +50,14 @@ export const getRemoteActions = (
   updateFile: Function,
   rerenderRowData: Function,
   showAlert: Function,
-  openScrapePanel: Function,
+  openScrapePanel: Function
 ): ContextMenuOption[] => {
   const remoetActions: ContextMenuOption[] = [];
   if (sourceurl) {
-    const sanitizedSourceurl = `https://${sourceurl.split('://').slice(-1).pop()}`;
+    const sanitizedSourceurl = `https://${sourceurl
+      .split('://')
+      .slice(-1)
+      .pop()}`;
     remoetActions.push(
       {
         label: 'Copy Source URL',
@@ -68,7 +71,7 @@ export const getRemoteActions = (
         onClick: () => {
           openScrapePanel(sanitizedSourceurl);
         },
-        hotkey: 's'
+        hotkey: 's',
       }
     );
   }
@@ -95,13 +98,14 @@ export const getCommonActions = (
       hotkey: 'w',
     },
     {
-      label: 'Show Metadata',
+      label: 'Show Metadata (I)',
       onClick: () => {
         setFullscreenComponent({
           title: file.filename,
           body: <pre>{JSON.stringify(file, null, 2)}</pre>,
         });
       },
+      hotkey: 'i',
     },
     {
       label: 'Delete',

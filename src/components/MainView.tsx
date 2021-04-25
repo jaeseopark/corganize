@@ -65,7 +65,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     new CorganizeClient(library.config.server)
   );
   const [hsClient] = useState(
-    new HyperSquirrelClient(library.config.hypersquirrel)
+    new HyperSquirrelClient(library.config.hypersquirrel.remote)
   );
 
   const tableRef = useRef(null);
@@ -189,6 +189,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   const getBurgerMenuOptions = () =>
     getAllBurgerMenuOptions(
       files,
+      library.config.hypersquirrel.preset,
       allFilesLoaded,
       openScrapePanel,
       openOrphanPanel,
