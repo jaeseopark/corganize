@@ -57,8 +57,10 @@ const ScrapePanel = ({
   const scrape = (event = null) => {
     if (event) event.preventDefault();
 
+    const urls = urlRef?.current.value.split(',');
+
     hsClient
-      .scrapeAsync(urlRef?.current.value)
+      .scrapeAsync(...urls)
       .then((files) =>
         files.map((file) => {
           return { file, status: DEFAULT_STATUS };

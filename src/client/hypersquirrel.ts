@@ -9,23 +9,34 @@ class HyperSquirrelClient {
     this.host = host;
   }
 
-  async scrapeAsync(url: string): Promise<File[]> {
-    return fetch(`${this.host}/scrape`, {
-      method: 'POST',
-      body: JSON.stringify({ url }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then((res) => res.json())
-      .then(({ files }: { files: File[] }) => {
-        return files.map((f) => {
-          return {
-            ...f,
-            storageservice: 'None',
-          };
+  async scrapeAsync(...urls: string[]): Promise<File[]> {
+    const scrapeSingleUrl = (url: string) =>
+      fetch(`${this.host}/scrape`, {
+        method: 'POST',
+        body: JSON.stringify({ url }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then((res) => res.json())
+        .then(({ files }: { files: File[] }) => {
+          return files.map((f) => {
+            return {
+              ...f,
+              storageservice: 'None',
+            };
+          });
         });
-      });
+
+    return Promise.allSettled(urls.map((url) => scrapeSingleUrl(url))).then(
+      (results) =>
+        results.reduce((acc, result) => {
+          if (result.status === 'fulfilled') {
+            acc.push(...result.value);
+          }
+          return acc;
+        }, new Array<File>())
+    );
   }
 }
 

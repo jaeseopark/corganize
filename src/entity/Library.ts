@@ -5,7 +5,10 @@ const path = require('path');
 
 type LibraryConfig = {
   server: CorganizeClientProps;
-  hypersquirrel: HypersquirrelClientProps;
+  hypersquirrel: {
+    remote: HypersquirrelClientProps;
+    preset: string[];
+  };
   storageservice: {
     gdrive: {
       creds: {

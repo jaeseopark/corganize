@@ -4,10 +4,11 @@ import { toHumanFileSize } from '../utils/numberUtils';
 
 export const getBurgerMenuOptions = (
   files: File[],
+  scrapePreset: string[],
   allFilesLoaded: boolean,
   openScrapePanel: Function,
   openOrphanAnalysisPanel: Function,
-  openDuplicateAnalysisPanel: Function,
+  openDuplicateAnalysisPanel: Function
 ) => {
   const libSize = files.reduce((sum, f: File) => sum + (f.size || 0), 0);
   const libSizeStr = toHumanFileSize(libSize);
@@ -16,6 +17,11 @@ export const getBurgerMenuOptions = (
     {
       label: 'Scrape',
       onClick: openScrapePanel,
+    },
+    {
+      label: 'Scrape Preset',
+      onClick: () => openScrapePanel(scrapePreset),
+      disabled: !scrapePreset || scrapePreset.length === 0,
     },
     {
       label: 'Orphan Analysis',
