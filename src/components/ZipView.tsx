@@ -90,22 +90,27 @@ const ZipView = ({ path }: { path: string }) => {
     return null;
   }
 
+  // Note: this component gets rendered right inside <body>
+  const getFullscreenModal = () => (
+    <ModalGateway>
+      {modalIsOpen && (
+        <Modal onClose={() => setModalIsOpen(!modalIsOpen)}>
+          <Carousel
+            views={images}
+            currentIndex={currentIndex}
+            trackProps={{
+              onViewChange: (newIndex: number) => setCurrentIndex(newIndex),
+            }}
+            frameProps={{ accessibility: false }}
+          />
+        </Modal>
+      )}
+    </ModalGateway>
+  );
+
   return (
     <div className="zip-view" onKeyUp={onKeyUp}>
-      <ModalGateway>
-        {modalIsOpen && (
-          <Modal onClose={() => setModalIsOpen(!modalIsOpen)}>
-            <Carousel
-              views={images}
-              currentIndex={currentIndex}
-              trackProps={{
-                onViewChange: (newIndex: number) => setCurrentIndex(newIndex),
-              }}
-              frameProps={{ accessibility: false }}
-            />
-          </Modal>
-        )}
-      </ModalGateway>
+      {getFullscreenModal()}
       <Button onClick={() => setModalIsOpen(true)}>Open Lightbox</Button>
       <ZipViewHotkeyHelper />
     </div>

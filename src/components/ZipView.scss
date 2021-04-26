@@ -3,6 +3,14 @@
     img {
       height: 100vh;
     }
+
+    div {
+      transition: none !important;
+      -webkit-transition-duration: none !important;
+      -moz-transition-duration: none !important;
+      -o-transition-duration: none !important;
+      transition-duration: none !important;
+    }
   }
 
   .helper {
