@@ -1,7 +1,8 @@
 :global {
   .fullscreen {
     img {
-      height: 100vh;
+      height: auto;
+      max-height: 100vh;
     }
 
     div {
