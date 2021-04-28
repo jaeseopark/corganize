@@ -7,6 +7,7 @@ const TIME_HOTKEY_MAP = {
   x: -15,
   c: 15,
   v: 60,
+  b: 300,
 };
 
 const isHotkey = (key: string) => Object.keys(TIME_HOTKEY_MAP).includes(key);
