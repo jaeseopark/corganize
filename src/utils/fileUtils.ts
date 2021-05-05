@@ -74,7 +74,7 @@ export const guessMimetypeAsync = (filepath: string) => {
 export const createParentPath = (filepath: string) => {
   const parentPath = path.dirname(filepath);
   if (!existsSync(parentPath)) {
-    mkdirSync(parentPath);
+    mkdirSync(parentPath, { recursive: true });
   }
 };
 

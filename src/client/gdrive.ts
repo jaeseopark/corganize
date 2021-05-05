@@ -74,6 +74,7 @@ class GdriveClient {
     );
 
     return new Promise((resolve, reject) => {
+      createParentPath(localPath);
       createParentPath(tmpLocalPath);
       const dest = fs.createWriteStream(tmpLocalPath);
       const { data } = res;

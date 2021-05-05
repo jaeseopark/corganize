@@ -37,7 +37,9 @@ export const decrypt = (
   aespassword: string,
   percentageCallback: Function
 ) => {
+  const tmpDecryptedPath = `${decryptedPath}.tmp`;
   createParentPath(decryptedPath);
+  createParentPath(tmpDecryptedPath);
 
   const ps = ProgressStream({
     length: getFileSizeInBytes(encryptedPath),
@@ -48,9 +50,9 @@ export const decrypt = (
     percentageCallback(percentage);
   });
 
-  const tmpDecryptedPath = `${decryptedPath}.tmp`;
   const streamIn = createReadStream(encryptedPath);
   const streamOut = createWriteStream(tmpDecryptedPath);
+
   return decryptAes256Cbc(streamIn, streamOut, aespassword, ps)
     .then(() => {
       streamIn.close();
