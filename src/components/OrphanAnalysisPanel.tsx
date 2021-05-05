@@ -1,29 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { File } from '../entity/File';
-import { deleteAllAsync, listDirAsync } from '../utils/fileUtils';
+import { deleteAllAsync } from '../utils/fileUtils';
 import Button from './Button';
 
 type OrphanAnalysisPanelProps = {
   files: File[];
-  localPath: string;
+  localFiles: string[];
 };
 
-const OrphanAnalysisPanel = ({ files, localPath }: OrphanAnalysisPanelProps) => {
+const OrphanAnalysisPanel = ({
+  files,
+  localFiles,
+}: OrphanAnalysisPanelProps) => {
   const [orphans, setOrphans] = useState<string[] | null>(null);
   const [errorObj, setErrorObj] = useState(null);
 
   const findOrphans = () => {
-    return listDirAsync(localPath, false)
-      .then((localFilePaths: string[]) => {
-        const pathsInLibrary = files
-          .filter((f) => f.storageservice && f.storageservice !== 'None')
-          .map((f) => f.encryptedPath);
-        return localFilePaths.filter(
-          (p) => p.endsWith('.aes') && !pathsInLibrary.includes(p)
-        );
-      })
-      .then(setOrphans)
-      .catch(setErrorObj);
+    const pathsInLibrary = files
+      .filter((f) => f.storageservice && f.storageservice !== 'None')
+      .map((f) => f.encryptedPath);
+
+    setOrphans(
+      localFiles.filter(
+        (p) => p.endsWith('.aes') && !pathsInLibrary.includes(p)
+      )
+    );
   };
 
   useEffect(() => {

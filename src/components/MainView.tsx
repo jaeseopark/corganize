@@ -7,7 +7,6 @@ import {
   useGlobalFilter,
   useColumnOrder,
 } from 'react-table';
-import { existsSync } from 'fs';
 import classNames from 'classnames';
 import { ipcRenderer } from 'electron';
 
@@ -37,9 +36,11 @@ import ScrapePanel from './ScrapePanel';
 import { retrieveFilesAsync } from '../uiutils/fileRetrievalUtils';
 import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
 import { openFileFullscreen } from '../uiutils/mainViewUtils';
+import { listDirAsync } from '../utils/fileUtils';
 
 type MainViewRenderBuffer = {
   files: File[];
+  localFiles: string[];
   shouldFocusTable: boolean;
 };
 
@@ -53,6 +54,7 @@ type MainViewProps = {
 // This array acts as the buffer so the UI can render reliably.
 const renderBuffer: MainViewRenderBuffer = {
   files: [],
+  localFiles: [],
   shouldFocusTable: false,
 };
 
@@ -75,7 +77,13 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   const downloadFile = (file: File) => {
     const { fileid } = file;
     if (fileid.length <= 128) {
-      ipcRenderer.invoke('download', file);
+      ipcRenderer
+        .invoke('download', file)
+        .then(() => {
+          renderBuffer.localFiles.push(file.encryptedPath);
+          return null;
+        })
+        .catch(showAlert);
     } else {
       showAlert('fileid too long');
     }
@@ -138,7 +146,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       body: (
         <OrphanAnalysisPanel
           files={files}
-          localPath={library.config.local.path}
+          localFiles={renderBuffer.localFiles}
         />
       ),
     });
@@ -162,7 +170,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       renderBuffer.files.find((f: File) => f.fileid === inputFile.fileid) ||
       inputFile;
     return [
-      ...getLocalActions(file, rerender, showAlert),
+      ...getLocalActions(file, rerender, showAlert, renderBuffer.localFiles),
       ...getRemoteActions(
         file,
         updateFile,
@@ -197,7 +205,13 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     );
 
   const openFile = (file: File) => {
-    openFileFullscreen(file, updateFile, getContextMenuOptions, setFullscreenComponent, library);
+    openFileFullscreen(
+      file,
+      updateFile,
+      getContextMenuOptions,
+      setFullscreenComponent,
+      library
+    );
   };
 
   const renderActions = ({ row }) => {
@@ -205,6 +219,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     return (
       <FileActions
         file={file}
+        localFiles={renderBuffer.localFiles}
         openFile={openFile}
         downloadFile={downloadFile}
       />
@@ -249,20 +264,11 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       return;
     }
 
-    if (existsSync(file.encryptedPath)) {
+    if (renderBuffer.localFiles.includes(file.encryptedPath)) {
       openFile(file);
     } else if (file.storageservice) {
       downloadFile(file);
     }
-  };
-
-  const populateFileBuffer = (): Promise<null> => {
-    const progressCallback = (moreFiles: File[]) => {
-      renderBuffer.files = renderBuffer.files.concat(moreFiles);
-      setFiles(renderBuffer.files);
-    };
-
-    return retrieveFilesAsync(corganizeClient, library, progressCallback);
   };
 
   const focusTable = () => {
@@ -273,15 +279,35 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
 
   useEffect(() => {
     if (!files) {
-      populateFileBuffer()
+      const progressCallback = (moreFiles: File[]) => {
+        renderBuffer.files = renderBuffer.files.concat(moreFiles);
+        setFiles(renderBuffer.files);
+      };
+
+      listDirAsync(library.config.local.path, false)
+        .then((localFiles) => {
+          renderBuffer.localFiles = localFiles;
+          return null;
+        })
+        .then(() =>
+          retrieveFilesAsync(
+            corganizeClient,
+            library,
+            progressCallback,
+            renderBuffer.localFiles
+          )
+        )
         .then(() => setAllFilesLoaded(true))
         .catch((error) => showAlert(error.message));
     }
+  }, [corganizeClient, files, library, showAlert]);
+
+  useEffect(() => {
     if (renderBuffer.shouldFocusTable) {
       renderBuffer.shouldFocusTable = false;
       focusTable();
     }
-  }, [files, populateFileBuffer, showAlert]);
+  });
 
   if (!files) {
     return <h2 className="center">Loading...</h2>;
@@ -313,6 +339,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
           getConextMenuOptions={getContextMenuOptions}
           tableRef={tableRef}
           focusTable={focusTable}
+          localFiles={renderBuffer.localFiles}
         />
       </div>
     </>

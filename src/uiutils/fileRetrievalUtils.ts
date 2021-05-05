@@ -1,6 +1,5 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable prefer-promise-reject-errors */
-import { existsSync } from 'fs';
 import CorganizeClient from '../client/corganize';
 import { File } from '../entity/File';
 import Library from '../entity/Library';
@@ -9,7 +8,8 @@ import { htmlDecode } from '../utils/stringUtils';
 export const retrieveFilesAsync = (
   corganizeClient: CorganizeClient,
   library: Library,
-  progressCallback: Function
+  progressCallback: Function,
+  localFiles: string[]
 ) => {
   const {
     showDownloadableFilesOnly: sdfo,
@@ -22,7 +22,7 @@ export const retrieveFilesAsync = (
 
     return (
       (!sdfo || f.storageservice !== 'None') &&
-      (!hdf || !existsSync(f.encryptedPath))
+      (!hdf || !localFiles.includes(f.encryptedPath))
     );
   };
 

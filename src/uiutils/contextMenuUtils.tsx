@@ -1,7 +1,7 @@
 import React from 'react';
 import os from 'os';
 import { exec } from 'child_process';
-import { existsSync, unlink } from 'fs';
+import { unlink } from 'fs';
 import { copyTextToClipboard } from './clipboardUtils';
 import { File } from '../entity/File';
 import { ContextMenuOption } from '../entity/props';
@@ -9,11 +9,12 @@ import { ContextMenuOption } from '../entity/props';
 export const getLocalActions = (
   { encryptedPath }: File,
   rerenderRowData: Function,
-  showAlert: Function
+  showAlert: Function,
+  localFiles: string[]
 ): ContextMenuOption[] => {
   const localActions: ContextMenuOption[] = [];
 
-  if (existsSync(encryptedPath)) {
+  if (localFiles.includes(encryptedPath)) {
     localActions.push({
       label: 'Reveal',
       onClick: () => {
