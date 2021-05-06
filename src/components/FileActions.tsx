@@ -17,7 +17,7 @@ const FileActions = ({ file, localFiles, downloadFile, openFile }) => {
     const downloadListener = (_event, { percentage, isInitial }) => {
       if (
         isInitial ||
-        percentage >= download.percentage + 10 ||
+        percentage >= download.percentage + 1 ||
         percentage === 100
       ) {
         download.percentage = percentage;
