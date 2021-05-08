@@ -35,6 +35,8 @@ export const getLocalActions = (
             showAlert('The file could not be deleted');
             return;
           }
+          const iToDelete = localFiles.indexOf(encryptedPath);
+          localFiles.splice(iToDelete, 1);
           rerenderRowData();
           showAlert('The local file has been deleted');
         }),
