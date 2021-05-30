@@ -1,6 +1,5 @@
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable react/jsx-key */
-import { existsSync } from 'fs';
 import React from 'react';
 import { File } from '../entity/File';
 import { shuffle } from '../utils/arrayUtils';
@@ -14,6 +13,7 @@ import './TableView.scss';
 
 const TableView = ({
   downloadOrOpenFile,
+  localFiles,
   tableInstance,
   getConextMenuOptions,
   tableRef,
@@ -31,13 +31,15 @@ const TableView = ({
     pageCount,
   } = tableInstance;
 
+  const isLocal = (file) => localFiles.includes(file.encryptedPath);
+
   const getFirstLocalFileWithoutMimetype = () => {
     return page
       .map((row) => row.original)
-      .find((file: File) => existsSync(file.encryptedPath) && !file.mimetype);
+      .find((file: File) => isLocal(file) && !file.mimetype);
   };
 
-  const isActiveAndLocal = (f: File) => f.dateactivated && existsSync(f.encryptedPath);
+  const isActiveAndLocal = (f: File) => f.dateactivated && isLocal(f);
 
   const getRandomActiveLocalFile = () => {
     const files = page.map((row) => row.original).filter(isActiveAndLocal);
@@ -50,7 +52,7 @@ const TableView = ({
       .map((row) => row.original)
       .filter(
         (file: File) =>
-          !existsSync(file.encryptedPath) &&
+          !isLocal(file) &&
           file.storageservice &&
           file.storageservice !== 'None'
       )

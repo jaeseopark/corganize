@@ -1,12 +1,11 @@
 /* eslint-disable promise/always-return */
 /* eslint-disable react/prop-types */
 import { ipcRenderer } from 'electron';
-import { existsSync } from 'fs';
 import React, { useEffect, useState } from 'react';
 
 import Button from './Button';
 
-const FileActions = ({ file, downloadFile, openFile }) => {
+const FileActions = ({ file, localFiles, downloadFile, openFile }) => {
   const { fileid, locationref, storageservice, encryptedPath } = file;
   const [download] = useState({ percentage: null });
   const [, setRerenderTimestamp] = useState(null);
@@ -16,7 +15,11 @@ const FileActions = ({ file, downloadFile, openFile }) => {
   useEffect(() => {
     const channel = `download${fileid}`;
     const downloadListener = (_event, { percentage, isInitial }) => {
-      if (isInitial || percentage >= download.percentage + 10) {
+      if (
+        isInitial ||
+        percentage >= download.percentage + 1 ||
+        percentage === 100
+      ) {
         download.percentage = percentage;
         if (percentage !== 100) {
           rerender();
@@ -36,7 +39,7 @@ const FileActions = ({ file, downloadFile, openFile }) => {
   });
 
   let actionButton = null;
-  if (existsSync(encryptedPath)) {
+  if (localFiles.includes(encryptedPath)) {
     actionButton = <Button onClick={() => openFile(file)}>Open</Button>;
   } else if (download.percentage !== null) {
     actionButton = <Button disabled>{download.percentage}%</Button>;

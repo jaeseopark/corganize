@@ -27,11 +27,10 @@ export const handleDownload = (mainWindow, library, gdriveClient) => {
         };
 
         const downloadPath = library.getDownloadPath(fileid);
-        gdriveClient
+        return gdriveClient
           .downloadFileAsync(locationref, encryptedPath, downloadPath, callback)
           .then(() => respond(100))
           .catch(console.log);
-        break;
       }
       default: {
         throw new Error(`Unsupported storageservice: ${storageservice}`);
