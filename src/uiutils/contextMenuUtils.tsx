@@ -80,9 +80,8 @@ export const getRemoteActions = (
   }
   if (storageservice !== 'None')
     remoetActions.push({
-      label: 'Delete Remote File (D)',
+      label: 'Delete Remote File',
       onClick: () => updateFile(fileid, { storageservice: 'None' }),
-      hotkey: 'd',
     });
   if (remoetActions.length > 0) remoetActions.push(null);
   return remoetActions;
