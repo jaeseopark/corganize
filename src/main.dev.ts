@@ -11,7 +11,7 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import path from 'path';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { existsSync } from 'fs';
@@ -185,3 +185,11 @@ ipcMain.handle(
       resolve(null);
     })
 );
+
+ipcMain.handle('openAnyFile', (_event, allowMultiple: boolean) => {
+  const properties = ['openFile'];
+  if (allowMultiple) properties.push('multiSelections');
+  return dialog
+    .showOpenDialog({ properties })
+    .then((result) => !result.canceled && result.filePaths);
+});

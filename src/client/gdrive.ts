@@ -65,7 +65,12 @@ class GdriveClient {
     });
   }
 
-  async downloadFileAsync(fileId: string, localPath: string, tmpLocalPath: string, progressCallback) {
+  async downloadFileAsync(
+    fileId: string,
+    localPath: string,
+    tmpLocalPath: string,
+    progressCallback
+  ) {
     google.options({ auth: this.getOAuthClient() });
 
     const res = await drive.files.get(
@@ -100,6 +105,32 @@ class GdriveClient {
       } catch (error) {
         reject(error);
       }
+    });
+  }
+
+  async uploadFileAsync(localPath: string) {
+    google.options({ auth: this.getOAuthClient() });
+
+    return new Promise((resolve, reject) => {
+      const payload = {
+        resource: {
+          name: 'photo.jpg',
+          parents: ['1xxxXj_sdsdsdsd0Rw6qDf0jLukG6eEUl'],
+        },
+        media: {
+          mimeType: 'application/octet-stream',
+          body: fs.createReadStream(localPath),
+        },
+        fields: 'id',
+      };
+
+      drive.files.create(payload, (err, file) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(file.id);
+        }
+      });
     });
   }
 }

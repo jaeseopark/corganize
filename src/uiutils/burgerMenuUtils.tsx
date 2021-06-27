@@ -8,12 +8,17 @@ export const getBurgerMenuOptions = (
   allFilesLoaded: boolean,
   openScrapePanel: Function,
   openOrphanAnalysisPanel: Function,
-  openDuplicateAnalysisPanel: Function
+  openDuplicateAnalysisPanel: Function,
+  openUploadPanel: Function
 ) => {
   const libSize = files.reduce((sum, f: File) => sum + (f.size || 0), 0);
   const libSizeStr = toHumanFileSize(libSize);
 
   return [
+    {
+      label: 'Upload',
+      onClick: openUploadPanel
+    },
     {
       label: 'Scrape',
       onClick: openScrapePanel,

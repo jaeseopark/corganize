@@ -37,6 +37,7 @@ import { retrieveFilesAsync } from '../uiutils/fileRetrievalUtils';
 import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
 import { openFileFullscreen } from '../uiutils/mainViewUtils';
 import { listDirAsync } from '../utils/fileUtils';
+import UploadPanel from './UploadPanel';
 
 type MainViewRenderBuffer = {
   files: File[];
@@ -87,6 +88,18 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     } else {
       showAlert('fileid too long');
     }
+  };
+
+  const uploadFile = (file: File, localPath: string) => {
+    return ipcRenderer.invoke('upload', localPath).then((fileid) => {
+      const uploadedFile = {
+        ...file,
+        fileid,
+        storageservice: 'gdrive',
+      };
+
+      return corganizeClient.upsertFile(uploadedFile);
+    });
   };
 
   const deleteFile = (fileid: string) => {
@@ -194,6 +207,13 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     });
   };
 
+  const openUploadPanel = () => {
+    setFullscreenComponent({
+      title: 'Upload',
+      body: <UploadPanel uploadFile={uploadFile} />,
+    });
+  };
+
   const getBurgerMenuOptions = () =>
     getAllBurgerMenuOptions(
       files,
@@ -201,7 +221,8 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       allFilesLoaded,
       openScrapePanel,
       openOrphanPanel,
-      openDuplicateAnalysisPanel
+      openDuplicateAnalysisPanel,
+      openUploadPanel
     );
 
   const openFile = (file: File) => {
