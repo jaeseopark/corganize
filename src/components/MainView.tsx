@@ -91,14 +91,14 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   };
 
   const uploadFile = (file: File, localPath: string) => {
-    return ipcRenderer.invoke('upload', localPath).then((fileid) => {
+    return ipcRenderer.invoke('upload', localPath).then((gdriveFileId) => {
       const uploadedFile = {
         ...file,
-        fileid,
+        locationref: gdriveFileId,
         storageservice: 'gdrive',
       };
 
-      return corganizeClient.upsertFile(uploadedFile);
+      return corganizeClient.createFile(uploadedFile);
     });
   };
 
