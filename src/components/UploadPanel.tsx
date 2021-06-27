@@ -48,13 +48,9 @@ const UploadPanel = ({ uploadFile }) => {
 
   const handleBrowseClick = () => {
     // const localPath = dialog.showOpenDialog({ properties: ['openFile'] });
-    const allowMultiple = false;
-    ipcRenderer
-      .invoke('openAnyFile', allowMultiple)
-      .then((localPaths: string[]) => {
-        if (localPaths)
-          localPaths.forEach((localPath) => addUpload(localPath));
-      });
+    ipcRenderer.invoke('openAnyFile').then((localPaths: string[]) => {
+      if (localPaths) localPaths.forEach((localPath) => addUpload(localPath));
+    });
   };
 
   // TODO: add drag-drop support

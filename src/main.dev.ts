@@ -186,9 +186,8 @@ ipcMain.handle(
     })
 );
 
-ipcMain.handle('openAnyFile', (_event, allowMultiple: boolean) => {
-  const properties = ['openFile'];
-  if (allowMultiple) properties.push('multiSelections');
+ipcMain.handle('openAnyFile', () => {
+  const properties = ['openFile', 'multiSelections'];
   return dialog
     .showOpenDialog({ properties })
     .then((result) => !result.canceled && result.filePaths);
