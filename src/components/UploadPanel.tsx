@@ -47,7 +47,6 @@ const UploadPanel = ({ uploadFile }) => {
   };
 
   const handleBrowseClick = () => {
-    // const localPath = dialog.showOpenDialog({ properties: ['openFile'] });
     ipcRenderer.invoke('openAnyFile').then((localPaths: string[]) => {
       if (localPaths) localPaths.forEach((localPath) => addUpload(localPath));
     });
