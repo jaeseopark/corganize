@@ -40,11 +40,10 @@ const UploadPanel = ({ uploadFile }) => {
 
     setUploads([...uploads, upload]);
 
-    alert('ehe');
-    // uploadFile(file, localPath).then(() => {
-    //   upload.status = 'complete';
-    //   setUploads([...uploads]);
-    // });
+    uploadFile(file, localPath).then(() => {
+      upload.status = 'complete';
+      setUploads([...uploads]);
+    });
   };
 
   const handleBrowseClick = () => {
