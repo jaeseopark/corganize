@@ -1,26 +1,7 @@
-import { CorganizeClientProps, HypersquirrelClientProps } from './props';
+import { LibraryConfig } from "./props";
 
 const fs = require('fs');
 const path = require('path');
-
-type LibraryConfig = {
-  server: CorganizeClientProps;
-  hypersquirrel: {
-    remote: HypersquirrelClientProps;
-    preset: string[];
-  };
-  storageservice: {
-    gdrive: {
-      creds: {
-        path: string;
-      };
-    };
-  };
-  local: {
-    path: string;
-    tmpPath?: string;
-  };
-};
 
 const getPath = (parent: string, fileid: string, ext: string) => {
   const fileidNew = fileid.replace('/', 'slash');

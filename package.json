@@ -271,7 +271,8 @@
     "react-table": "^7.6.2",
     "regenerator-runtime": "^0.13.5",
     "screenfull": "^5.1.0",
-    "source-map-support": "^0.5.19"
+    "source-map-support": "^0.5.19",
+    "uuid": "^8.3.2"
   },
   "devEngines": {
     "node": ">=10.x",

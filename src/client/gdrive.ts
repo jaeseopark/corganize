@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+import { GdriveClientProps } from '../entity/props';
 import { createParentPath, moveFileAsync } from '../utils/fileUtils';
 
 /* eslint-disable import/prefer-default-export */
@@ -12,7 +14,10 @@ const SCOPES = [
 const drive = google.drive({ version: 'v3' });
 
 class GdriveClient {
-  constructor(config) {
+  config;
+  oAuthClient;
+
+  constructor(config: GdriveClientProps) {
     this.config = config;
     this.oAuthClient = null;
   }
@@ -114,8 +119,8 @@ class GdriveClient {
     return new Promise((resolve, reject) => {
       const payload = {
         resource: {
-          name: 'photo.jpg',
-          parents: ['1xxxXj_sdsdsdsd0Rw6qDf0jLukG6eEUl'],
+          name: uuidv4().toString(),
+          parents: [this.config.upload.folder],
         },
         media: {
           mimeType: 'application/octet-stream',

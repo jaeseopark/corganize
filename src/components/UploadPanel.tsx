@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { ipcRenderer } from 'electron';
+import { v4 as uuidv4 } from 'uuid';
 import { File } from '../entity/File';
 import Button from './Button';
+import Library from '../entity/Library';
 
 type Upload = {
   status: string;
   localPath: string;
   file: File;
+};
+
+type UploadPanelProps = {
+  uploadFile: (file: File, localPath: string) => Promise<File>;
 };
 
 const UploadView = ({ upload }) => {
@@ -18,18 +24,16 @@ const UploadView = ({ upload }) => {
   );
 };
 
-const UploadPanel = ({ uploadFile }) => {
+const UploadPanel = ({ uploadFile }: UploadPanelProps) => {
   const [uploads, setUploads] = useState<Upload[]>([]);
 
   const addUpload = (localPath) => {
     const timestamp = Date.now();
     const file: File = {
-      fileid: 'uuid123',
+      fileid: uuidv4().toString(),
       sourceurl: 'local',
       filename: `Local Upload ${timestamp}`,
       lastupdated: timestamp,
-      encryptedPath: null,
-      decryptedPath: null,
     };
 
     const upload = {
@@ -62,7 +66,7 @@ const UploadPanel = ({ uploadFile }) => {
       <div className="files">
         {uploads.map((u) => (
           // eslint-disable-next-line react/jsx-key
-          <UploadView upload={u} />
+          <UploadView key={u.file.fileid} upload={u} />
         ))}
       </div>
     </div>
