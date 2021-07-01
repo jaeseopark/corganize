@@ -11,6 +11,7 @@ import VideoView from './VideoView';
 import { ContextMenuOption } from '../entity/props';
 import ContextMenuWrapper from './ContextMenuWrapper';
 import AesCryptView from './AesCryptView';
+import { AesCryptOperation } from '../utils/cryptoUtils';
 
 const getInnermostChild = (el: HTMLElement) => {
   if (el.children.length === 0) {
@@ -91,7 +92,8 @@ const FileView = ({
         encryptedPath={encryptedPath}
         decryptedPath={decryptedPath}
         aespassword={aespassword}
-        onDecrypt={onDecrypt}
+        operation={AesCryptOperation.DECRYPT}
+        onFinish={onDecrypt}
       />
     );
   }
