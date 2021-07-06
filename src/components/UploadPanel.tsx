@@ -3,12 +3,13 @@ import { ipcRenderer } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import { File } from '../entity/File';
 import Button from './Button';
-import Library from '../entity/Library';
+import { encrypt } from '../utils/cryptoUtils';
 
 type Upload = {
   status: string;
   localPath: string;
   file: File;
+  error: any;
 };
 
 type UploadPanelProps = {
@@ -37,17 +38,27 @@ const UploadPanel = ({ uploadFile }: UploadPanelProps) => {
     };
 
     const upload = {
-      status: 'uploading',
+      status: 'encrypting',
       localPath,
       file,
     };
 
     setUploads([...uploads, upload]);
+    const encryptedPath = '';
 
-    uploadFile(file, localPath).then(() => {
-      upload.status = 'complete';
-      setUploads([...uploads]);
-    });
+    encrypt()
+      .then(() => {
+        upload.status = 'uploading';
+      })
+      .then(() => uploadFile(file, encryptedPath))
+      .then(() => {
+        upload.status = 'complete';
+      })
+      .catch(err => {
+        upload.status = 'error';
+        upload.error = err;
+      })
+      .finally(() => setUploads([...uploads]));
   };
 
   const handleBrowseClick = () => {
@@ -65,7 +76,6 @@ const UploadPanel = ({ uploadFile }: UploadPanelProps) => {
       </div>
       <div className="files">
         {uploads.map((u) => (
-          // eslint-disable-next-line react/jsx-key
           <UploadView key={u.file.fileid} upload={u} />
         ))}
       </div>
