@@ -89,7 +89,14 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     }
   };
 
-  const deleteFile = (fileid: string) => {
+  const createFile = (file: File): Promise<File> =>
+    corganizeClient.createFile(file).then((newFile) => {
+      renderBuffer.files.push(newFile);
+      files.push(newFile);
+      return file;
+    });
+
+  const deleteFile = (fileid: string) =>
     corganizeClient
       .deleteFile(fileid)
       .then(() => {
@@ -102,7 +109,6 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       .then(showAlert('file has been deleted'))
       .then(rerender)
       .catch(showAlert);
-  };
 
   const updateFile = (fileid: string, props: File) => {
     const file = renderBuffer.files.find((f: File) => f.fileid === fileid);
@@ -157,10 +163,10 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       title: 'Scrape',
       body: (
         <ScrapePanel
-          corganizeClient={corganizeClient}
+          createFile={createFile}
           hsClient={hsClient}
           defaultUrl={url}
-          existingFileIds={files.map((file) => file.fileid)}
+          files={files.map((file) => file.fileid)}
         />
       ),
     });
