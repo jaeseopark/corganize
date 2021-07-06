@@ -7,17 +7,30 @@ import HyperSquirrelClient from '../client/hypersquirrel';
 import './ScrapePanel.scss';
 import { ignoreEvent } from '../uiutils/eventUtils';
 import Button from './Button';
+import { File } from '../entity/File';
 
 const FILENAME_LENGTH = 10;
-const DEFAULT_STATUS = 'idle';
 
 type ScrapePanelProps = {
   corganizeClient: CorganizeClient;
   hsClient: HyperSquirrelClient;
   defaultUrl: string | null;
+  existingFileIds: string[];
 };
 
-const Card = ({ card, onSend, onScape }) => {
+type Card = {
+  file: File;
+  status: string;
+  error: Error;
+};
+
+type CardViewProps = {
+  card: Card;
+  onSend: (card: Card) => void;
+  onScrape: (url: string) => void;
+};
+
+const CardView = ({ card, onSend, onScrape }: CardViewProps) => {
   const { file, status, error } = card;
   const { sourceurl, thumbnailurl, filename, fileid } = file;
 
@@ -35,7 +48,7 @@ const Card = ({ card, onSend, onScape }) => {
         src={thumbnailurl || 'not.found.jpg'}
         onClick={onSendCard}
       />
-      <Button onClick={() => onScape(sourceurl)}>Scrape</Button>
+      <Button onClick={() => onScrape(sourceurl)}>Scrape</Button>
       <span className={classnames('caption', { error, complete })}>
         {error || title}
       </span>
@@ -47,11 +60,12 @@ const ScrapePanel = ({
   corganizeClient,
   hsClient,
   defaultUrl,
+  existingFileIds,
 }: ScrapePanelProps) => {
-  const [cards, setCards] = useState([]);
+  const [cards, setCards] = useState<Card[]>([]);
   const urlRef = useRef(null);
 
-  const [, setRerenderTimestamp] = useState(null);
+  const [, setRerenderTimestamp] = useState<number>(0);
   const rerender = () => setRerenderTimestamp(Date.now());
 
   const scrape = (event = null) => {
@@ -62,9 +76,11 @@ const ScrapePanel = ({
     hsClient
       .scrapeAsync(...urls)
       .then((files) =>
-        files.map((file) => {
-          return { file, status: DEFAULT_STATUS };
-        })
+        files
+          .filter((file) => !existingFileIds.includes(file.fileid))
+          .map((file) => {
+            return { file, status: 'idle' };
+          })
       )
       .then(setCards)
       .catch((error) => {
@@ -79,12 +95,12 @@ const ScrapePanel = ({
     }
   });
 
-  const scrapeUrl = (url) => {
+  const scrapeUrl = (url: string) => {
     urlRef.current.value = url;
     scrape();
   };
 
-  const createFile = (card) =>
+  const createFile = (card: Card) =>
     corganizeClient
       .createFile(card.file)
       .then(() => {
@@ -108,7 +124,12 @@ const ScrapePanel = ({
       </div>
       <div className="grid">
         {cards.map((card) => (
-          <Card card={card} onSend={createFile} onScape={scrapeUrl} />
+          <CardView
+            key={card.file.fileid}
+            card={card}
+            onSend={createFile}
+            onScrape={scrapeUrl}
+          />
         ))}
       </div>
     </div>

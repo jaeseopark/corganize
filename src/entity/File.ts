@@ -5,14 +5,15 @@ export type File = {
   lastupdated: number;
   filename: string;
 
-  // Optional fields
+  // Optional fields (still server-side)
   dateactivated?: number;
   storageservice?: string;
   locationref?: string;
   size?: number;
   mimetype?: string;
 
-  // Decorative/local fields
+  // UI-only fields
   encryptedPath: string;
   decryptedPath: string;
+  thumbnailurl?: string;
 };
