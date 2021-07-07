@@ -44,6 +44,6 @@ export const handleUpload = (gdriveClient: GdriveClient) => {
   ipcMain.removeHandler('upload');
   ipcMain.handle('upload', async (_event, localPath: string) => {
     console.log(`Upload event received: ${localPath}`);
-    return gdriveClient.uploadFileAsync(localPath).catch(console.log);
+    return gdriveClient.uploadFileAsync(localPath);
   });
 };

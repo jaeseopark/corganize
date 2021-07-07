@@ -63,7 +63,7 @@ class CorganizeClient {
     );
   }
 
-  createFile(file: File) {
+  createFile(file: File): Promise<File> {
     const url = new URL('/Prod/files', this.host);
 
     return fetch(url, {

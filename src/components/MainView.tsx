@@ -11,6 +11,8 @@ import classNames from 'classnames';
 import { ipcRenderer } from 'electron';
 
 import './MainView.scss';
+import { basename } from 'path';
+import { v4 as uuidv4 } from 'uuid';
 import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 
@@ -38,6 +40,7 @@ import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
 import { openFileFullscreen } from '../uiutils/mainViewUtils';
 import { listDirAsync } from '../utils/fileUtils';
 import UploadPanel from './UploadPanel';
+import { encrypt } from '../utils/cryptoUtils';
 
 type MainViewRenderBuffer = {
   files: File[];
@@ -90,16 +93,34 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     }
   };
 
-  const uploadFile = (file: File, localPath: string) => {
-    return ipcRenderer.invoke('upload', localPath).then((gdriveFileId) => {
-      const uploadedFile = {
-        ...file,
-        locationref: gdriveFileId,
-        storageservice: 'gdrive',
-      };
+  const uploadFile = (localPath: string): Promise<File> => {
+    const fileid = uuidv4().toString();
+    const encryptedPath = library.getEncryptedPath(fileid);
 
-      return corganizeClient.createFile(uploadedFile);
-    });
+    const cb = (percentage: number) => {
+      // TODO
+    };
+
+    const file: File = {
+      fileid: uuidv4(),
+      decryptedPath: localPath,
+      encryptedPath,
+      sourceurl: 'local',
+      filename: basename(localPath),
+      lastupdated: Date.now(),
+    };
+
+    return encrypt(localPath, encryptedPath, library.getAesPassword(), cb)
+      .then(() => ipcRenderer.invoke('upload', localPath))
+      .then((gdriveFileId) => {
+        const uploadedFile = {
+          ...file,
+          locationref: gdriveFileId,
+          storageservice: 'gdrive',
+        };
+
+        return corganizeClient.createFile(uploadedFile);
+      });
   };
 
   const deleteFile = (fileid: string) => {

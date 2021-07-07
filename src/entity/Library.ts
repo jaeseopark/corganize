@@ -28,23 +28,23 @@ class Library {
     }
   }
 
-  getAesPassword() {
+  getAesPassword(): string {
     return this.config.local.aes.password;
   }
 
-  getEncryptedPath(fileid: string) {
+  getEncryptedPath(fileid: string): string {
     return getPath(this.config.local.path, fileid, 'aes');
   }
 
-  getTmpPath() {
+  getTmpPath(): string {
     return this.config.local.tmpPath || this.config.local.path;
   }
 
-  getDecryptedPath(fileid: string) {
+  getDecryptedPath(fileid: string): string {
     return getPath(this.getTmpPath(), fileid, 'dec');
   }
 
-  getDownloadPath(fileid: string) {
+  getDownloadPath(fileid: string): string {
     return getPath(this.getTmpPath(), fileid, 'download');
   }
 }

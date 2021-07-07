@@ -3,22 +3,22 @@ import { ipcRenderer } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import { File } from '../entity/File';
 import Button from './Button';
-import { encrypt } from '../utils/cryptoUtils';
 
 type Upload = {
+  uploadid: string;
   status: string;
   localPath: string;
-  file: File;
-  error: any;
+  file?: File;
+  error?: Error;
 };
 
 type UploadPanelProps = {
-  uploadFile: (file: File, localPath: string) => Promise<File>;
+  uploadFile: (localPath: string) => Promise<File>;
 };
 
 const UploadView = ({ upload }) => {
   return (
-    <div key={upload.file.fileid}>
+    <div className="upload-view">
       <span className="localPath">{upload.localPath}</span>
       <span className="status">{upload.status}</span>
     </div>
@@ -28,33 +28,23 @@ const UploadView = ({ upload }) => {
 const UploadPanel = ({ uploadFile }: UploadPanelProps) => {
   const [uploads, setUploads] = useState<Upload[]>([]);
 
-  const addUpload = (localPath) => {
-    const timestamp = Date.now();
-    const file: File = {
-      fileid: uuidv4().toString(),
-      sourceurl: 'local',
-      filename: `Local Upload ${timestamp}`,
-      lastupdated: timestamp,
-    };
-
-    const upload = {
-      status: 'encrypting',
+  const addUpload = (localPath: string) => {
+    const upload: Upload = {
+      uploadid: uuidv4().toString(),
+      status: 'uploading',
       localPath,
-      file,
     };
 
     setUploads([...uploads, upload]);
-    const encryptedPath = '';
 
-    encrypt()
-      .then(() => {
-        upload.status = 'uploading';
-      })
-      .then(() => uploadFile(file, encryptedPath))
-      .then(() => {
+    // eslint-disable-next-line promise/catch-or-return
+    uploadFile(localPath)
+      // eslint-disable-next-line promise/always-return
+      .then((file) => {
+        upload.file = file;
         upload.status = 'complete';
       })
-      .catch(err => {
+      .catch((err) => {
         upload.status = 'error';
         upload.error = err;
       })
@@ -62,7 +52,9 @@ const UploadPanel = ({ uploadFile }: UploadPanelProps) => {
   };
 
   const handleBrowseClick = () => {
+    // eslint-disable-next-line promise/catch-or-return
     ipcRenderer.invoke('openAnyFile').then((localPaths: string[]) => {
+      // eslint-disable-next-line promise/always-return
       if (localPaths) localPaths.forEach((localPath) => addUpload(localPath));
     });
   };
@@ -76,7 +68,7 @@ const UploadPanel = ({ uploadFile }: UploadPanelProps) => {
       </div>
       <div className="files">
         {uploads.map((u) => (
-          <UploadView key={u.file.fileid} upload={u} />
+          <UploadView key={u.uploadid} upload={u} />
         ))}
       </div>
     </div>
