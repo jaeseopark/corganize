@@ -1,6 +1,6 @@
 import { existsSync } from 'fs';
 import React, { useEffect, useState } from 'react';
-import { AesCryptOperation, decrypt, encrypt } from '../utils/cryptoUtils';
+import { AesCryptOperation, decrypt } from '../utils/cryptoUtils';
 
 type AesCryptViewProps = {
   encryptedPath: string;
@@ -30,11 +30,7 @@ const AesCryptView = ({
   };
 
   const getEncryptPromise = () => {
-    if (existsSync(encryptedPath)) {
-      return Promise.resolve(encryptedPath);
-    }
-
-    return encrypt(encryptedPath, decryptedPath, aespassword, setPercentage);
+    return Promise.reject(new Error('Not implemented'));
   };
 
   useEffect(() => {
