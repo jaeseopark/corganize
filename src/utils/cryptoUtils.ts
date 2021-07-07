@@ -34,7 +34,7 @@ const execute = (
   pathOut: string,
   aespassword: string,
   percentageCallback: (percentage: number) => void
-): Promise<void> => {
+): Promise<string> => {
   const tmpPath = `${pathOut}.tmp`;
   createParentPath(pathOut);
   createParentPath(tmpPath);
@@ -62,7 +62,7 @@ const execute = (
   }).then(() => {
     streamIn.close();
     streamOut.close();
-    moveFileAsync(tmpPath, pathOut);
+    return moveFileAsync(tmpPath, pathOut);
   });
 };
 
