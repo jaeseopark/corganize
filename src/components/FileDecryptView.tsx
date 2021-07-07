@@ -7,7 +7,7 @@ type FileDecryptViewProps = {
   encryptedPath: string;
   decryptedPath: string;
   aespassword: string;
-  onDecrypt: Function;
+  onDecrypt: () => void;
 };
 
 const FileDecryptView = ({
