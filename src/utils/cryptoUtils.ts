@@ -1,3 +1,4 @@
+/* eslint-disable promise/always-return */
 import { createReadStream, createWriteStream } from 'fs';
 import { Decrypt, Encrypt } from 'node-aescrypt';
 import {
@@ -33,7 +34,7 @@ const execute = (
   pathOut: string,
   aespassword: string,
   percentageCallback: (percentage: number) => void
-) => {
+): Promise<void> => {
   const tmpPath = `${pathOut}.tmp`;
   createParentPath(pathOut);
   createParentPath(tmpPath);
@@ -58,13 +59,11 @@ const execute = (
       .pipe(streamOut)
       .on('error', reject)
       .on('finish', resolve);
-  })
-    .then(() => {
-      streamIn.close();
-      streamOut.close();
-      return null;
-    })
-    .then(() => moveFileAsync(tmpPath, pathOut));
+  }).then(() => {
+    streamIn.close();
+    streamOut.close();
+    moveFileAsync(tmpPath, pathOut);
+  });
 };
 
 export const decrypt = (...args) => execute(AesCryptOperation.DECRYPT, ...args);

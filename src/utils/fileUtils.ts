@@ -78,7 +78,10 @@ export const createParentPath = (filepath: string) => {
   }
 };
 
-export const moveFileAsync = (srcPath: string, destPath: string) => {
+export const moveFileAsync = (
+  srcPath: string,
+  destPath: string
+): Promise<string> => {
   return new Promise((resolve, reject) => {
     copyFile(srcPath, destPath, (err, _data) => {
       if (err) reject(err);

@@ -10,8 +10,7 @@ import { guessMimetypeAsync } from '../utils/fileUtils';
 import VideoView from './VideoView';
 import { ContextMenuOption } from '../entity/props';
 import ContextMenuWrapper from './ContextMenuWrapper';
-import AesCryptView from './AesCryptView';
-import { AesCryptOperation } from '../utils/cryptoUtils';
+import FileDecryptView from './FileDecryptView';
 
 const getInnermostChild = (el: HTMLElement) => {
   if (el.children.length === 0) {
@@ -88,12 +87,11 @@ const FileView = ({
 
   if (!content) {
     return (
-      <AesCryptView
+      <FileDecryptView
         encryptedPath={encryptedPath}
         decryptedPath={decryptedPath}
         aespassword={aespassword}
-        operation={AesCryptOperation.DECRYPT}
-        onFinish={onDecrypt}
+        onDecrypt={onDecrypt}
       />
     );
   }
