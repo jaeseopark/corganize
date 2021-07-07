@@ -1,3 +1,4 @@
+/* eslint-disable promise/catch-or-return */
 import { existsSync } from 'fs';
 import React, { useEffect, useState } from 'react';
 import { decrypt } from '../utils/cryptoUtils';
@@ -6,7 +7,7 @@ type FileDecryptViewProps = {
   encryptedPath: string;
   decryptedPath: string;
   aespassword: string;
-  onDecrypt: Function;
+  onDecrypt: () => void;
 };
 
 const FileDecryptView = ({

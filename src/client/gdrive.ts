@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+import { GdriveClientProps } from '../entity/props';
 import { createParentPath, moveFileAsync } from '../utils/fileUtils';
 
 /* eslint-disable import/prefer-default-export */
@@ -5,6 +7,7 @@ const fs = require('fs');
 const { google } = require('googleapis');
 
 const SCOPES = [
+  'https://www.googleapis.com/auth/drive.file',
   'https://www.googleapis.com/auth/drive.readonly',
   'https://www.googleapis.com/auth/drive.metadata.readonly',
 ];
@@ -12,7 +15,10 @@ const SCOPES = [
 const drive = google.drive({ version: 'v3' });
 
 class GdriveClient {
-  constructor(config) {
+  config;
+  oAuthClient;
+
+  constructor(config: GdriveClientProps) {
     this.config = config;
     this.oAuthClient = null;
   }
@@ -65,7 +71,12 @@ class GdriveClient {
     });
   }
 
-  async downloadFileAsync(fileId: string, localPath: string, tmpLocalPath: string, progressCallback) {
+  async downloadFileAsync(
+    fileId: string,
+    localPath: string,
+    tmpLocalPath: string,
+    progressCallback
+  ) {
     google.options({ auth: this.getOAuthClient() });
 
     const res = await drive.files.get(
@@ -100,6 +111,32 @@ class GdriveClient {
       } catch (error) {
         reject(error);
       }
+    });
+  }
+
+  async uploadFileAsync(localPath: string) {
+    google.options({ auth: this.getOAuthClient() });
+
+    return new Promise((resolve, reject) => {
+      const payload = {
+        resource: {
+          name: uuidv4().toString(),
+          parents: [this.config.upload.folder],
+        },
+        media: {
+          mimeType: 'application/octet-stream',
+          body: fs.createReadStream(localPath),
+        },
+        fields: 'id',
+      };
+
+      drive.files.create(payload, (err, file) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(file.id);
+        }
+      });
     });
   }
 }

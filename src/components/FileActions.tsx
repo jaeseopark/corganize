@@ -2,15 +2,15 @@
 /* eslint-disable react/prop-types */
 import { ipcRenderer } from 'electron';
 import React, { useEffect, useState } from 'react';
+import { useUpdate } from 'react-use';
 
 import Button from './Button';
 
 const FileActions = ({ file, localFiles, downloadFile, openFile }) => {
   const { fileid, locationref, storageservice, encryptedPath } = file;
   const [download] = useState({ percentage: null });
-  const [, setRerenderTimestamp] = useState(null);
 
-  const rerender = () => setRerenderTimestamp(Date.now());
+  const rerender = useUpdate();
 
   useEffect(() => {
     const channel = `download${fileid}`;

@@ -49,4 +49,4 @@ npm-debug.log.*
 *.sass.d.ts
 *.scss.d.ts
 
-*.library.json
+*.library*.json
