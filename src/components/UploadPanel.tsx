@@ -3,6 +3,7 @@ import { ipcRenderer } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import { File } from '../entity/File';
 import Button from './Button';
+import { useUpdate } from 'react-use';
 
 type Upload = {
   uploadid: string;
@@ -27,6 +28,7 @@ const UploadView = ({ upload }) => {
 
 const UploadPanel = ({ uploadFile }: UploadPanelProps) => {
   const [uploads, setUploads] = useState<Upload[]>([]);
+  const rerender = useUpdate();
 
   const addUpload = (localPath: string) => {
     const upload: Upload = {
@@ -48,7 +50,7 @@ const UploadPanel = ({ uploadFile }: UploadPanelProps) => {
         upload.status = 'error';
         upload.error = err;
       })
-      .finally(() => setUploads([...uploads]));
+      .finally(() => rerender());
   };
 
   const handleBrowseClick = () => {
@@ -66,7 +68,7 @@ const UploadPanel = ({ uploadFile }: UploadPanelProps) => {
       <div className="dragdrop">
         <Button onClick={handleBrowseClick}>Browse</Button>
       </div>
-      <div className="files">
+      <div className="uploads">
         {uploads.map((u) => (
           <UploadView key={u.uploadid} upload={u} />
         ))}

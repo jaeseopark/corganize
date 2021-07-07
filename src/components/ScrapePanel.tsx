@@ -7,6 +7,7 @@ import HyperSquirrelClient from '../client/hypersquirrel';
 import './ScrapePanel.scss';
 import { ignoreEvent } from '../uiutils/eventUtils';
 import Button from './Button';
+import { useUpdate } from 'react-use';
 
 const FILENAME_LENGTH = 10;
 const DEFAULT_STATUS = 'idle';
@@ -51,8 +52,7 @@ const ScrapePanel = ({
   const [cards, setCards] = useState([]);
   const urlRef = useRef(null);
 
-  const [, setRerenderTimestamp] = useState(null);
-  const rerender = () => setRerenderTimestamp(Date.now());
+  const rerender = useUpdate();
 
   const scrape = (event = null) => {
     if (event) event.preventDefault();
