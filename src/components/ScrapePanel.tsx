@@ -1,10 +1,11 @@
 /* eslint-disable promise/always-return */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useUpdate } from 'react-use';
 import HyperSquirrelClient from '../client/hypersquirrel';
 
 import { ignoreEvent } from '../uiutils/eventUtils';
-import Button from './Button';
 import { File } from '../entity/File';
+import Button from './Button';
 
 import './ScrapePanel.scss';
 import CardView from './ScrapePanelCardView';
@@ -31,8 +32,7 @@ const ScrapePanel = ({
   const [cards, setCards] = useState<Card[]>([]);
   const urlRef = useRef(null);
 
-  const [, setRerenderTimestamp] = useState<number>(0);
-  const rerender = () => setRerenderTimestamp(Date.now());
+  const rerender = useUpdate();
 
   const existingFileIds = useMemo(() => files.map((f) => f.fileid), [files]);
 

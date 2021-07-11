@@ -1,6 +1,7 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable no-console */
 import { ipcMain } from 'electron';
+import GdriveClient from './client/gdrive';
 import { File } from './entity/File';
 
 export const handleDownload = (mainWindow, library, gdriveClient) => {
@@ -36,5 +37,13 @@ export const handleDownload = (mainWindow, library, gdriveClient) => {
         throw new Error(`Unsupported storageservice: ${storageservice}`);
       }
     }
+  });
+};
+
+export const handleUpload = (gdriveClient: GdriveClient) => {
+  ipcMain.removeHandler('upload');
+  ipcMain.handle('upload', async (_event, localPath: string) => {
+    console.log(`Upload event received: ${localPath}`);
+    return gdriveClient.uploadFileAsync(localPath);
   });
 };

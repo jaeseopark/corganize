@@ -11,6 +11,8 @@ import classNames from 'classnames';
 import { ipcRenderer } from 'electron';
 
 import './MainView.scss';
+import { basename } from 'path';
+import { v4 as uuidv4 } from 'uuid';
 import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 
@@ -37,6 +39,8 @@ import { retrieveFilesAsync } from '../uiutils/fileRetrievalUtils';
 import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
 import { openFileFullscreen } from '../uiutils/mainViewUtils';
 import { listDirAsync } from '../utils/fileUtils';
+import UploadPanel from './UploadPanel';
+import { encrypt } from '../utils/cryptoUtils';
 
 type MainViewRenderBuffer = {
   files: File[];
@@ -95,6 +99,39 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       files.push(newFile);
       return file;
     });
+
+  const uploadFile = (localPath: string): Promise<File> => {
+    const fileid = uuidv4().toString();
+    const encryptedPath = library.getEncryptedPath(fileid);
+
+    const cb = (percentage: number) => {
+      // TODO
+    };
+
+    const file: File = {
+      fileid: uuidv4(),
+      decryptedPath: localPath,
+      encryptedPath,
+      sourceurl: 'local',
+      filename: basename(localPath),
+      lastupdated: Date.now(),
+    };
+
+    return encrypt(localPath, encryptedPath, library.getAesPassword(), cb)
+      .then(() => ipcRenderer.invoke('upload', localPath))
+      .then((gdriveFileId) =>
+        corganizeClient.createFile({
+          ...file,
+          locationref: gdriveFileId,
+          storageservice: 'gdrive',
+        })
+      )
+      .then((uploadedFile) => {
+        renderBuffer.files.push(uploadedFile);
+        files.push(uploadedFile);
+        return uploadedFile;
+      });
+  };
 
   const deleteFile = (fileid: string) =>
     corganizeClient
@@ -201,6 +238,13 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     });
   };
 
+  const openUploadPanel = () => {
+    setFullscreenComponent({
+      title: 'Upload',
+      body: <UploadPanel uploadFile={uploadFile} />,
+    });
+  };
+
   const getBurgerMenuOptions = () =>
     getAllBurgerMenuOptions(
       files,
@@ -208,7 +252,8 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       allFilesLoaded,
       openScrapePanel,
       openOrphanPanel,
-      openDuplicateAnalysisPanel
+      openDuplicateAnalysisPanel,
+      openUploadPanel
     );
 
   const openFile = (file: File) => {

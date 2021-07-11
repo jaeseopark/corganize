@@ -1,11 +1,6 @@
-/* eslint-disable import/prefer-default-export */
-import {
-  createReadStream,
-  createWriteStream,
-  ReadStream,
-  WriteStream,
-} from 'fs';
-import { Decrypt } from 'node-aescrypt';
+/* eslint-disable promise/always-return */
+import { createReadStream, createWriteStream } from 'fs';
+import { Decrypt, Encrypt } from 'node-aescrypt';
 import {
   createParentPath,
   getFileSizeInBytes,
@@ -14,35 +9,38 @@ import {
 
 const ProgressStream = require('progress-stream');
 
-function decryptAes256Cbc(
-  streamIn: ReadStream,
-  streamOut: WriteStream,
-  password: string,
-  progressStream = null
-) {
-  return new Promise((resolve, reject) => {
-    const through = new Decrypt(password);
-    streamIn
-      .pipe(through)
-      .pipe(progressStream)
-      .pipe(streamOut)
-      .on('error', reject)
-      .on('finish', resolve);
-  });
+export enum AesCryptOperation {
+  ENCRYPT,
+  DECRYPT,
 }
 
-export const decrypt = (
-  encryptedPath: string,
-  decryptedPath: string,
+const getThroughStream = (
   aespassword: string,
-  percentageCallback: Function
+  cryptType: AesCryptOperation
 ) => {
-  const tmpDecryptedPath = `${decryptedPath}.tmp`;
-  createParentPath(decryptedPath);
-  createParentPath(tmpDecryptedPath);
+  switch (cryptType) {
+    case AesCryptOperation.ENCRYPT:
+      return new Encrypt(aespassword);
+    case AesCryptOperation.DECRYPT:
+      return new Decrypt(aespassword);
+    default:
+      throw new Error('Unknown crypt type');
+  }
+};
+
+const execute = (
+  cryptType: AesCryptOperation,
+  pathIn: string,
+  pathOut: string,
+  aespassword: string,
+  percentageCallback: (percentage: number) => void
+): Promise<string> => {
+  const tmpPath = `${pathOut}.tmp`;
+  createParentPath(pathOut);
+  createParentPath(tmpPath);
 
   const ps = ProgressStream({
-    length: getFileSizeInBytes(encryptedPath),
+    length: getFileSizeInBytes(pathIn),
     time: 100,
   });
 
@@ -50,14 +48,24 @@ export const decrypt = (
     percentageCallback(percentage);
   });
 
-  const streamIn = createReadStream(encryptedPath);
-  const streamOut = createWriteStream(tmpDecryptedPath);
+  const streamIn = createReadStream(pathIn);
+  const streamOut = createWriteStream(tmpPath);
+  const through = getThroughStream(aespassword, cryptType);
 
-  return decryptAes256Cbc(streamIn, streamOut, aespassword, ps)
-    .then(() => {
-      streamIn.close();
-      streamOut.close();
-      return null;
-    })
-    .then(() => moveFileAsync(tmpDecryptedPath, decryptedPath));
+  return new Promise((resolve, reject) => {
+    streamIn
+      .pipe(through)
+      .pipe(ps)
+      .pipe(streamOut)
+      .on('error', reject)
+      .on('finish', resolve);
+  }).then(() => {
+    streamIn.close();
+    streamOut.close();
+    return moveFileAsync(tmpPath, pathOut);
+  });
 };
+
+export const decrypt = (...args) => execute(AesCryptOperation.DECRYPT, ...args);
+
+export const encrypt = (...args) => execute(AesCryptOperation.ENCRYPT, ...args);
