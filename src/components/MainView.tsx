@@ -120,17 +120,12 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     return encrypt(localPath, encryptedPath, library.getAesPassword(), cb)
       .then(() => ipcRenderer.invoke('upload', localPath))
       .then((gdriveFileId) =>
-        corganizeClient.createFile({
+        createFile({
           ...file,
           locationref: gdriveFileId,
           storageservice: 'gdrive',
         })
-      )
-      .then((uploadedFile) => {
-        renderBuffer.files.push(uploadedFile);
-        files.push(uploadedFile);
-        return uploadedFile;
-      });
+      );
   };
 
   const deleteFile = (fileid: string) =>
