@@ -6,7 +6,7 @@ import { htmlDecode } from '../utils/stringUtils';
 const retrieveFilesAsync = (
   corganizeClient: CorganizeClient,
   library: Library,
-  progressCallback: Function,
+  progressCallback: (files: File[]) => void,
   localFiles: string[]
 ) => {
   const decorateFile = (f: File) => {
