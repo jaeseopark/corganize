@@ -1,8 +1,15 @@
 import React from 'react';
 import classnames from 'classnames';
 import Button from './Button';
+import { File } from '../entity/File';
 
 const FILENAME_LENGTH = 10;
+
+export type Card = {
+  file: File;
+  status: string;
+  error?: string;
+};
 
 type CardViewProps = {
   card: Card;

@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 import { File } from '../entity/File';
 import { HypersquirrelClientProps } from '../entity/props';
 

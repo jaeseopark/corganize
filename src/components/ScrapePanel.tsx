@@ -1,4 +1,3 @@
-/* eslint-disable promise/always-return */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useUpdate } from 'react-use';
 import HyperSquirrelClient from '../client/hypersquirrel';
@@ -8,19 +7,13 @@ import { File } from '../entity/File';
 import Button from './Button';
 
 import './ScrapePanel.scss';
-import CardView from './ScrapePanelCardView';
+import CardView, { Card } from './ScrapePanelCardView';
 
 type ScrapePanelProps = {
   hsClient: HyperSquirrelClient;
   defaultUrl: string | null;
   files: File[];
   createFile: (file: File) => Promise<File>;
-};
-
-type Card = {
-  file: File;
-  status: string;
-  error?: string;
 };
 
 const fileToCard = (file: File) => {
@@ -35,6 +28,7 @@ const ScrapePanel = ({
 }: ScrapePanelProps) => {
   const [isScraping, setScraping] = useState(false);
   const [cards, setCards] = useState<Card[]>([]);
+  const [error, setError] = useState<Error | null>(null);
   const urlRef = useRef(null);
 
   const rerender = useUpdate();
@@ -59,9 +53,7 @@ const ScrapePanel = ({
           .map(fileToCard)
       )
       .then(setCards)
-      .catch((error) => {
-        alert(`Error: ${JSON.stringify(error)}`);
-      })
+      .catch(setError)
       .finally(() => setScraping(false));
   };
 
@@ -79,12 +71,13 @@ const ScrapePanel = ({
 
   const createFileFromCard = (card: Card) =>
     createFile(card.file)
+      // eslint-disable-next-line promise/always-return
       .then(() => {
         card.status = 'complete';
       })
-      .catch((error: Error) => {
+      .catch((e: Error) => {
         card.status = 'error';
-        card.error = JSON.stringify(error);
+        card.error = JSON.stringify(e);
       })
       .finally(rerender);
 
@@ -114,6 +107,10 @@ const ScrapePanel = ({
     ));
     return <div className="grid">{cardViews}</div>;
   };
+
+  if (error) {
+    return <pre>{JSON.stringify(error)}</pre>;
+  }
 
   return (
     <div className="scrape-panel">
