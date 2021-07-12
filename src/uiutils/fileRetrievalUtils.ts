@@ -1,31 +1,14 @@
-/* eslint-disable import/prefer-default-export */
-/* eslint-disable prefer-promise-reject-errors */
 import CorganizeClient from '../client/corganize';
 import { File } from '../entity/File';
 import Library from '../entity/Library';
 import { htmlDecode } from '../utils/stringUtils';
 
-export const retrieveFilesAsync = (
+const retrieveFilesAsync = (
   corganizeClient: CorganizeClient,
   library: Library,
   progressCallback: Function,
   localFiles: string[]
 ) => {
-  const {
-    showDownloadableFilesOnly: sdfo,
-    hideDownloadedFiles: hdf,
-    view,
-  } = library;
-
-  const shouldKeep = (f: File) => {
-    if (!sdfo && !hdf) return true;
-
-    return (
-      (!sdfo || f.storageservice !== 'None') &&
-      (!hdf || !localFiles.includes(f.encryptedPath))
-    );
-  };
-
   const decorateFile = (f: File) => {
     f.encryptedPath = library.getEncryptedPath(f.fileid);
     f.decryptedPath = library.getDecryptedPath(f.fileid);
@@ -33,12 +16,21 @@ export const retrieveFilesAsync = (
     return f;
   };
 
+  // TODO: convert this to a filter in React Table
+  const shouldKeep = (f: File) =>
+    (!library.showDownloadableFilesOnly || f.storageservice !== 'None') &&
+    (!library.hideDownloadedFiles || !localFiles.includes(f.encryptedPath));
+
   const callbackWrapper = (files: File[]) => {
-    const decoratedAndFiltered = files.map(decorateFile).filter(shouldKeep);
-    progressCallback(decoratedAndFiltered);
+    let retFiles = files.map(decorateFile);
+    if (library.showDownloadableFilesOnly || library.hideDownloadedFiles) {
+      retFiles = retFiles.filter(shouldKeep);
+    }
+
+    progressCallback(retFiles);
   };
 
-  switch (view) {
+  switch (library.view) {
     case 'recent': {
       const limit = 20000;
       return corganizeClient.getRecentFiles(callbackWrapper, limit);
@@ -50,8 +42,10 @@ export const retrieveFilesAsync = (
       return corganizeClient.getIncompleteFiles(callbackWrapper);
     }
     default: {
-      const message = `Invalid view: ${view}`;
-      return Promise.reject({ message });
+      const error = new Error(`Invalid view: ${library.view}`);
+      return Promise.reject(error);
     }
   }
 };
+
+export default retrieveFilesAsync;
