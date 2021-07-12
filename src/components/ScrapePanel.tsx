@@ -23,6 +23,10 @@ type Card = {
   error?: string;
 };
 
+const fileToCard = (file: File) => {
+  return { file, status: 'idle' };
+};
+
 const ScrapePanel = ({
   hsClient,
   defaultUrl,
@@ -52,11 +56,7 @@ const ScrapePanel = ({
       .then((scrapedFiles) =>
         scrapedFiles
           .filter((file) => !existingFileIds.includes(file.fileid))
-          .map(
-            (file): Card => {
-              return { file, status: 'idle' };
-            }
-          )
+          .map(fileToCard)
       )
       .then(setCards)
       .catch((error) => {
