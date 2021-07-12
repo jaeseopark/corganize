@@ -29,6 +29,7 @@ const ScrapePanel = ({
   files,
   createFile,
 }: ScrapePanelProps) => {
+  const [isScraping, setScraping] = useState(false);
   const [cards, setCards] = useState<Card[]>([]);
   const urlRef = useRef(null);
 
@@ -39,8 +40,13 @@ const ScrapePanel = ({
   const scrape = (event = null) => {
     if (event) event.preventDefault();
 
+    if (isScraping) return;
+
+    setScraping(true);
+
     const urls = urlRef?.current.value.split(',');
 
+    // eslint-disable-next-line promise/catch-or-return
     hsClient
       .scrapeAsync(...urls)
       .then((scrapedFiles) =>
@@ -55,7 +61,8 @@ const ScrapePanel = ({
       .then(setCards)
       .catch((error) => {
         alert(`Error: ${JSON.stringify(error)}`);
-      });
+      })
+      .finally(() => setScraping(false));
   };
 
   useEffect(() => {
@@ -84,7 +91,13 @@ const ScrapePanel = ({
   const getInputBar = () => (
     <div className="input-bar">
       <form onSubmit={scrape}>
-        <input required ref={urlRef} type="text" onKeyUp={ignoreEvent} />
+        <input
+          required
+          ref={urlRef}
+          type="text"
+          onKeyUp={ignoreEvent}
+          disabled={isScraping}
+        />
         <Button type="submit">Scrape</Button>
       </form>
     </div>
@@ -103,7 +116,7 @@ const ScrapePanel = ({
   };
 
   return (
-    <div>
+    <div className="scrape-panel">
       {getInputBar()}
       {getGrid()}
     </div>
