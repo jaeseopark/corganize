@@ -35,7 +35,7 @@ import HyperSquirrelClient from '../client/hypersquirrel';
 import { getBurgerMenuOptions as getAllBurgerMenuOptions } from '../uiutils/burgerMenuUtils';
 import OrphanAnalysisPanel from './OrphanAnalysisPanel';
 import ScrapePanel from './ScrapePanel';
-import { retrieveFilesAsync } from '../uiutils/fileRetrievalUtils';
+import retrieveFilesAsync from '../uiutils/fileRetrievalUtils';
 import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
 import { openFileFullscreen } from '../uiutils/mainViewUtils';
 import { listDirAsync } from '../utils/fileUtils';

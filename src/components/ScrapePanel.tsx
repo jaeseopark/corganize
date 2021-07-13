@@ -33,8 +33,6 @@ const ScrapePanel = ({
 
   const rerender = useUpdate();
 
-  const existingFileIds = useMemo(() => files.map((f) => f.fileid), [files]);
-
   const scrape = (event = null) => {
     if (event) event.preventDefault();
 
@@ -47,11 +45,12 @@ const ScrapePanel = ({
     // eslint-disable-next-line promise/catch-or-return
     hsClient
       .scrapeAsync(...urls)
-      .then((scrapedFiles) =>
-        scrapedFiles
+      .then((scrapedFiles) => {
+        const existingFileIds = files.map((f) => f.fileid);
+        return scrapedFiles
           .filter((file) => !existingFileIds.includes(file.fileid))
-          .map(fileToCard)
-      )
+          .map(fileToCard);
+      })
       .then(setCards)
       .catch(setError)
       .finally(() => setScraping(false));
@@ -84,14 +83,10 @@ const ScrapePanel = ({
   const getInputBar = () => (
     <div className="input-bar">
       <form onSubmit={scrape}>
-        <input
-          required
-          ref={urlRef}
-          type="text"
-          onKeyUp={ignoreEvent}
-          disabled={isScraping}
-        />
-        <Button type="submit">Scrape</Button>
+        <input required ref={urlRef} type="text" onKeyUp={ignoreEvent} />
+        <Button type="submit" disabled={isScraping}>
+          Scrape
+        </Button>
       </form>
     </div>
   );
