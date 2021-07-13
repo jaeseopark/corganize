@@ -1,6 +1,9 @@
 import { File } from '../entity/File';
 import { HypersquirrelClientProps } from '../entity/props';
 
+const dedupFilesById = (files: File[]) =>
+  files.filter((v, i, a) => a.findIndex((f) => f.fileid === v.fileid) === i);
+
 class HyperSquirrelClient {
   host: string;
 
@@ -27,15 +30,16 @@ class HyperSquirrelClient {
           });
         });
 
-    return Promise.allSettled(urls.map((url) => scrapeSingleUrl(url))).then(
-      (results) =>
+    return Promise.allSettled(urls.map((url) => scrapeSingleUrl(url)))
+      .then((results) =>
         results.reduce((acc, result) => {
           if (result.status === 'fulfilled') {
             acc.push(...result.value);
           }
           return acc;
         }, new Array<File>())
-    );
+      )
+      .then(dedupFilesById);
   }
 }
 
