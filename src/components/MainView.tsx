@@ -13,6 +13,7 @@ import { ipcRenderer } from 'electron';
 import './MainView.scss';
 import { basename } from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { useDispatch, useSelector } from 'react-redux';
 import GlobalFilter from './GlobalFilter';
 import CorganizeClient from '../client/corganize';
 
@@ -41,24 +42,20 @@ import { openFileFullscreen } from '../uiutils/mainViewUtils';
 import { listDirAsync } from '../utils/fileUtils';
 import UploadPanel from './UploadPanel';
 import { encrypt } from '../utils/cryptoUtils';
-
-type MainViewRenderBuffer = {
-  files: File[];
-  localFiles: string[];
-  shouldFocusTable: boolean;
-};
+import {
+  addAll,
+  addAllLocal,
+  getLocalFiles,
+  getRemoteFiles,
+  update,
+} from '../redux/files/slice';
 
 type MainViewProps = {
   library: Library;
   showAlert: Function;
 };
 
-// TODO: incorporate useMemo() instead.
-const renderBuffer: MainViewRenderBuffer = {
-  files: [],
-  localFiles: [],
-  shouldFocusTable: false,
-};
+let shouldFocusTable = false;
 
 const getCorganizeClient = (library: Library) =>
   new CorganizeClient(library.config.server);
@@ -67,7 +64,9 @@ const getHyperSquirrelClient = (library: Library) =>
   new HyperSquirrelClient(library.config.hypersquirrel.remote);
 
 const MainView = ({ library, showAlert }: MainViewProps) => {
-  const [files, setFiles] = useState(null);
+  const dispatch = useDispatch();
+  const remoteFiles: File[] = useSelector(getRemoteFiles);
+  const localFiles: string[] = useSelector(getLocalFiles);
   const [allFilesLoaded, setAllFilesLoaded] = useState(false);
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
   const [fullscreenComponent, setFullscreenComponent] = useState(null);
@@ -83,10 +82,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     if (fileid.length <= 128) {
       ipcRenderer
         .invoke('download', file)
-        .then(() => {
-          renderBuffer.localFiles.push(file.encryptedPath);
-          return null;
-        })
+        .then(() => dispatch(addAllLocal([file.encryptedPath])))
         .catch(showAlert);
     } else {
       showAlert('fileid is too long');
@@ -95,8 +91,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
 
   const createFile = (file: File): Promise<File> =>
     corganizeClient.createFile(file).then((newFile) => {
-      renderBuffer.files.push(newFile);
-      files.push(newFile);
+      dispatch(addAll([newFile]));
       return file;
     });
 
@@ -143,19 +138,17 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       .catch(showAlert);
 
   const updateFile = (fileid: string, props: File) => {
-    const file = renderBuffer.files.find((f: File) => f.fileid === fileid);
+    const file = remoteFiles.find((f) => f.fileid === fileid);
     if (!file) {
-      showAlert('File not found in renderBuffer');
+      showAlert('File not found');
       return Promise.resolve(null);
     }
 
+    const updateRedux = (f: File) => dispatch(update(f));
+
     return corganizeClient
       .updateFile(fileid, props)
-      .then((newFile: File) => {
-        if (newFile) return Object.assign(file, newFile);
-        throw new Error('File not found');
-      })
-      .then(rerender)
+      .then(updateRedux)
       .catch((error: Error) => showAlert(error.message));
   };
 
@@ -163,7 +156,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     const { fileid, dateactivated } = file;
     corganizeClient
       .updateFile(fileid, { isactive: !dateactivated })
-      .then((newFile: File) => {
+      .then((newFile) => {
         if (dateactivated) {
           delete file.dateactivated;
         } else {
@@ -181,12 +174,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   const openOrphanPanel = () => {
     setFullscreenComponent({
       title: 'Delete Orphan Files',
-      body: (
-        <OrphanAnalysisPanel
-          files={files}
-          localFiles={renderBuffer.localFiles}
-        />
-      ),
+      body: <OrphanAnalysisPanel />,
     });
   };
 
@@ -198,7 +186,6 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
           createFile={createFile}
           hsClient={hsClient}
           defaultUrl={url}
-          files={files}
         />
       ),
     });
@@ -206,10 +193,9 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
 
   const getContextMenuOptions = (inputFile: File): ContextMenuOption[] => {
     const file =
-      renderBuffer.files.find((f: File) => f.fileid === inputFile.fileid) ||
-      inputFile;
+      remoteFiles.find((f) => f.fileid === inputFile.fileid) || inputFile;
     return [
-      ...getLocalActions(file, rerender, showAlert, renderBuffer.localFiles),
+      ...getLocalActions(file, rerender, showAlert, localFiles),
       ...getRemoteActions(
         file,
         updateFile,
@@ -225,10 +211,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     setFullscreenComponent({
       title: 'Duplicate Analysis',
       body: (
-        <DuplicateAnalysisPanel
-          files={files}
-          getContextMenuOptions={getContextMenuOptions}
-        />
+        <DuplicateAnalysisPanel getContextMenuOptions={getContextMenuOptions} />
       ),
     });
   };
@@ -242,7 +225,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
 
   const getBurgerMenuOptions = () =>
     getAllBurgerMenuOptions(
-      files,
+      remoteFiles,
       library.config.hypersquirrel.preset,
       allFilesLoaded,
       openScrapePanel,
@@ -261,12 +244,11 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     );
   };
 
-  const renderActions = ({ row }) => {
+  const renderActions = ({ row }: { row: { original: File } }) => {
     const { original: file } = row;
     return (
       <FileActions
         file={file}
-        localFiles={renderBuffer.localFiles}
         openFile={openFile}
         downloadFile={downloadFile}
       />
@@ -283,7 +265,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     return <div onClick={onClick} className={classNames} />;
   };
 
-  const data = useMemo(() => files || [], [files]);
+  const data = useMemo(() => remoteFiles || [], [remoteFiles]);
   const columns = useMemo(() => {
     return getAllColumns(setFullscreenComponent, renderActions, renderFav);
   }, [rerenderTimestamp]);
@@ -311,7 +293,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       return;
     }
 
-    if (renderBuffer.localFiles.includes(file.encryptedPath)) {
+    if (localFiles.includes(file.encryptedPath)) {
       openFile(file);
     } else if (file.storageservice) {
       downloadFile(file);
@@ -325,38 +307,37 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   };
 
   useEffect(() => {
-    if (!files) {
-      const progressCallback = (moreFiles: File[]) => {
-        renderBuffer.files = renderBuffer.files.concat(moreFiles);
-        setFiles(renderBuffer.files);
-      };
+    if (localFiles.length > 0 || remoteFiles.length > 0) return;
 
-      listDirAsync(library.config.local.path, false)
-        .then((localFiles) => {
-          renderBuffer.localFiles = localFiles;
-          return null;
-        })
-        .then(() =>
-          retrieveFilesAsync(
-            corganizeClient,
-            library,
-            progressCallback,
-            renderBuffer.localFiles
-          )
+    const progressCallback = (moreFiles: File[]) => {
+      dispatch(addAll(moreFiles));
+    };
+
+    const addAllLocalToRedux = (newPaths: string[]) =>
+      dispatch(addAllLocal(newPaths));
+
+    listDirAsync(library.config.local.path, false)
+      .then(addAllLocalToRedux)
+      .then(() =>
+        retrieveFilesAsync(
+          corganizeClient,
+          library,
+          progressCallback,
+          localFiles
         )
-        .then(() => setAllFilesLoaded(true))
-        .catch((error) => showAlert(error.message));
-    }
-  }, [corganizeClient, files, library, showAlert]);
+      )
+      .then(() => setAllFilesLoaded(true))
+      .catch((error: Error) => showAlert(error.message));
+  }, [corganizeClient, remoteFiles, library, showAlert]);
 
   useEffect(() => {
-    if (renderBuffer.shouldFocusTable) {
-      renderBuffer.shouldFocusTable = false;
+    if (shouldFocusTable) {
+      shouldFocusTable = false;
       focusTable();
     }
   });
 
-  if (!files) {
+  if (!allFilesLoaded && remoteFiles.length === 0) {
     return <h2 className="center">Loading...</h2>;
   }
 
@@ -368,7 +349,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
         <FullscreenView
           fullscreenComponent={fullscreenComponent}
           onClose={() => {
-            renderBuffer.shouldFocusTable = true;
+            shouldFocusTable = true;
             setFullscreenComponent(null);
           }}
         />
@@ -386,7 +367,6 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
           getConextMenuOptions={getContextMenuOptions}
           tableRef={tableRef}
           focusTable={focusTable}
-          localFiles={renderBuffer.localFiles}
         />
       </div>
     </>

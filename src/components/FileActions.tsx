@@ -2,11 +2,14 @@
 /* eslint-disable react/prop-types */
 import { ipcRenderer } from 'electron';
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useUpdate } from 'react-use';
+import { getLocalFiles } from '../redux/files/slice';
 
 import Button from './Button';
 
-const FileActions = ({ file, localFiles, downloadFile, openFile }) => {
+const FileActions = ({ file, downloadFile, openFile }) => {
+  const localFiles = useSelector(getLocalFiles);
   const { fileid, locationref, storageservice, encryptedPath } = file;
   const [download] = useState({ percentage: null });
 

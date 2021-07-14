@@ -1,22 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { File } from '../entity/File';
+import { getLocalFiles, getRemoteFiles } from '../redux/files/slice';
 import { deleteAllAsync } from '../utils/fileUtils';
 import Button from './Button';
 
-type OrphanAnalysisPanelProps = {
-  files: File[];
-  localFiles: string[];
-};
-
-const OrphanAnalysisPanel = ({
-  files,
-  localFiles,
-}: OrphanAnalysisPanelProps) => {
+const OrphanAnalysisPanel = () => {
+  const remoteFiles: File[] = useSelector(getRemoteFiles);
+  const localFiles: string[] = useSelector(getLocalFiles);
   const [orphans, setOrphans] = useState<string[] | null>(null);
-  const [errorObj, setErrorObj] = useState(null);
+  const [errorObj, setErrorObj] = useState<Error | null>(null);
 
   const findOrphans = () => {
-    const pathsInLibrary = files
+    const pathsInLibrary = remoteFiles
       .filter((f) => f.storageservice && f.storageservice !== 'None')
       .map((f) => f.encryptedPath);
 

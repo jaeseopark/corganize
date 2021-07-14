@@ -1,7 +1,9 @@
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable react/jsx-key */
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { File } from '../entity/File';
+import { getLocalFiles } from '../redux/files/slice';
 import { shuffle } from '../utils/arrayUtils';
 import { randomIntFromInterval } from '../utils/numberUtils';
 
@@ -13,7 +15,6 @@ import './TableView.scss';
 
 const TableView = ({
   downloadOrOpenFile,
-  localFiles,
   tableInstance,
   getConextMenuOptions,
   tableRef,
@@ -30,6 +31,8 @@ const TableView = ({
     gotoPage,
     pageCount,
   } = tableInstance;
+
+  const localFiles = useSelector(getLocalFiles);
 
   const isLocal = (file) => localFiles.includes(file.encryptedPath);
 
