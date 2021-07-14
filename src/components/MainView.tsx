@@ -186,6 +186,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
           createFile={createFile}
           hsClient={hsClient}
           defaultUrl={url}
+          files={files}
         />
       ),
     });
