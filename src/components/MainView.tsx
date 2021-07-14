@@ -35,7 +35,7 @@ import HyperSquirrelClient from '../client/hypersquirrel';
 import { getBurgerMenuOptions as getAllBurgerMenuOptions } from '../uiutils/burgerMenuUtils';
 import OrphanAnalysisPanel from './OrphanAnalysisPanel';
 import ScrapePanel from './ScrapePanel';
-import { retrieveFilesAsync } from '../uiutils/fileRetrievalUtils';
+import retrieveFilesAsync from '../uiutils/fileRetrievalUtils';
 import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
 import { openFileFullscreen } from '../uiutils/mainViewUtils';
 import { listDirAsync } from '../utils/fileUtils';
@@ -53,26 +53,26 @@ type MainViewProps = {
   showAlert: Function;
 };
 
-// MainView.state.files will grow in size as the data is retrieved via server side pagination.
-// Unfortunately, updating a state value within a React component can be slow at times; causing some chunks to be skipped, etc.
-// This array acts as the buffer so the UI can render reliably.
+// TODO: incorporate useMemo() instead.
 const renderBuffer: MainViewRenderBuffer = {
   files: [],
   localFiles: [],
   shouldFocusTable: false,
 };
 
+const getCorganizeClient = (library: Library) =>
+  new CorganizeClient(library.config.server);
+
+const getHyperSquirrelClient = (library: Library) =>
+  new HyperSquirrelClient(library.config.hypersquirrel.remote);
+
 const MainView = ({ library, showAlert }: MainViewProps) => {
   const [files, setFiles] = useState(null);
   const [allFilesLoaded, setAllFilesLoaded] = useState(false);
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
   const [fullscreenComponent, setFullscreenComponent] = useState(null);
-  const [corganizeClient] = useState(
-    new CorganizeClient(library.config.server)
-  );
-  const [hsClient] = useState(
-    new HyperSquirrelClient(library.config.hypersquirrel.remote)
-  );
+  const [corganizeClient] = useState(getCorganizeClient(library));
+  const [hsClient] = useState(getHyperSquirrelClient(library));
 
   const tableRef = useRef(null);
 
@@ -89,9 +89,16 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
         })
         .catch(showAlert);
     } else {
-      showAlert('fileid too long');
+      showAlert('fileid is too long');
     }
   };
+
+  const createFile = (file: File): Promise<File> =>
+    corganizeClient.createFile(file).then((newFile) => {
+      renderBuffer.files.push(newFile);
+      files.push(newFile);
+      return file;
+    });
 
   const uploadFile = (localPath: string): Promise<File> => {
     const fileid = uuidv4().toString();
@@ -113,33 +120,27 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     return encrypt(localPath, encryptedPath, library.getAesPassword(), cb)
       .then(() => ipcRenderer.invoke('upload', localPath))
       .then((gdriveFileId) =>
-        corganizeClient.createFile({
+        createFile({
           ...file,
           locationref: gdriveFileId,
           storageservice: 'gdrive',
         })
-      )
-      .then((uploadedFile) => {
-        renderBuffer.files.push(uploadedFile);
-        files.push(uploadedFile);
-        return uploadedFile;
-      });
+      );
   };
 
-  const deleteFile = (fileid: string) => {
+  const deleteFile = (fileid: string) =>
     corganizeClient
       .deleteFile(fileid)
       .then(() => {
         // const i = renderBuffer.files.findIndex((f) => f.fileid === fileid);
         // renderBuffer.files.splice(i, 1);
         // return setFiles(renderBuffer.files);
-        // How do i delete a row?
+        // TODO: How do i delete a row?
         return null;
       })
       .then(showAlert('file has been deleted'))
       .then(rerender)
       .catch(showAlert);
-  };
 
   const updateFile = (fileid: string, props: File) => {
     const file = renderBuffer.files.find((f: File) => f.fileid === fileid);
@@ -152,10 +153,10 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       .updateFile(fileid, props)
       .then((newFile: File) => {
         if (newFile) return Object.assign(file, newFile);
-        throw { message: 'File not found' };
+        throw new Error('File not found');
       })
       .then(rerender)
-      .catch((error) => showAlert(error.message));
+      .catch((error: Error) => showAlert(error.message));
   };
 
   const toggleFav = (file: File) => {
@@ -194,9 +195,10 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       title: 'Scrape',
       body: (
         <ScrapePanel
-          corganizeClient={corganizeClient}
+          createFile={createFile}
           hsClient={hsClient}
           defaultUrl={url}
+          files={files}
         />
       ),
     });

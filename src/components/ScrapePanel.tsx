@@ -1,55 +1,34 @@
-/* eslint-disable promise/always-return */
-import React, { useEffect, useRef, useState } from 'react';
-import classnames from 'classnames';
-import CorganizeClient from '../client/corganize';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useUpdate } from 'react-use';
 import HyperSquirrelClient from '../client/hypersquirrel';
 
-import './ScrapePanel.scss';
 import { ignoreEvent } from '../uiutils/eventUtils';
+import { File } from '../entity/File';
 import Button from './Button';
-import { useUpdate } from 'react-use';
 
-const FILENAME_LENGTH = 10;
-const DEFAULT_STATUS = 'idle';
+import './ScrapePanel.scss';
+import CardView, { Card } from './ScrapePanelCardView';
 
 type ScrapePanelProps = {
-  corganizeClient: CorganizeClient;
   hsClient: HyperSquirrelClient;
   defaultUrl: string | null;
+  files: File[];
+  createFile: (file: File) => Promise<File>;
 };
 
-const Card = ({ card, onSend, onScape }) => {
-  const { file, status, error } = card;
-  const { sourceurl, thumbnailurl, filename, fileid } = file;
-
-  const title = `${fileid}: ${filename.substring(0, FILENAME_LENGTH)}`;
-  const complete = status === 'complete';
-  const clickable = status === 'idle';
-  const onSendCard = () => {
-    if (clickable) onSend(card);
-  };
-
-  return (
-    <div className="card">
-      <img
-        className={classnames('thumbnail', { clickable })}
-        src={thumbnailurl || 'not.found.jpg'}
-        onClick={onSendCard}
-      />
-      <Button onClick={() => onScape(sourceurl)}>Scrape</Button>
-      <span className={classnames('caption', { error, complete })}>
-        {error || title}
-      </span>
-    </div>
-  );
+const fileToCard = (file: File) => {
+  return { file, status: 'idle' };
 };
 
 const ScrapePanel = ({
-  corganizeClient,
   hsClient,
   defaultUrl,
+  files,
+  createFile,
 }: ScrapePanelProps) => {
-  const [cards, setCards] = useState([]);
+  const [isScraping, setScraping] = useState(false);
+  const [cards, setCards] = useState<Card[]>([]);
+  const [error, setError] = useState<Error | null>(null);
   const urlRef = useRef(null);
 
   const rerender = useUpdate();
@@ -57,19 +36,24 @@ const ScrapePanel = ({
   const scrape = (event = null) => {
     if (event) event.preventDefault();
 
+    if (isScraping) return;
+
+    setScraping(true);
+
     const urls = urlRef?.current.value.split(',');
 
+    // eslint-disable-next-line promise/catch-or-return
     hsClient
       .scrapeAsync(...urls)
-      .then((files) =>
-        files.map((file) => {
-          return { file, status: DEFAULT_STATUS };
-        })
-      )
+      .then((scrapedFiles) => {
+        const existingFileIds = files.map((f) => f.fileid);
+        return scrapedFiles
+          .filter((file) => !existingFileIds.includes(file.fileid))
+          .map(fileToCard);
+      })
       .then(setCards)
-      .catch((error) => {
-        alert(`Error: ${JSON.stringify(error)}`);
-      });
+      .catch(setError)
+      .finally(() => setScraping(false));
   };
 
   useEffect(() => {
@@ -79,38 +63,54 @@ const ScrapePanel = ({
     }
   });
 
-  const scrapeUrl = (url) => {
+  const scrapeUrl = (url: string) => {
     urlRef.current.value = url;
     scrape();
   };
 
-  const createFile = (card) =>
-    corganizeClient
-      .createFile(card.file)
+  const createFileFromCard = (card: Card) =>
+    createFile(card.file)
+      // eslint-disable-next-line promise/always-return
       .then(() => {
         card.status = 'complete';
       })
-      .catch((error) => {
+      .catch((e: Error) => {
         card.status = 'error';
-        card.error = JSON.stringify(error);
+        card.error = JSON.stringify(e);
       })
-      .finally(() => {
-        rerender();
-      });
+      .finally(rerender);
+
+  const getInputBar = () => (
+    <div className="input-bar">
+      <form onSubmit={scrape}>
+        <input required ref={urlRef} type="text" onKeyUp={ignoreEvent} />
+        <Button type="submit" disabled={isScraping}>
+          Scrape
+        </Button>
+      </form>
+    </div>
+  );
+
+  const getGrid = () => {
+    const cardViews = cards.map((card) => (
+      <CardView
+        key={card.file.fileid}
+        card={card}
+        onSend={createFileFromCard}
+        onScrape={scrapeUrl}
+      />
+    ));
+    return <div className="grid">{cardViews}</div>;
+  };
+
+  if (error) {
+    return <pre>{JSON.stringify(error)}</pre>;
+  }
 
   return (
-    <div>
-      <div className="input-bar">
-        <form onSubmit={scrape}>
-          <input required ref={urlRef} type="text" onKeyUp={ignoreEvent} />
-          <Button type="submit">Scrape</Button>
-        </form>
-      </div>
-      <div className="grid">
-        {cards.map((card) => (
-          <Card card={card} onSend={createFile} onScape={scrapeUrl} />
-        ))}
-      </div>
+    <div className="scrape-panel">
+      {getInputBar()}
+      {getGrid()}
     </div>
   );
 };

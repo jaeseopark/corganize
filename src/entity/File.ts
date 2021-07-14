@@ -1,18 +1,19 @@
 export type File = {
-  // Mandatory fields
+  // Mandatory fields (server-side)
   fileid: string;
   sourceurl: string;
   lastupdated: number;
   filename: string;
 
-  // Optional fields
+  // Optional fields (server-side)
   dateactivated?: number;
   storageservice?: string;
   locationref?: string;
   size?: number;
   mimetype?: string;
 
-  // Decorative/local fields
+  // UI-only fields
   encryptedPath: string;
   decryptedPath: string;
+  thumbnailurl?: string;
 };
