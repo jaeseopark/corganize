@@ -32,9 +32,9 @@ const TableView = ({
     pageCount,
   } = tableInstance;
 
-  const localFiles = useSelector(getLocalFiles);
+  const localFiles: string[] = useSelector(getLocalFiles);
 
-  const isLocal = (file) => localFiles.includes(file.encryptedPath);
+  const isLocal = (file: File) => localFiles.includes(file.encryptedPath);
 
   const getFirstLocalFileWithoutMimetype = () => {
     return page
