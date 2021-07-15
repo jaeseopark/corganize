@@ -5,7 +5,7 @@ import {
   createParentPath,
   getFileSizeInBytes,
   moveFileAsync,
-} from './fileUtils';
+} from './fsUtils';
 
 const ProgressStream = require('progress-stream');
 

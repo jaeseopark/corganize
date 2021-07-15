@@ -6,7 +6,7 @@ import { Document, Page } from 'react-pdf';
 import './FileView.scss';
 
 import ZipView from './ZipView';
-import { guessMimetypeAsync } from '../utils/fileUtils';
+import { guessMimetypeAsync } from '../utils/fsUtils';
 import VideoView from './VideoView';
 import { ContextMenuOption } from '../entity/props';
 import ContextMenuWrapper from './ContextMenuWrapper';

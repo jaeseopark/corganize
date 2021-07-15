@@ -39,7 +39,7 @@ import ScrapePanel from './ScrapePanel';
 import retrieveFilesAsync from '../uiutils/fileRetrievalUtils';
 import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
 import { openFileFullscreen } from '../uiutils/mainViewUtils';
-import { listDirAsync } from '../utils/fileUtils';
+import { listDirAsync } from '../utils/fsUtils';
 import UploadPanel from './UploadPanel';
 import { encrypt } from '../utils/cryptoUtils';
 import {

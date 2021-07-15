@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { File } from '../entity/File';
 import { getLocalFiles, getRemoteFiles } from '../redux/files/slice';
-import { deleteAllAsync } from '../utils/fileUtils';
+import { deleteAllAsync } from '../utils/fsUtils';
 import Button from './Button';
 
 const OrphanAnalysisPanel = () => {
