@@ -83,12 +83,11 @@ class CorganizeClient {
     });
   }
 
-  updateFile(fileid: string, props: File): Promise<File> {
+  updateFile(file: File): Promise<File> {
     const url = new URL('/Prod/files', this.host);
-    const body = { ...props, fileid };
     return fetch(url, {
       method: 'PATCH',
-      body: JSON.stringify(body),
+      body: JSON.stringify(file),
       headers: {
         'Content-Type': 'application/json',
         apikey: this.apikey,

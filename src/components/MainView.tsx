@@ -137,34 +137,18 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       .then(rerender)
       .catch(showAlert);
 
-  const updateFile = (fileid: string, props: File) => {
-    const file = remoteFiles.find((f) => f.fileid === fileid);
-    if (!file) {
-      showAlert('File not found');
-      return Promise.resolve(null);
-    }
-
-    const updateRedux = (f: File) => dispatch(update(f));
-
-    return corganizeClient
-      .updateFile(fileid, props)
-      .then(updateRedux)
+  const updateFile = (newFile: File) =>
+    corganizeClient
+      .updateFile(newFile)
+      .then((f: File) => dispatch(update(f)))
       .catch((error: Error) => showAlert(error.message));
-  };
 
   const toggleFav = (file: File) => {
-    const { fileid, dateactivated } = file;
-    const isactive = !dateactivated;
-    corganizeClient
-      .updateFile(fileid, { isactive })
-      .then((newFile) => {
-        newFile.dateactivated = isactive ? Date.now() : 0;
-        dispatch(update(newFile));
-        return dateactivated ? 'unfavorited' : 'favorited';
-      })
-      .then((newValue) => showAlert(`The file has been ${newValue}`))
-      .then(rerender)
-      .catch(showAlert);
+    const toggled = {
+      ...file,
+      dateactivated: !file.dateactivated ? Math.round(Date.now() / 1000) : 0,
+    };
+    return updateFile(toggled);
   };
 
   const openOrphanPanel = () => {
