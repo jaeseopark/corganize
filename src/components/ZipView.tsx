@@ -1,7 +1,7 @@
 /* eslint-disable radix */
 import React, { useEffect, useRef, useState } from 'react';
 import Carousel, { Modal, ModalGateway } from 'react-images';
-import { listDirAsync } from '../utils/fileUtils';
+import { listDirAsync } from '../utils/fsUtils';
 import Button from './Button';
 
 import './ZipView.scss';

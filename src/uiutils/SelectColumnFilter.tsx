@@ -1,4 +1,3 @@
-/* eslint-disable import/prefer-default-export */
 import React from 'react';
 
 export function SelectColumnFilter({
@@ -34,7 +33,7 @@ export function SelectColumnFilter({
 
 export const nullableSelectColumnFilter = (rows, id, filterValue) => {
   if (id.length > 1) {
-    throw { message: 'Not implemented' };
+    throw new Error('Not implemented');
   }
 
   return rows.filter((row) => {

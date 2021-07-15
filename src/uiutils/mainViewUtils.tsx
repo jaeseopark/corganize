@@ -10,16 +10,16 @@ import { hasAtLeast1Change } from '../utils/objectUtils';
 
 export function openFileFullscreen(
   file: File,
-  updateFile: (fileid: string, props: File) => any,
+  updateFile: (f: File) => Promise<File>,
   getContextMenuOptions: (inputFile: File) => ContextMenuOption[],
   setFullscreenComponent: React.Dispatch<React.SetStateAction<null>>,
   library: Library
 ) {
-  const { encryptedPath, decryptedPath, filename, size, fileid } = file;
+  const { encryptedPath, decryptedPath, filename, size } = file;
   const contextMenuOptions = getContextMenuOptions(file);
-  const updateFileWrapper = (newFile) => {
-    if (hasAtLeast1Change(file, newFile)) {
-      updateFile(fileid, newFile);
+  const updateFileWrapper = (partialProps: File) => {
+    if (hasAtLeast1Change(file, partialProps)) {
+      updateFile({ ...file, ...partialProps });
     }
   };
 

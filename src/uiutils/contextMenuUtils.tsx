@@ -49,12 +49,13 @@ export const getLocalActions = (
 };
 
 export const getRemoteActions = (
-  { fileid, sourceurl, storageservice }: File,
-  updateFile: Function,
+  file: File,
+  updateFile: (f: File) => Promise<File>,
   rerenderRowData: Function,
   showAlert: Function,
   openScrapePanel: Function
 ): ContextMenuOption[] => {
+  const { sourceurl, storageservice } = file;
   const remoetActions: ContextMenuOption[] = [];
   if (sourceurl) {
     const sanitizedSourceurl = `https://${sourceurl
@@ -81,7 +82,7 @@ export const getRemoteActions = (
   if (storageservice !== 'None')
     remoetActions.push({
       label: 'Delete Remote File',
-      onClick: () => updateFile(fileid, { storageservice: 'None' }),
+      onClick: () => updateFile({ ...file, storageservice: 'None' }),
     });
   if (remoetActions.length > 0) remoetActions.push(null);
   return remoetActions;

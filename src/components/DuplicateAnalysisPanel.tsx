@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { File } from '../entity/File';
+import { ContextMenuOption } from '../entity/props';
+import { getRemoteFiles } from '../redux/files/slice';
 import { toHumanFileSize } from '../utils/numberUtils';
 import ContextMenuWrapper from './ContextMenuWrapper';
 
@@ -11,12 +14,11 @@ const GroupBy = {
 };
 
 const DuplicateAnalysisPanel = ({
-  files,
   getContextMenuOptions,
 }: {
-  files: File[];
-  getContextMenuOptions: Function;
+  getContextMenuOptions: (inputFile: File) => ContextMenuOption[];
 }) => {
+  const files = useSelector(getRemoteFiles);
   const [groupBy, setGroupBy] = useState<string>(GroupBy.FILENAME);
   const [grouppedFiles, setGrouppedFiles] = useState(null);
 

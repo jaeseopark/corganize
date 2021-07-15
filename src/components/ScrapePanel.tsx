@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useUpdate } from 'react-use';
+import { useSelector } from 'react-redux';
 import HyperSquirrelClient from '../client/hypersquirrel';
 
 import { ignoreEvent } from '../uiutils/eventUtils';
@@ -8,11 +9,11 @@ import Button from './Button';
 
 import './ScrapePanel.scss';
 import CardView, { Card } from './ScrapePanelCardView';
+import { getRemoteAndHiddenFiles } from '../redux/files/slice';
 
 type ScrapePanelProps = {
   hsClient: HyperSquirrelClient;
   defaultUrl: string | null;
-  files: File[];
   createFile: (file: File) => Promise<File>;
 };
 
@@ -23,9 +24,9 @@ const fileToCard = (file: File) => {
 const ScrapePanel = ({
   hsClient,
   defaultUrl,
-  files,
   createFile,
 }: ScrapePanelProps) => {
+  const files = useSelector(getRemoteAndHiddenFiles);
   const [isScraping, setScraping] = useState(false);
   const [cards, setCards] = useState<Card[]>([]);
   const [error, setError] = useState<Error | null>(null);
@@ -46,7 +47,7 @@ const ScrapePanel = ({
     hsClient
       .scrapeAsync(...urls)
       .then((scrapedFiles) => {
-        const existingFileIds = files.map((f) => f.fileid);
+        const existingFileIds = files.map((f: File) => f.fileid);
         return scrapedFiles
           .filter((file) => !existingFileIds.includes(file.fileid))
           .map(fileToCard);

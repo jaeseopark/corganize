@@ -248,6 +248,7 @@
     "yarn-deduplicate": "^3.1.0"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^1.6.0",
     "adm-zip": "^0.5.1",
     "classnames": "^2.2.6",
     "dayjs": "^1.9.7",
@@ -267,6 +268,7 @@
     "react-dom": "^17.0.1",
     "react-images": "^1.1.7",
     "react-pdf": "^5.1.0",
+    "react-redux": "^7.2.4",
     "react-router-dom": "^5.2.0",
     "react-table": "^7.6.2",
     "react-use": "^17.2.4",

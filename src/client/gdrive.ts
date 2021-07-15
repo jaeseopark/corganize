@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { GdriveClientProps } from '../entity/props';
-import { createParentPath, moveFileAsync } from '../utils/fileUtils';
+import { createParentPath, moveFileAsync } from '../utils/fsUtils';
 
 /* eslint-disable import/prefer-default-export */
 const fs = require('fs');

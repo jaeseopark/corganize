@@ -18,7 +18,7 @@ import { existsSync } from 'fs';
 import MenuBuilder from './menu';
 import GdriveClient from './client/gdrive';
 import Library from './entity/Library';
-import { removeTmpFiles } from './utils/fileUtils';
+import { removeTmpFiles } from './utils/fsUtils';
 import { handleDownload, handleUpload } from './main.dev.handlers';
 
 const DEFAULT_WINDOW_SIZE = { width: 1150, height: 670 };
