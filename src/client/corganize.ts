@@ -63,7 +63,7 @@ class CorganizeClient {
     );
   }
 
-  createFile(file: File): Promise<File> {
+  createFile(file: File): Promise<void> {
     const url = new URL('/Prod/files', this.host);
 
     return fetch(url, {
@@ -74,7 +74,7 @@ class CorganizeClient {
         apikey: this.apikey,
       },
     }).then(async (res) => {
-      if (res.status === 200) return res.json();
+      if (res.status === 200) return null;
 
       throw {
         status: res.status,
@@ -83,7 +83,7 @@ class CorganizeClient {
     });
   }
 
-  updateFile(file: File): Promise<File> {
+  updateFile(file: File): Promise<void> {
     const url = new URL('/Prod/files', this.host);
     return fetch(url, {
       method: 'PATCH',
@@ -92,7 +92,7 @@ class CorganizeClient {
         'Content-Type': 'application/json',
         apikey: this.apikey,
       },
-    }).then((res) => res.json());
+    }).then(() => null);
   }
 
   deleteFile(fileid) {
@@ -104,7 +104,7 @@ class CorganizeClient {
         'Content-Type': 'application/json',
         apikey: this.apikey,
       },
-    }).then((res) => res.json());
+    }).then(() => null);
   }
 }
 
