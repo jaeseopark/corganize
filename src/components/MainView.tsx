@@ -154,19 +154,15 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
 
   const toggleFav = (file: File) => {
     const { fileid, dateactivated } = file;
+    const isactive = !dateactivated;
     corganizeClient
-      .updateFile(fileid, { isactive: !dateactivated })
+      .updateFile(fileid, { isactive })
       .then((newFile) => {
-        if (dateactivated) {
-          delete file.dateactivated;
-        } else {
-          file.dateactivated = Date.now();
-        }
-        file.lastupdated = newFile.lastupdated;
-        const newValue = dateactivated ? 'unfavorited' : 'favorited';
-        return `The file has been ${newValue}`;
+        newFile.dateactivated = isactive ? Date.now() : 0;
+        dispatch(update(newFile));
+        return dateactivated ? 'unfavorited' : 'favorited';
       })
-      .then(showAlert)
+      .then((newValue) => showAlert(`The file has been ${newValue}`))
       .then(rerender)
       .catch(showAlert);
   };
