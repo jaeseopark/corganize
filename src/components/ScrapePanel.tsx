@@ -9,7 +9,7 @@ import Button from './Button';
 
 import './ScrapePanel.scss';
 import CardView, { Card } from './ScrapePanelCardView';
-import { getRemoteFiles } from '../redux/files/slice';
+import { getRemoteAndHiddenFiles } from '../redux/files/slice';
 
 type ScrapePanelProps = {
   hsClient: HyperSquirrelClient;
@@ -26,7 +26,7 @@ const ScrapePanel = ({
   defaultUrl,
   createFile,
 }: ScrapePanelProps) => {
-  const files = useSelector(getRemoteFiles);
+  const files = useSelector(getRemoteAndHiddenFiles);
   const [isScraping, setScraping] = useState(false);
   const [cards, setCards] = useState<Card[]>([]);
   const [error, setError] = useState<Error | null>(null);
@@ -47,7 +47,7 @@ const ScrapePanel = ({
     hsClient
       .scrapeAsync(...urls)
       .then((scrapedFiles) => {
-        const existingFileIds = files.map((f) => f.fileid);
+        const existingFileIds = files.map((f: File) => f.fileid);
         return scrapedFiles
           .filter((file) => !existingFileIds.includes(file.fileid))
           .map(fileToCard);

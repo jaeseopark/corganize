@@ -43,11 +43,13 @@ import { listDirAsync } from '../utils/fsUtils';
 import UploadPanel from './UploadPanel';
 import { encrypt } from '../utils/cryptoUtils';
 import {
-  addAll,
+  addAllHidden,
   addAllLocal,
+  addAllRemote,
+  deleteRemote,
   getLocalFiles,
   getRemoteFiles,
-  update,
+  updateRemote,
 } from '../redux/files/slice';
 
 type MainViewProps = {
@@ -90,10 +92,16 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   };
 
   const createFile = (file: File): Promise<File> =>
-    corganizeClient.createFile(file).then((newFile) => {
-      dispatch(addAll([newFile]));
-      return file;
-    });
+    corganizeClient
+      .createFile(file)
+      .then(() => dispatch(addAllRemote([file])))
+      .then(() => file)
+      .catch((error: Error) => {
+        if (JSON.stringify(error).includes('Primary Key already exists')) {
+          dispatch(addAllHidden([file]));
+        }
+        throw error;
+      });
 
   const uploadFile = (localPath: string): Promise<File> => {
     const fileid = uuidv4().toString();
@@ -123,24 +131,18 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       );
   };
 
-  const deleteFile = (fileid: string) =>
+  const deleteFile = (fileid: string): Promise<void> =>
     corganizeClient
       .deleteFile(fileid)
-      .then(() => {
-        // const i = renderBuffer.files.findIndex((f) => f.fileid === fileid);
-        // renderBuffer.files.splice(i, 1);
-        // return setFiles(renderBuffer.files);
-        // TODO: How do i delete a row?
-        return null;
-      })
-      .then(showAlert('file has been deleted'))
-      .then(rerender)
+      .then(() => dispatch(deleteRemote))
+      .then(() => showAlert('file has been deleted'))
       .catch(showAlert);
 
-  const updateFile = (newFile: File) =>
+  const updateFile = (newFile: File): Promise<File> =>
     corganizeClient
       .updateFile(newFile)
-      .then((f: File) => dispatch(update(f)))
+      .then(() => dispatch(updateRemote(newFile)))
+      .then(() => newFile)
       .catch((error: Error) => showAlert(error.message));
 
   const toggleFav = (file: File) => {
@@ -148,7 +150,10 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
       ...file,
       dateactivated: !file.dateactivated ? Math.round(Date.now() / 1000) : 0,
     };
-    return updateFile(toggled);
+    return updateFile(toggled).then(() => {
+      const msg = toggled.dateactivated ? 'Favorited' : 'Unfavorited';
+      return showAlert(msg);
+    });
   };
 
   const openOrphanPanel = () => {
@@ -166,7 +171,6 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
           createFile={createFile}
           hsClient={hsClient}
           defaultUrl={url}
-          files={files}
         />
       ),
     });
@@ -291,7 +295,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     if (localFiles.length > 0 || remoteFiles.length > 0) return;
 
     const progressCallback = (moreFiles: File[]) => {
-      dispatch(addAll(moreFiles));
+      dispatch(addAllRemote(moreFiles));
     };
 
     const addAllLocalToRedux = (newPaths: string[]) =>

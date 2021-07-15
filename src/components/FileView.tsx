@@ -24,7 +24,7 @@ type FileViewProps = {
   encryptedPath: string;
   decryptedPath: string;
   aespassword: string;
-  updateFile: Function;
+  updateFile: (f: File) => Promise<File>;
   contextMenuOptions: ContextMenuOption[];
 };
 
