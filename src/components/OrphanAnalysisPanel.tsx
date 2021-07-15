@@ -18,7 +18,7 @@ const OrphanAnalysisPanel = () => {
 
     setOrphans(
       localFiles.filter(
-        (p) => p.endsWith('.aes') && !pathsInLibrary.includes(p)
+        (p) => !pathsInLibrary.includes(p) && p.endsWith('.aes')
       )
     );
   };
