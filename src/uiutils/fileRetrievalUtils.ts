@@ -6,7 +6,7 @@ import { htmlDecode } from '../utils/stringUtils';
 const retrieveFilesAsync = (
   corganizeClient: CorganizeClient,
   library: Library,
-  progressCallback: (files: File[]) => void,
+  progressCallback: (moreFiles: { remote: File[]; hidden: File[] }) => void,
   localFiles: string[]
 ) => {
   const decorateFile = (f: File) => {
@@ -17,17 +17,21 @@ const retrieveFilesAsync = (
   };
 
   // TODO: convert this to a filter in React Table
-  const shouldKeep = (f: File) =>
+  const isRemote = (f: File) =>
     (!library.showDownloadableFilesOnly || f.storageservice !== 'None') &&
     (!library.hideDownloadedFiles || !localFiles.includes(f.encryptedPath));
 
   const callbackWrapper = (files: File[]) => {
-    let retFiles = files.map(decorateFile);
-    if (library.showDownloadableFilesOnly || library.hideDownloadedFiles) {
-      retFiles = retFiles.filter(shouldKeep);
-    }
+    const callbackPayload = files.map(decorateFile).reduce(
+      (acc, f) => {
+        const target = isRemote(f) ? acc.remote : acc.hidden;
+        target.push(f);
+        return acc;
+      },
+      { remote: new Array<File>(), hidden: new Array<File>() }
+    );
 
-    progressCallback(retFiles);
+    progressCallback(callbackPayload);
   };
 
   switch (library.view) {

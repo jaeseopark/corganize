@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { ipcRenderer } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
+import { useUpdate } from 'react-use';
 import { File } from '../entity/File';
 import Button from './Button';
-import { useUpdate } from 'react-use';
 
 type Upload = {
   uploadid: string;

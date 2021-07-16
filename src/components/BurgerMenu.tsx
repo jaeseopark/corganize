@@ -1,20 +1,80 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { slide as Menu } from 'react-burger-menu';
 import classNames from 'classnames';
 
 import './BurgerMenu.scss';
+import { useSelector } from 'react-redux';
+import { getHiddenFiles, getRemoteFiles } from '../redux/files/slice';
+import { toHumanFileSize } from '../utils/numberUtils';
 
 export type BurgerMenuOption = {
   label: string;
-  disabled: boolean;
-  onClick: Function;
-  className: string | null;
+  onClick?;
+  disabled?: boolean;
+  className?: string;
 };
 
-const BurgerMenu = ({ getBurgerMenuOptions }) => {
-  const options: BurgerMenuOption[] = getBurgerMenuOptions();
+type BurgerMenuProps = {
+  scrapePreset: string[];
+  allFilesLoaded: boolean;
+  openScrapePanel: Function;
+  openOrphanAnalysisPanel: Function;
+  openDuplicateAnalysisPanel: Function;
+  openUploadPanel: Function;
+};
 
-  const closingOnClick = (onClick: Function) => {
+const BurgerMenu = ({
+  scrapePreset,
+  allFilesLoaded,
+  openScrapePanel,
+  openOrphanAnalysisPanel,
+  openDuplicateAnalysisPanel,
+  openUploadPanel,
+}: BurgerMenuProps) => {
+  const remote = useSelector(getRemoteFiles);
+  const hidden = useSelector(getHiddenFiles);
+
+  const getMainOptions = (): BurgerMenuOption[] => [
+    {
+      label: 'Upload',
+      onClick: openUploadPanel,
+    },
+    {
+      label: 'Scrape',
+      onClick: openScrapePanel,
+    },
+    {
+      label: 'Scrape Preset',
+      onClick: () => openScrapePanel(scrapePreset),
+      disabled: !scrapePreset || scrapePreset.length === 0,
+    },
+    {
+      label: 'Orphan Analysis',
+      onClick: openOrphanAnalysisPanel,
+      disabled: !allFilesLoaded,
+    },
+    {
+      label: 'Duplicate Analysis',
+      onClick: openDuplicateAnalysisPanel,
+    },
+  ];
+
+  const getFooterOption = (): BurgerMenuOption => {
+    const libSize = toHumanFileSize(
+      remote.reduce((sum: number, f: File) => sum + (f.size || 0), 0)
+    );
+    return {
+      label: `R${remote.length} (${libSize}), H${hidden.length}`,
+      className: 'footer',
+    };
+  };
+
+  const options: BurgerMenuOption[] = useMemo(
+    () => [...getMainOptions(), getFooterOption()],
+    [remote, hidden]
+  );
+
+  const closingOnClick = (onClick: () => void) => {
     return () => {
       if (onClick) {
         onClick();
@@ -24,16 +84,13 @@ const BurgerMenu = ({ getBurgerMenuOptions }) => {
   };
 
   const optionToLabel = (option: BurgerMenuOption) => {
-    const { label, disabled, onClick, className, ...remainingProps } = option;
-    const onClickWrapper = disabled ? null : closingOnClick(onClick);
-    const newClassName = classNames(className, disabled && 'disabled');
+    const { label, disabled, onClick, className } = option;
+    const onClickWrapper = !disabled ? closingOnClick(onClick) : undefined;
+    const newClassName = classNames(className, { disabled });
 
     return (
-      <div
-        onClick={onClickWrapper}
-        className={newClassName}
-        {...remainingProps}
-      >
+      // eslint-disable-next-line jsx-a11y/no-static-element-interactions,jsx-a11y/click-events-have-key-events
+      <div key={label} onClick={onClickWrapper} className={newClassName}>
         {label}
       </div>
     );
