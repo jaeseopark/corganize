@@ -46,7 +46,6 @@ import {
   addAllLocal,
   addAllRemote,
   deleteRemote,
-  getHiddenFiles,
   getLocalFiles,
   getRemoteFiles,
   updateRemote,
@@ -68,7 +67,6 @@ const getHyperSquirrelClient = (library: Library) =>
 const MainView = ({ library, showAlert }: MainViewProps) => {
   const dispatch = useDispatch();
   const remoteFiles: File[] = useSelector(getRemoteFiles);
-  const hiddenFiles: File[] = useSelector(getHiddenFiles);
   const localFiles: string[] = useSelector(getLocalFiles);
   const [allFilesLoaded, setAllFilesLoaded] = useState(false);
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
@@ -254,6 +252,8 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
         columnOrder: ['dateactivated'],
       },
       autoResetPage: false,
+      autoResetSortBy: false,
+      autoResetFilters: false,
     },
     useFilters,
     useGlobalFilter,
@@ -321,41 +321,55 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     return <h2 className="center">Loading...</h2>;
   }
 
-  const isFullscreenActive = !!fullscreenComponent;
+  const maybeRenderFullScreenComponent = () => {
+    if (!fullscreenComponent) return null;
+
+    return (
+      <FullscreenView
+        fullscreenComponent={fullscreenComponent}
+        onClose={() => {
+          shouldFocusTable = true;
+          setFullscreenComponent(null);
+        }}
+      />
+    );
+  };
+
+  const maybeRenderBurgerMenu = () => {
+    if (fullscreenComponent) return null;
+
+    return (
+      <BurgerMenu
+        scrapePreset={library.config.hypersquirrel.preset}
+        allFilesLoaded={allFilesLoaded}
+        openScrapePanel={openScrapePanel}
+        openOrphanAnalysisPanel={openOrphanPanel}
+        openDuplicateAnalysisPanel={openDuplicateAnalysisPanel}
+        openUploadPanel={openUploadPanel}
+      />
+    );
+  };
+
+  const renderMainView = () => (
+    <div className={classNames('mainview', { hidden: !!fullscreenComponent })}>
+      <BurgerMenuSpacer />
+      <GlobalFilter tableInstance={tableInstance} />
+      <DownloadCenter />
+      <TableView
+        downloadOrOpenFile={downloadOrOpenFile}
+        tableInstance={tableInstance}
+        getConextMenuOptions={getContextMenuOptions}
+        tableRef={tableRef}
+        focusTable={focusTable}
+      />
+    </div>
+  );
 
   return (
     <>
-      {fullscreenComponent && (
-        <FullscreenView
-          fullscreenComponent={fullscreenComponent}
-          onClose={() => {
-            shouldFocusTable = true;
-            setFullscreenComponent(null);
-          }}
-        />
-      )}
-      {!fullscreenComponent && (
-        <BurgerMenu
-          scrapePreset={library.config.hypersquirrel.preset}
-          allFilesLoaded={allFilesLoaded}
-          openScrapePanel={openScrapePanel}
-          openOrphanAnalysisPanel={openOrphanPanel}
-          openDuplicateAnalysisPanel={openDuplicateAnalysisPanel}
-          openUploadPanel={openUploadPanel}
-        />
-      )}
-      <div className={classNames('mainview', { hidden: isFullscreenActive })}>
-        <BurgerMenuSpacer />
-        <GlobalFilter tableInstance={tableInstance} />
-        <DownloadCenter />
-        <TableView
-          downloadOrOpenFile={downloadOrOpenFile}
-          tableInstance={tableInstance}
-          getConextMenuOptions={getContextMenuOptions}
-          tableRef={tableRef}
-          focusTable={focusTable}
-        />
-      </div>
+      {maybeRenderFullScreenComponent()}
+      {maybeRenderBurgerMenu()}
+      {renderMainView()}
     </>
   );
 };
