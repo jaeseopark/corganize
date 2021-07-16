@@ -1,19 +1,13 @@
 import React from 'react';
 import { ContextMenu, MenuItem, ContextMenuTrigger } from 'react-contextmenu';
+import { ContextMenuOption } from '../entity/props';
 
 import './ContextMenuWrapper.scss';
 
 type ContextMenuWrapperProps = {
   id: string;
   component: HTMLElement;
-  options: any[];
-};
-
-const attributes = {
-  className: 'custom-root',
-  disabledClassName: 'custom-disabled',
-  dividerClassName: 'custom-divider',
-  selectedClassName: 'custom-selected',
+  options: ContextMenuOption[];
 };
 
 const ContextMenuWrapper = ({
@@ -24,13 +18,13 @@ const ContextMenuWrapper = ({
   const optionsWithHotkeys = options
     .filter((option) => option && option.hotkey)
     .reduce((map, obj) => {
-      map[obj.hotkey.toLowerCase()] = obj.onClick;
+      map.set(obj.hotkey.toLowerCase(), obj.onClick);
       return map;
-    }, {});
+    }, new Map<string, () => void>());
 
   const onKeyUp = (event) => {
     const key = event.key.toLowerCase();
-    const onClick = optionsWithHotkeys[key];
+    const onClick = optionsWithHotkeys.get(key);
     if (onClick) {
       onClick();
     }
@@ -45,7 +39,7 @@ const ContextMenuWrapper = ({
 
           const { label, onClick } = option;
           return (
-            <MenuItem key={label} onClick={onClick} attributes={attributes}>
+            <MenuItem key={label} className="custom-root" onClick={onClick}>
               {label}
             </MenuItem>
           );

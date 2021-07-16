@@ -33,6 +33,6 @@ export type LibraryConfig = {
 
 export type ContextMenuOption = {
   label: string;
-  onClick: Function;
+  onClick: () => void;
   hotkey?: string;
 };

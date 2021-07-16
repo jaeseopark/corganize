@@ -4,12 +4,13 @@ import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
 import MainView from './components/MainView';
 import LibrarySelector from './components/LibrarySelector';
+import Library from './entity/Library';
 
 // See MainView.renderBuffer to understand how this variable is used.
 const renderBuffer = { alertContent: null };
 
 const Corganize = () => {
-  const [library, setLibrary] = useState(null);
+  const [library, setLibrary] = useState<Library | null>(null);
   const [alertContent, setAlertContent] = useState(null);
 
   useEffect(() => {}, [library]);
@@ -35,7 +36,7 @@ const Corganize = () => {
     }
   };
 
-  const onLibraryChange = (lib) => {
+  const onLibraryChange = (lib: Library) => {
     ipcRenderer.send('changeLibraryConfig', lib.config);
     setLibrary(lib);
   };
