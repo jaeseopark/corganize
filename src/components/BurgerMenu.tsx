@@ -85,10 +85,11 @@ const BurgerMenu = ({
 
   const optionToLabel = (option: BurgerMenuOption) => {
     const { label, disabled, onClick, className } = option;
-    const onClickWrapper = disabled ? null : closingOnClick(onClick);
+    const onClickWrapper = !disabled ? undefined : closingOnClick(onClick);
     const newClassName = classNames(className, { disabled });
 
     return (
+      // eslint-disable-next-line jsx-a11y/no-static-element-interactions,jsx-a11y/click-events-have-key-events
       <div key={label} onClick={onClickWrapper} className={newClassName}>
         {label}
       </div>
