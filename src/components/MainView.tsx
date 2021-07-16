@@ -33,7 +33,6 @@ import Library from '../entity/Library';
 import BurgerMenu, { BurgerMenuSpacer } from './BurgerMenu';
 import HyperSquirrelClient from '../client/hypersquirrel';
 
-import { getBurgerMenuOptions as getAllBurgerMenuOptions } from '../uiutils/burgerMenuUtils';
 import OrphanAnalysisPanel from './OrphanAnalysisPanel';
 import ScrapePanel from './ScrapePanel';
 import retrieveFilesAsync from '../uiutils/fileRetrievalUtils';
@@ -47,6 +46,7 @@ import {
   addAllLocal,
   addAllRemote,
   deleteRemote,
+  getHiddenFiles,
   getLocalFiles,
   getRemoteFiles,
   updateRemote,
@@ -68,6 +68,7 @@ const getHyperSquirrelClient = (library: Library) =>
 const MainView = ({ library, showAlert }: MainViewProps) => {
   const dispatch = useDispatch();
   const remoteFiles: File[] = useSelector(getRemoteFiles);
+  const hiddenFiles: File[] = useSelector(getHiddenFiles);
   const localFiles: string[] = useSelector(getLocalFiles);
   const [allFilesLoaded, setAllFilesLoaded] = useState(false);
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
@@ -208,17 +209,6 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     });
   };
 
-  const getBurgerMenuOptions = () =>
-    getAllBurgerMenuOptions(
-      remoteFiles,
-      library.config.hypersquirrel.preset,
-      allFilesLoaded,
-      openScrapePanel,
-      openOrphanPanel,
-      openDuplicateAnalysisPanel,
-      openUploadPanel
-    );
-
   const openFile = (file: File) => {
     openFileFullscreen(
       file,
@@ -294,8 +284,13 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   useEffect(() => {
     if (localFiles.length > 0 || remoteFiles.length > 0) return;
 
-    const progressCallback = (moreFiles: File[]) => {
-      dispatch(addAllRemote(moreFiles));
+    const progressCallback = (moreFiles: {
+      remote: File[];
+      hidden: File[];
+    }) => {
+      const { remote, hidden } = moreFiles;
+      dispatch(addAllRemote(remote));
+      dispatch(addAllHidden(hidden));
     };
 
     const addAllLocalToRedux = (newPaths: string[]) =>
@@ -340,7 +335,14 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
         />
       )}
       {!fullscreenComponent && (
-        <BurgerMenu getBurgerMenuOptions={getBurgerMenuOptions} />
+        <BurgerMenu
+          scrapePreset={library.config.hypersquirrel.preset}
+          allFilesLoaded={allFilesLoaded}
+          openScrapePanel={openScrapePanel}
+          openOrphanAnalysisPanel={openOrphanPanel}
+          openDuplicateAnalysisPanel={openDuplicateAnalysisPanel}
+          openUploadPanel={openUploadPanel}
+        />
       )}
       <div className={classNames('mainview', { hidden: isFullscreenActive })}>
         <BurgerMenuSpacer />
