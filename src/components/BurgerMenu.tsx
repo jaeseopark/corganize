@@ -85,7 +85,7 @@ const BurgerMenu = ({
 
   const optionToLabel = (option: BurgerMenuOption) => {
     const { label, disabled, onClick, className } = option;
-    const onClickWrapper = !disabled ? undefined : closingOnClick(onClick);
+    const onClickWrapper = !disabled ? closingOnClick(onClick) : undefined;
     const newClassName = classNames(className, { disabled });
 
     return (
