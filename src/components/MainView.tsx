@@ -93,7 +93,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   const createFile = (file: File): Promise<File> =>
     corganizeClient
       .createFile(file)
-      .then(() => dispatch(addAllRemote([file])))
+      .then(() => dispatch(addAllHidden([file])))
       .then(() => file)
       .catch((error: Error) => {
         if (JSON.stringify(error).includes('Primary Key already exists')) {
