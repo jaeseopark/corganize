@@ -3,6 +3,7 @@ import cls from 'classnames';
 import { getMetadata } from '../uiutils/multimediaUtils';
 import { toHumanDuration } from '../utils/numberUtils';
 import { htmlDecode } from '../utils/stringUtils';
+import { File } from '../entity/File';
 
 const renderMultimediaIcons = (width, height, duration, size) => {
   const { isVertical: vertical, resolution, bitrate } = getMetadata(
@@ -23,28 +24,33 @@ const renderMultimediaIcons = (width, height, duration, size) => {
   );
 };
 
-const maybeRenderMultimediaIcons = (file) => {
-  const { multimedia, size } = file;
-  if (multimedia) {
-    const { width, height, duration } = multimedia;
-    if (width && height && duration && size) {
-      return renderMultimediaIcons(width, height, duration, size);
-    }
-  }
-  return null;
-};
+const Filename = (file: File) => {
+  const { multimedia, size, filename } = file;
 
-const Filename = ({ row, value }) => {
+  const maybeRenderMultimediaIcons = () => {
+    if (multimedia && size) {
+      const { width, height, duration } = multimedia;
+      if (width && height && duration) {
+        return renderMultimediaIcons(width, height, duration, size);
+      }
+    }
+    return null;
+  };
+
+  const renderText = () => (
+    <textarea
+      className="filename"
+      readOnly
+      tabIndex="-1"
+      value={htmlDecode(String(filename))}
+    />
+  );
+
   return (
-    <>
-      {maybeRenderMultimediaIcons(row.original)}
-      <textarea
-        className="filename"
-        readOnly
-        tabIndex="-1"
-        value={htmlDecode(String(value))}
-      />
-    </>
+    <div>
+      {maybeRenderMultimediaIcons()}
+      {renderText()}
+    </div>
   );
 };
 

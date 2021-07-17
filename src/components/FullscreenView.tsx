@@ -1,27 +1,28 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
-
-type FullscreenComponent = {
-  title: string;
-  body: HTMLElement;
-};
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  getFullscreennPayload,
+  unsetFullscreen,
+} from '../redux/fullscreen/slice';
 
 type FullscreenViewProps = {
-  onClose: Function;
-  fullscreenComponent: FullscreenComponent | null;
+  onClose: () => void;
 };
 
-const FullscreenView = ({
-  onClose,
-  fullscreenComponent,
-}: FullscreenViewProps) => {
+const FullscreenView = ({ onClose }: FullscreenViewProps) => {
+  const dispatch = useDispatch();
+  const fullscreenComponent = useSelector(getFullscreennPayload);
   const { title, body } = fullscreenComponent;
+
+  const onCloseWrapper = () => {
+    onClose();
+    dispatch(unsetFullscreen());
+  };
 
   const onKeyUp = (event) => {
     const key = event.key.toLowerCase();
-    if (key === 'q') {
-      onClose();
-    }
+    if (key === 'q') onCloseWrapper();
   };
 
   return (
@@ -33,7 +34,7 @@ const FullscreenView = ({
           className="close"
           data-dismiss="modal"
           aria-label="Close"
-          onClick={onClose}
+          onClick={onCloseWrapper}
         >
           <span aria-hidden="true">&times;</span>
         </button>

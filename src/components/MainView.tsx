@@ -27,7 +27,7 @@ import {
   getRemoteActions,
 } from '../uiutils/contextMenuUtils';
 import { File } from '../entity/File';
-import { ContextMenuOption } from '../entity/props';
+import { ContextMenuOption, FullscreenComponent } from '../entity/props';
 import { getAllColumns, hiddenColumns } from '../uiutils/columnUtils';
 import Library from '../entity/Library';
 import BurgerMenu, { BurgerMenuSpacer } from './BurgerMenu';
@@ -37,7 +37,6 @@ import OrphanAnalysisPanel from './OrphanAnalysisPanel';
 import ScrapePanel from './ScrapePanel';
 import retrieveFilesAsync from '../uiutils/fileRetrievalUtils';
 import DuplicateAnalysisPanel from './DuplicateAnalysisPanel';
-import { openFileFullscreen } from '../uiutils/mainViewUtils';
 import { listDirAsync } from '../utils/fsUtils';
 import UploadPanel from './UploadPanel';
 import { encrypt } from '../utils/cryptoUtils';
@@ -50,6 +49,10 @@ import {
   getRemoteFiles,
   updateRemote,
 } from '../redux/files/slice';
+import {
+  getFullscreennPayload,
+  setFullscreen,
+} from '../redux/fullscreen/slice';
 
 type MainViewProps = {
   library: Library;
@@ -68,9 +71,12 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   const dispatch = useDispatch();
   const remoteFiles: File[] = useSelector(getRemoteFiles);
   const localFiles: string[] = useSelector(getLocalFiles);
+  const fullscreenComponent = useSelector(getFullscreennPayload);
+  const setFullscreenComponent = (payload: FullscreenComponent) =>
+    dispatch(setFullscreen(payload));
+
   const [allFilesLoaded, setAllFilesLoaded] = useState(false);
   const [rerenderTimestamp, setRerenderTimestamp] = useState(0);
-  const [fullscreenComponent, setFullscreenComponent] = useState(null);
   const [corganizeClient] = useState(getCorganizeClient(library));
   const [hsClient] = useState(getHyperSquirrelClient(library));
 
@@ -93,7 +99,7 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   const createFile = (file: File): Promise<File> =>
     corganizeClient
       .createFile(file)
-      .then(() => dispatch(addAllRemote([file])))
+      .then(() => dispatch(addAllHidden([file])))
       .then(() => file)
       .catch((error: Error) => {
         if (JSON.stringify(error).includes('Primary Key already exists')) {
@@ -155,24 +161,20 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     });
   };
 
-  const openOrphanPanel = () => {
-    setFullscreenComponent({
-      title: 'Delete Orphan Files',
-      body: <OrphanAnalysisPanel />,
-    });
-  };
-
   const openScrapePanel = (url: string | null = null) => {
-    setFullscreenComponent({
-      title: 'Scrape',
-      body: (
-        <ScrapePanel
-          createFile={createFile}
-          hsClient={hsClient}
-          defaultUrl={url}
-        />
-      ),
-    });
+    const panel = (
+      <ScrapePanel
+        createFile={createFile}
+        hsClient={hsClient}
+        defaultUrl={url}
+      />
+    );
+    dispatch(
+      setFullscreen({
+        title: 'Scrape',
+        body: panel,
+      })
+    );
   };
 
   const getContextMenuOptions = (inputFile: File): ContextMenuOption[] => {
@@ -192,29 +194,27 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   };
 
   const openDuplicateAnalysisPanel = () => {
-    setFullscreenComponent({
-      title: 'Duplicate Analysis',
-      body: (
-        <DuplicateAnalysisPanel getContextMenuOptions={getContextMenuOptions} />
-      ),
-    });
+    const panel = (
+      <DuplicateAnalysisPanel getContextMenuOptions={getContextMenuOptions} />
+    );
+    dispatch(
+      setFullscreen({
+        title: 'Duplicate Analysis',
+        body: panel,
+      })
+    );
   };
 
-  const openUploadPanel = () => {
-    setFullscreenComponent({
-      title: 'Upload',
-      body: <UploadPanel uploadFile={uploadFile} />,
-    });
-  };
+  const openUploadPanel = () =>
+    dispatch(
+      setFullscreen({
+        title: 'Upload',
+        body: <UploadPanel uploadFile={uploadFile} />,
+      })
+    );
 
   const openFile = (file: File) => {
-    openFileFullscreen(
-      file,
-      updateFile,
-      getContextMenuOptions,
-      setFullscreenComponent,
-      library
-    );
+    openFileFullscreen(file, updateFile, getContextMenuOptions, library);
   };
 
   const renderActions = ({ row }: { row: { original: File } }) => {
@@ -228,19 +228,9 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
     );
   };
 
-  const renderFav = ({ value, row }) => {
-    const onClick = () => {
-      const { original: file } = row;
-      toggleFav(file);
-    };
-
-    const classNames = `${String(!!value)} icon`;
-    return <div onClick={onClick} className={classNames} />;
-  };
-
   const data = useMemo(() => remoteFiles || [], [remoteFiles]);
   const columns = useMemo(() => {
-    return getAllColumns(setFullscreenComponent, renderActions, renderFav);
+    return getAllColumns(renderActions);
   }, [rerenderTimestamp]);
 
   const tableInstance = useTable(
@@ -324,15 +314,11 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
   const maybeRenderFullScreenComponent = () => {
     if (!fullscreenComponent) return null;
 
-    return (
-      <FullscreenView
-        fullscreenComponent={fullscreenComponent}
-        onClose={() => {
-          shouldFocusTable = true;
-          setFullscreenComponent(null);
-        }}
-      />
-    );
+    const onClose = () => {
+      shouldFocusTable = true;
+    };
+
+    return <FullscreenView onClose={onClose} />;
   };
 
   const maybeRenderBurgerMenu = () => {
@@ -343,7 +329,6 @@ const MainView = ({ library, showAlert }: MainViewProps) => {
         scrapePreset={library.config.hypersquirrel.preset}
         allFilesLoaded={allFilesLoaded}
         openScrapePanel={openScrapePanel}
-        openOrphanAnalysisPanel={openOrphanPanel}
         openDuplicateAnalysisPanel={openDuplicateAnalysisPanel}
         openUploadPanel={openUploadPanel}
       />

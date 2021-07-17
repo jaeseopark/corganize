@@ -11,6 +11,11 @@ export type File = {
   locationref?: string;
   size?: number;
   mimetype?: string;
+  multimedia?: {
+    width: number;
+    height: number;
+    duration: number;
+  };
 
   // UI-only fields
   encryptedPath: string;

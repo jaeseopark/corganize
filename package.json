@@ -272,6 +272,7 @@
     "react-router-dom": "^5.2.0",
     "react-table": "^7.6.2",
     "react-use": "^17.2.4",
+    "redux-thunk": "^2.3.0",
     "regenerator-runtime": "^0.13.5",
     "screenfull": "^5.1.0",
     "source-map-support": "^0.5.19",

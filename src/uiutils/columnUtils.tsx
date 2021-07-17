@@ -6,6 +6,8 @@ import {
   SelectColumnFilter,
 } from './SelectColumnFilter';
 import { toHumanFileSize, toRelativeHumanTime } from '../utils/numberUtils';
+import { File } from '../entity/File';
+import FavButton from '../components/FavButton';
 
 export const hiddenColumns = [
   'sourceurl',
@@ -14,6 +16,13 @@ export const hiddenColumns = [
   'encryptedPath',
 ];
 
+type ColumnCell = {
+  row: {
+    original: File;
+  };
+  value;
+};
+
 const valueAsDivClass = (...baseClassname) => (value) => {
   return <div className={classnames(...baseClassname, value)} />;
 };
@@ -21,9 +30,8 @@ const valueAsDivClass = (...baseClassname) => (value) => {
 const valueAsMimetypeIcon = valueAsDivClass('icon', 'mimetype');
 
 export function getAllColumns(
-  setFullscreenComponent: React.Dispatch<React.SetStateAction<null>>,
-  renderActions: ({ row }: { row: any }) => JSX.Element,
-  renderFav: ({ value, row }: { value: any; row: any }) => JSX.Element
+  renderActions: (props: ColumnCell) => JSX.Element,
+  toggleFav: (file: File) => void
 ) {
   const hidden = hiddenColumns.map((accessor) => {
     return {
@@ -31,25 +39,30 @@ export function getAllColumns(
     };
   });
 
+  const renderFavButton = (props: ColumnCell) => (
+    <FavButton file={props.row.original} toggleFav={toggleFav} />
+  );
+
   const custom = [
     {
       accessor: 'lastupdated',
       Header: 'modded',
-      Cell: ({ value }) => toRelativeHumanTime(value),
+      Cell: ({ value }: ColumnCell) => toRelativeHumanTime(value),
     },
     {
       accessor: 'size',
-      Cell: ({ value }) => toHumanFileSize(value),
+      Cell: ({ value }: ColumnCell) => toHumanFileSize(value),
     },
     {
       accessor: 'mimetype',
       Filter: SelectColumnFilter,
       filter: nullableSelectColumnFilter,
-      Cell: ({ value }) => valueAsMimetypeIcon((value || '').replace('/', '-')),
+      Cell: ({ value }: ColumnCell) =>
+        valueAsMimetypeIcon((value || '').replace('/', '-')),
     },
     {
       accessor: 'filename',
-      Cell: (props) => Filename({ ...props, setFullscreenComponent }),
+      Cell: (props: ColumnCell) => Filename(props.row.original),
     },
     {
       id: 'actions',
@@ -58,13 +71,17 @@ export function getAllColumns(
     {
       accessor: 'dateactivated',
       Header: 'fav',
-      Cell: renderFav,
+      Cell: renderFavButton,
     },
   ];
 
   return [...hidden, ...custom].map((column) => {
-    if (!column.id) { column.id = column.accessor };
-    if (!column.Header && column.accessor) { column.Header = column.accessor; }
+    if (!column.id) {
+      column.id = column.accessor;
+    }
+    if (!column.Header && column.accessor) {
+      column.Header = column.accessor;
+    }
     return column;
   });
 }

@@ -11,7 +11,7 @@ const OrphanAnalysisPanel = () => {
   const [orphans, setOrphans] = useState<string[] | null>(null);
   const [errorObj, setErrorObj] = useState<Error | null>(null);
 
-  const findOrphans = () => {
+  const findOrphans = async () => {
     const pathsInLibrary = remoteFiles
       .filter((f) => f.storageservice && f.storageservice !== 'None')
       .map((f) => f.encryptedPath);
@@ -37,7 +37,7 @@ const OrphanAnalysisPanel = () => {
     return <span>{JSON.stringify(errorObj, null, 2)}</span>;
   }
 
-  if (!orphans) return 'Progressing...';
+  if (!orphans) return <p>Progressing...</p>;
 
   return (
     <div>

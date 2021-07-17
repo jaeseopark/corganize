@@ -36,3 +36,8 @@ export type ContextMenuOption = {
   onClick: () => void;
   hotkey?: string;
 };
+
+export type FullscreenComponent = {
+  title: string | JSX.Element | Element;
+  body: JSX.Element | Element;
+};

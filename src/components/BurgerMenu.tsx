@@ -3,9 +3,11 @@ import { slide as Menu } from 'react-burger-menu';
 import classNames from 'classnames';
 
 import './BurgerMenu.scss';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { getHiddenFiles, getRemoteFiles } from '../redux/files/slice';
 import { toHumanFileSize } from '../utils/numberUtils';
+import { setFullscreen } from '../redux/fullscreen/slice';
+import OrphanAnalysisPanel from './OrphanAnalysisPanel';
 
 export type BurgerMenuOption = {
   label: string;
@@ -18,7 +20,6 @@ type BurgerMenuProps = {
   scrapePreset: string[];
   allFilesLoaded: boolean;
   openScrapePanel: Function;
-  openOrphanAnalysisPanel: Function;
   openDuplicateAnalysisPanel: Function;
   openUploadPanel: Function;
 };
@@ -27,12 +28,20 @@ const BurgerMenu = ({
   scrapePreset,
   allFilesLoaded,
   openScrapePanel,
-  openOrphanAnalysisPanel,
   openDuplicateAnalysisPanel,
   openUploadPanel,
 }: BurgerMenuProps) => {
+  const dispatch = useDispatch();
   const remote = useSelector(getRemoteFiles);
   const hidden = useSelector(getHiddenFiles);
+
+  const openOrphanPanel = () =>
+    dispatch(
+      setFullscreen({
+        title: 'Delete Orphan Files',
+        body: <OrphanAnalysisPanel />,
+      })
+    );
 
   const getMainOptions = (): BurgerMenuOption[] => [
     {
@@ -50,7 +59,7 @@ const BurgerMenu = ({
     },
     {
       label: 'Orphan Analysis',
-      onClick: openOrphanAnalysisPanel,
+      onClick: openOrphanPanel,
       disabled: !allFilesLoaded,
     },
     {

@@ -4,7 +4,7 @@ import { exec } from 'child_process';
 import { unlink } from 'fs';
 import { copyTextToClipboard } from './clipboardUtils';
 import { File } from '../entity/File';
-import { ContextMenuOption } from '../entity/props';
+import { ContextMenuOption, FullscreenComponent } from '../entity/props';
 
 export const getLocalActions = (
   { encryptedPath }: File,
@@ -90,7 +90,7 @@ export const getRemoteActions = (
 
 export const getCommonActions = (
   file: File,
-  setFullscreenComponent: Function,
+  setFullscreenComponent: (payload: FullscreenComponent) => void,
   toggleFav: Function,
   deleteFile: Function
 ): ContextMenuOption[] => {
