@@ -13,8 +13,12 @@ server {
         proxy_pass http://ui;
     }
 
+    location ~* \.(crgimg)$ {
+        root /images;
+    }
+
     location /api/ {
-        rewrite /api/(.*) /corganize break;
+        rewrite /api/(.*) /$1 break;
         proxy_pass http://api;
 
         proxy_read_timeout 300;
