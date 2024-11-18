@@ -1,43 +1,11 @@
-import { useEffect, useState } from "preact/hooks";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
-import { Center, VStack } from "@chakra-ui/react";
+import Admin from "@/components/admin";
+import Gallery from "@/components/gallery";
 
 import "./app.css";
 
-type Image = {
-  filename: string;
-  isActive: boolean;
-  // created: number;
-};
-
-function Home() {
-  const [images, setImages] = useState<Image[]>([]);
-
-  useEffect(() => {
-    setTimeout(() => {
-      // one-time data load
-      fetch("/api/images")
-        .then((r) => r.json())
-        .then(({ filenames }: { filenames: string[] }) => {
-          setImages(filenames.map((filename) => ({ filename, isActive: true })));
-        });
-    }, 100);
-  }, []);
-
-  return (
-    <>
-      <Center>
-        <VStack>
-          {images.map((image) => {
-            // todo: consider isActive
-            return <img src={image.filename} />;
-          })}
-        </VStack>
-      </Center>
-    </>
-  );
-}
+const Home = () => <div />;
 
 const App = () => {
   return (
@@ -45,6 +13,8 @@ const App = () => {
       <Routes>
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/" element={<Home />} />
+        <Route path="/gallery" element={<Gallery />} />
+        <Route path="/admin" element={<Admin />} />
       </Routes>
     </BrowserRouter>
   );

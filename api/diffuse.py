@@ -1,21 +1,32 @@
-from random import shuffle
+import re
 from typing import List
+
+from utils import get_shuffled_copy
+
+
+def randomize_prompt(s: str):
+    matches = re.findall(r"(\([^()]+\))", s)
+    for match in matches:
+        candidates = match.strip("(").strip(")").split("|")
+        s = s.replace(match, get_shuffled_copy(candidates)[0])
+    return s
 
 
 class DiffuseRequest:
-    # See https://github.com/jaeseopark/diffusionbee-stable-diffusion-rest-api?tab=readme-ov-file#payload
     _request: dict
-    _prompt_variations: List[str] = []
 
-    def __init__(self, request: dict) -> None:
+    def __init__(self, request: dict):
         self._request = request
-        self._prompt_variations = [request["prompt"]]  # TODO: write logic here
+        assert "prompt" in request, "'prompt' must be present"
 
     def to_diffbee_payload(self) -> dict:
-        shuffle(self._prompt_variations)
+        # See https://github.com/jaeseopark/diffusionbee-stable-diffusion-rest-api?tab=readme-ov-file#payload
         return {
             **self._request,
-            "prompt": self._prompt_variations[0]
+            "prompt": randomize_prompt(self._request["prompt"]),
+            "selected_aspect_ratio": "Portrait",
+            "img_width": 448,
+            "img_height": 576,
         }
 
 
@@ -31,6 +42,4 @@ class DiffuseRequestCollection:
         self.expanded_requests = _expand(requests)
 
     def select(self, count: int) -> List[DiffuseRequest]:
-        # Shuffle in place which is fine for this use case.
-        shuffle(self.expanded_requests)
-        return self.expanded_requests[:count]
+        return get_shuffled_copy(self.expanded_requests)[:count]
