@@ -8,12 +8,21 @@ from fastapi.responses import FileResponse
 from starlette.responses import JSONResponse
 from starlette.websockets import WebSocketDisconnect
 
+from utils import run_on_interval
+from app import Corganize
+
+
 logger = logging.getLogger("")
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
 
 fastapi_app = FastAPI()
 sockets: List[WebSocket] = []
+corganize = Corganize()
+
+run_on_interval(corganize.generate,
+                interval_seconds=60,
+                initial_delay_seconds=5)
 
 
 @fastapi_app.websocket("/ws")
@@ -58,11 +67,10 @@ def unicorn_exception_handler(*args, **kwargs):
     )
 
 
-@fastapi_app.get("/stuff")
-def get_stuff():
-    return dict(stuff=[
-        1, 2, 3
-    ])
+@fastapi_app.get("/images")
+def get_images():
+    return dict(filenames=corganize.get_image_filenames())
+
 
 @fastapi_app.get("/file", response_class=FileResponse)
 def get_file():
