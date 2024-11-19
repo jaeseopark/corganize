@@ -56,11 +56,11 @@ class Corganize:
         diffuse_request = select_diffuse_request()
         for _ in range(DIFFUSE_BATCH_SIZE):
             payload = diffuse_request.to_diffbee_payload()
-            url = urljoin(DIFFBEE_URL, "generate/single")
+            tdict_filename = payload.get("model_tdict_filename")
             r = requests.post(urljoin(DIFFBEE_URL, "generate/single"), json=payload)
             r.raise_for_status()
 
-            image_path = os.path.join(IMG_DIR, f"{uuid.uuid4()}.crgimg")
+            image_path = os.path.join(IMG_DIR, f"{tdict_filename}-{uuid.uuid4()}.crgimg")
             with open(image_path, "wb") as fp:
                 fp.write(r.content)
 
