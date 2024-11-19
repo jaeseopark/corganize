@@ -1,14 +1,16 @@
 import re
-from typing import List
+from typing import Any, List
 
 from utils import get_shuffled_copy
+MAX_PRESET_LEN = 30
 
 
-def randomize_prompt(s: str):
-    matches = re.findall(r"(\([^()]+\))", s)
-    for match in matches:
-        candidates = match.strip("(").strip(")").split("|")
-        s = s.replace(match, get_shuffled_copy(candidates)[0])
+def randomize(s: Any):
+    if isinstance(s, str):
+        matches = re.findall(r"(\([^()]+\))", s)
+        for match in matches:
+            candidates = match.strip("(").strip(")").split("|")
+            s = s.replace(match, get_shuffled_copy(candidates)[0])
     return s
 
 
@@ -19,11 +21,14 @@ class DiffuseRequest:
         self._request = request
         assert "prompt" in request, "'prompt' must be present"
 
+    @property
+    def prefix(self) -> str:
+        return re.sub(r'[^a-zA-Z0-9]', '-', self._request["preset_name"])[:MAX_PRESET_LEN].strip("-")
+
     def to_diffbee_payload(self, num_imgs=1) -> dict:
         # See https://github.com/jaeseopark/diffusionbee-stable-diffusion-rest-api?tab=readme-ov-file#payload
         return {
-            **self._request,
-            "prompt": randomize_prompt(self._request["prompt"]),
+            **{k: randomize(v) for k, v in self._request.items()},
             "selected_aspect_ratio": "Portrait",
             "img_width": 448,
             "img_height": 576,

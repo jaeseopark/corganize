@@ -57,14 +57,13 @@ class Corganize:
 
         diffuse_request = select_diffuse_request()
         payload = diffuse_request.to_diffbee_payload(num_imgs=DIFFUSE_BATCH_SIZE)
-        tdict_filename = payload.get("model_tdict_filename")
         r = requests.post(urljoin(DIFFBEE_URL, "generate"), json=payload)
         r.raise_for_status()
 
         zip_data = io.BytesIO(r.content)
         with zipfile.ZipFile(zip_data, 'r') as zf:
             for arcname in zf.namelist():
-                dest_path = os.path.join(IMG_DIR, f"{tdict_filename}-{uuid.uuid4()}.crgimg")
+                dest_path = os.path.join(IMG_DIR, f"{diffuse_request.prefix}-{uuid.uuid4()}.crgimg")
                 with zf.open(arcname) as img_buffer, open(dest_path, 'wb') as fp:
                     fp.write(img_buffer.read())
                     content_length = img_buffer.tell()//1000
