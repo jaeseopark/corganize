@@ -37,6 +37,13 @@ class Corganize:
     def get_image_filenames(self):
         return [filename for filename in os.listdir(IMG_DIR) if filename not in self.filenames_to_delete]
 
+    def get_recent_image_filenames(self):
+        return sorted(
+            self.get_image_filenames(), 
+            key=lambda filename: os.path.getctime(os.path.join(IMG_DIR, filename)),
+            reverse=True
+        )
+
     def generate(self):
         logger.info("Generating...")
 

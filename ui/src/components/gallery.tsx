@@ -7,19 +7,19 @@ type Image = {
   isActive: boolean;
 };
 
-function Gallery() {
+const Gallery = ({ fileFetchUrl }: { fileFetchUrl: string }) => {
   const [images, setImages] = useState<Image[]>([]);
 
   useEffect(() => {
     setTimeout(() => {
       // one-time data load
-      fetch("/api/images/shuffled")
+      fetch(fileFetchUrl)
         .then((r) => r.json())
         .then(({ filenames }: { filenames: string[] }) => {
           setImages(filenames.map((filename) => ({ filename, isActive: true })));
         });
     }, 100);
-  }, []);
+  }, [fileFetchUrl]);
 
   const doubleTapBind = useDoubleTap(({ target: { id } }) => {
     const img = images.filter(({ filename }) => filename === id)[0];

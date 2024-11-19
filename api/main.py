@@ -12,6 +12,7 @@ from starlette.websockets import WebSocketDisconnect
 from utils import get_shuffled_copy, run_on_interval
 from app import DIFFUSE_BATCH_SIZE, Corganize
 
+FETCH_LIMIT = 250
 
 logger = logging.getLogger("corganize")
 logger.setLevel(logging.INFO)
@@ -81,7 +82,14 @@ def unicorn_exception_handler(*args, **kwargs):
 def get_images():
     filenames = get_shuffled_copy(corganize.get_image_filenames())
     logger.info(f"{len(filenames)=}")
-    return dict(filenames=filenames[:MAX_IMAGES_ALLOWED//3])
+    return dict(filenames=filenames[:FETCH_LIMIT])
+
+
+@fastapi_app.get("/images/recent")
+def get_recent_images():
+    filenames = corganize.get_recent_image_filenames()
+    logger.info(f"{len(filenames)=}")
+    return dict(filenames=filenames[:FETCH_LIMIT])
 
 
 @fastapi_app.delete("/images")
