@@ -92,6 +92,17 @@ def delete_images(body: DeleteRequest):
     )
 
 
+@fastapi_app.get("/notes")
+def get_notes():
+    return dict(value=corganize.get_notes())
+
+
+@fastapi_app.put("/notes")
+def save_notes(body: NoteSaveRequest):
+    corganize.save_notes(body.value)
+    return dict(message="success")
+
+
 @fastapi_app.get("/file", response_class=FileResponse)
 def get_file():
     local_path = "/data/some_file.pdf"

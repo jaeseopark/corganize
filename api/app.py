@@ -59,6 +59,11 @@ class Corganize:
     def delete(self, filenames: List[str]):
         # TODO: critical section implementation
         self.filenames_to_delete.update(filenames)
+    def get_notes(self):
+        return self.notes
+
+    def save_notes(self, value: str):
+        self.notes = value
 
     def cleanup(self):
         logger.info("Cleanup in progress...")
