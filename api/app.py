@@ -13,6 +13,7 @@ from diffuse import DiffuseRequestCollection
 
 AUTO_DELETE_DAYS = int(os.getenv("AUTO_DELETE_DAYS", "3"))
 MAX_IMAGES_ALLOWED = int(os.getenv("MAX_IMAGES_ALLOWED", "2000"))
+DIFFUSE_BATCH_SIZE = int(os.getenv("DIFFUSE_BATCH_SIZE", "4"))
 DIFFBEE_URL = os.getenv("DIFFUSION_BEE_URL").strip("/")
 
 DATA_DIR = "/data"
@@ -24,9 +25,9 @@ logger = logging.getLogger("corganize")
 lock = threading.Lock()
 
 
-def select_diffuse_requests(count: int):
+def select_diffuse_request():
     with open(os.path.join(DATA_DIR, "diffuse_requests.json")) as fp:
-        return DiffuseRequestCollection(json.load(fp)).select(count)
+        return DiffuseRequestCollection(json.load(fp)).select(1)[0]
 
 
 class Corganize:
@@ -44,11 +45,11 @@ class Corganize:
             logger.info(msg)
             return
 
-        diffuse_requests = select_diffuse_requests(1)
-
-        for diffuse_request in diffuse_requests:
+        diffuse_request = select_diffuse_request()
+        for _ in range(DIFFUSE_BATCH_SIZE):
+            payload = diffuse_request.to_diffbee_payload()
             url = urljoin(DIFFBEE_URL, "generate/single")
-            r = requests.post(url, json=diffuse_request.to_diffbee_payload())
+            r = requests.post(urljoin(DIFFBEE_URL, "generate/single"), json=payload)
             r.raise_for_status()
 
             image_path = os.path.join(IMG_DIR, f"{uuid.uuid4()}.crgimg")

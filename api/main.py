@@ -10,7 +10,7 @@ from starlette.responses import JSONResponse
 from starlette.websockets import WebSocketDisconnect
 
 from utils import get_shuffled_copy, run_on_interval
-from app import MAX_IMAGES_ALLOWED, Corganize
+from app import DIFFUSE_BATCH_SIZE, Corganize
 
 
 logger = logging.getLogger("corganize")
@@ -23,7 +23,8 @@ corganize = Corganize()
 
 run_on_interval(
     corganize.generate,
-    interval_seconds=60,
+    # each diffuse request takes ~30s. Giving another 30 as a buffer per image
+    interval_seconds=DIFFUSE_BATCH_SIZE * 60,
     initial_delay_seconds=5
 )
 
