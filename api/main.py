@@ -3,7 +3,7 @@ import json
 import logging
 from typing import Callable, List
 
-from models import DeleteRequest
+from models import DeleteRequest, NoteSaveRequest
 from fastapi import FastAPI, UploadFile, WebSocket
 from fastapi.responses import FileResponse
 from starlette.responses import JSONResponse

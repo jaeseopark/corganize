@@ -32,6 +32,7 @@ def select_diffuse_request():
 
 class Corganize:
     filenames_to_delete: Set[str] = set()
+    notes: str = ""
 
     def get_image_filenames(self):
         return [filename for filename in os.listdir(IMG_DIR) if filename not in self.filenames_to_delete]
