@@ -28,6 +28,7 @@ lock = threading.Lock()
 
 
 def select_diffuse_request():
+    logger.info("Accessing local FS for diffusion requests json...")
     with open(os.path.join(DATA_DIR, "diffuse_requests.json")) as fp:
         return DiffuseRequestCollection(json.load(fp)).select(1)[0]
 
@@ -57,6 +58,8 @@ class Corganize:
 
         diffuse_request = select_diffuse_request()
         payload = diffuse_request.to_diffbee_payload(num_imgs=DIFFUSE_BATCH_SIZE)
+        logger.info(f"payload: {json.dumps(payload)}")
+
         r = requests.post(urljoin(DIFFBEE_URL, "generate"), json=payload)
         r.raise_for_status()
 
