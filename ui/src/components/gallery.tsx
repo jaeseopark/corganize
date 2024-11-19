@@ -85,11 +85,6 @@ const Gallery = ({ fileFetchUrl }: { fileFetchUrl: string }) => {
                 <img
                   {...doubleTapBind}
                   ref={index === i && visibleImageRef}
-                  onPointerEnter={() => {
-                    if (index !== i) {
-                      setIndex(i);
-                    }
-                  }}
                   id={image.filename}
                   key={image.filename}
                   src={`/${image.filename}`}
