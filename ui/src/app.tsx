@@ -1,5 +1,3 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-
 import Admin from "@/components/admin";
 import Gallery from "@/components/gallery";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
