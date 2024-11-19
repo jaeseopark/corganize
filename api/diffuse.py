@@ -27,12 +27,15 @@ class DiffuseRequest:
             "selected_aspect_ratio": "Portrait",
             "img_width": 448,
             "img_height": 576,
+            "guidance_scale": 6.5
         }
 
 
 def _expand(requests: List[dict]):
     expanded: List[DiffuseRequest] = []
     for request in requests:
+        if not request.get("enabled", True):
+            continue
         expanded.extend([DiffuseRequest(request)] * request.get("weight", 1))
     return expanded
 
