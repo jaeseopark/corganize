@@ -1,6 +1,7 @@
 import logging
 import os
 import json
+import threading
 from typing import List, Set
 import uuid
 
@@ -20,6 +21,7 @@ IMG_DIR = os.path.join(DATA_DIR, "images")
 os.makedirs(IMG_DIR, exist_ok=True)
 
 logger = logging.getLogger("corganize")
+lock = threading.Lock()
 
 
 def select_diffuse_requests(count: int):
@@ -57,8 +59,10 @@ class Corganize:
             logger.info(f"Image saved. {content_length=} kB, {image_path=}")
 
     def delete(self, filenames: List[str]):
-        # TODO: critical section implementation
+        lock.acquire()
         self.filenames_to_delete.update(filenames)
+        lock.release()
+
     def get_notes(self):
         return self.notes
 
@@ -66,11 +70,13 @@ class Corganize:
         self.notes = value
 
     def cleanup(self):
+        lock.acquire()
         logger.info("Cleanup in progress...")
         old_filenames = get_old_files(IMG_DIR, age_seconds=AUTO_DELETE_DAYS*24*3600)
         self.filenames_to_delete.update(old_filenames)
         for filename in self.filenames_to_delete:
             os.remove(os.path.join(IMG_DIR, filename))
-            logger.info(f"deleted. {filename=}")
+            logger.info(f"Deleted. {filename=}")
         self.filenames_to_delete.clear()
         logger.info("Cleanup done")
+        lock.release()
