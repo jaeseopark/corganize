@@ -9,8 +9,8 @@ from fastapi.responses import FileResponse
 from starlette.responses import JSONResponse
 from starlette.websockets import WebSocketDisconnect
 
-from utils import get_shuffled_copy, run_on_interval
-from app import DIFFUSE_BATCH_SIZE, Corganize
+from utils import get_shuffled_copy, run_on_interval, keep_running
+from app import Corganize
 
 FETCH_LIMIT = 250
 
@@ -22,10 +22,9 @@ fastapi_app = FastAPI()
 sockets: List[WebSocket] = []
 corganize = Corganize()
 
-run_on_interval(
+keep_running(
     corganize.generate,
-    # each diffuse request takes ~30s. Giving another 30 as a buffer per image
-    interval_seconds=DIFFUSE_BATCH_SIZE * 60,
+    pause_seconds=30,  # Let server cool down for 30 s before the next request
     initial_delay_seconds=5
 )
 

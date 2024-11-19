@@ -8,8 +8,10 @@ from typing import List
 
 logger = logging.getLogger("corganize")
 
+
 def run_on_interval(func, interval_seconds, initial_delay_seconds=0):
     logger.info(f"Scheduling... {func.__name__=}")
+
     def run_func():
         threading.Timer(interval_seconds, run_func).start()
         try:
@@ -17,6 +19,20 @@ def run_on_interval(func, interval_seconds, initial_delay_seconds=0):
         except:
             # TODO: better error handling
             traceback.print_exc()
+
+    threading.Timer(initial_delay_seconds, run_func).start()
+
+
+def keep_running(func, pause_seconds: int, initial_delay_seconds=0):
+    logger.info(f"Scheduling... {func.__name__=}")
+
+    def run_func():
+        try:
+            func()
+        except:
+            # TODO: better error handling
+            traceback.print_exc()
+        threading.Timer(pause_seconds, run_func).start()
 
     threading.Timer(initial_delay_seconds, run_func).start()
 

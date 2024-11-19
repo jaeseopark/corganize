@@ -19,7 +19,7 @@ class DiffuseRequest:
         self._request = request
         assert "prompt" in request, "'prompt' must be present"
 
-    def to_diffbee_payload(self) -> dict:
+    def to_diffbee_payload(self, num_imgs=1) -> dict:
         # See https://github.com/jaeseopark/diffusionbee-stable-diffusion-rest-api?tab=readme-ov-file#payload
         return {
             **self._request,
@@ -27,7 +27,8 @@ class DiffuseRequest:
             "selected_aspect_ratio": "Portrait",
             "img_width": 448,
             "img_height": 576,
-            "guidance_scale": 6.5
+            "guidance_scale": 6.5,
+            "num_imgs": num_imgs
         }
 
 
