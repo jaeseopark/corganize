@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse
 from starlette.responses import JSONResponse
 from starlette.websockets import WebSocketDisconnect
 
-from utils import get_shuffled_copy, run_on_interval, keep_running
+from utils import get_shuffled_copy, run_on_interval, run_back_to_back
 from app import Corganize
 
 FETCH_LIMIT = 250
@@ -22,7 +22,7 @@ fastapi_app = FastAPI()
 sockets: List[WebSocket] = []
 corganize = Corganize()
 
-keep_running(
+run_back_to_back(
     corganize.generate,
     pause_seconds=30,  # Let server cool down for 30 s before the next request
     initial_delay_seconds=5

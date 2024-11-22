@@ -34,7 +34,7 @@ services:
       - ./mnt/data:/data
       - ./mnt/log:/var/log/corganize/api
     environment:
-      TZ: America/Denver
-      DIFFUSION_BEE_URL: http://atlas:5825
       UID: ${UID}
       GID: ${GID}
+      TZ: America/Denver
+      DF_URL: http://atlas:7859

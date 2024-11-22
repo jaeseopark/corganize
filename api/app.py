@@ -1,3 +1,4 @@
+import base64
 import io
 import logging
 import os
@@ -5,18 +6,17 @@ import json
 import threading
 from typing import List, Set
 import uuid
-import zipfile
 
 import requests
 from urllib.parse import urljoin
+from PIL import Image
 
 from utils import get_old_files
 from diffuse import DiffuseRequestCollection
 
-AUTO_DELETE_DAYS = int(os.getenv("AUTO_DELETE_DAYS", "3"))
+AUTO_DELETE_DAYS = int(os.getenv("AUTO_DELETE_DAYS", "30"))
 MAX_IMAGES_ALLOWED = int(os.getenv("MAX_IMAGES_ALLOWED", "2000"))
-DIFFUSE_BATCH_SIZE = int(os.getenv("DIFFUSE_BATCH_SIZE", "4"))
-DIFFBEE_URL = os.getenv("DIFFUSION_BEE_URL").strip("/")
+DF_URL = os.getenv("DF_URL", "").strip("/")
 
 DATA_DIR = "/data"
 IMG_DIR = os.path.join(DATA_DIR, "images")
@@ -28,9 +28,12 @@ lock = threading.Lock()
 
 
 def select_diffuse_request():
-    logger.info("Accessing local FS for diffusion requests json...")
-    with open(os.path.join(DATA_DIR, "diffuse_requests.json")) as fp:
-        return DiffuseRequestCollection(json.load(fp)).select(1)[0]
+    logger.info("Accessing local FS for diffusion presets...")
+    collection = DiffuseRequestCollection.from_dir(
+        os.path.join(DATA_DIR, "diffusion"))
+    selected_preset = collection.select(1)[0]
+    logger.info(f"{selected_preset.preset_name=}")
+    return selected_preset
 
 
 class Corganize:
@@ -42,8 +45,9 @@ class Corganize:
 
     def get_recent_image_filenames(self):
         return sorted(
-            self.get_image_filenames(), 
-            key=lambda filename: os.path.getctime(os.path.join(IMG_DIR, filename)),
+            self.get_image_filenames(),
+            key=lambda filename: os.path.getctime(
+                os.path.join(IMG_DIR, filename)),
             reverse=True
         )
 
@@ -57,20 +61,33 @@ class Corganize:
             return
 
         diffuse_request = select_diffuse_request()
-        payload = diffuse_request.to_diffbee_payload(num_imgs=DIFFUSE_BATCH_SIZE)
-        logger.info(f"payload: {json.dumps(payload)}")
 
-        r = requests.post(urljoin(DIFFBEE_URL, "generate"), json=payload)
+        logger.info(f"payload: {json.dumps(diffuse_request.payload)}")
+
+        url = urljoin(DF_URL, "sdapi/v1/txt2img")
+        r = requests.post(url, json=diffuse_request.payload)
+        if r.status_code >= 400:
+            logger.error(r.text)
         r.raise_for_status()
 
-        zip_data = io.BytesIO(r.content)
-        with zipfile.ZipFile(zip_data, 'r') as zf:
-            for arcname in zf.namelist():
-                dest_path = os.path.join(IMG_DIR, f"{diffuse_request.prefix}-{uuid.uuid4()}.crgimg")
-                with zf.open(arcname) as img_buffer, open(dest_path, 'wb') as fp:
-                    fp.write(img_buffer.read())
-                    content_length = img_buffer.tell()//1000
-                    logger.info(f"Image saved. {content_length=} kB, {dest_path=}")
+        for img_b64_str in r.json().get("images", []):
+            filename = f"{diffuse_request.prefix}-{uuid.uuid4()}.crgimg"
+            dest_path = os.path.join(IMG_DIR, filename)
+            pillow_image = Image.open(
+                io.BytesIO(base64.b64decode(img_b64_str)))
+
+            img_file_buffer = io.BytesIO()
+            pillow_image.save(img_file_buffer, format="jpeg",
+                              quality=70, optimize=True, progressive=True)
+            content_length = img_file_buffer.tell() // 1000
+
+            with open(dest_path, 'wb') as fp:
+                img_file_buffer.seek(0)
+                fp.write(img_file_buffer.read())
+
+            logger.info(f"Image saved. {content_length=} kB, {dest_path=}")
+
+        logger.info("Generation done")
 
     def delete(self, filenames: List[str]):
         lock.acquire()
@@ -86,7 +103,8 @@ class Corganize:
     def cleanup(self):
         lock.acquire()
         logger.info("Cleanup in progress...")
-        old_filenames = get_old_files(IMG_DIR, age_seconds=AUTO_DELETE_DAYS*24*3600)
+        old_filenames = get_old_files(
+            IMG_DIR, age_seconds=AUTO_DELETE_DAYS*24*3600)
         self.filenames_to_delete.update(old_filenames)
         for filename in self.filenames_to_delete:
             os.remove(os.path.join(IMG_DIR, filename))

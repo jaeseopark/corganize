@@ -84,6 +84,7 @@ const Gallery = ({ fileFetchUrl }: { fileFetchUrl: string }) => {
               return (
                 <img
                   {...doubleTapBind}
+                  title={image.filename}
                   ref={index === i && visibleImageRef}
                   id={image.filename}
                   key={image.filename}
@@ -94,6 +95,7 @@ const Gallery = ({ fileFetchUrl }: { fileFetchUrl: string }) => {
             })
           ) : (
             <img
+              title={`${images[index].filename}`}
               ref={visibleImageRef}
               src={`/${images[index].filename}`}
               style={{ opacity: images[index].isActive ? 1 : 0.1, height: "100vh" }}

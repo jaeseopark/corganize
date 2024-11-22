@@ -23,7 +23,7 @@ def run_on_interval(func, interval_seconds, initial_delay_seconds=0):
     threading.Timer(initial_delay_seconds, run_func).start()
 
 
-def keep_running(func, pause_seconds: int, initial_delay_seconds=0):
+def run_back_to_back(func, pause_seconds: int, initial_delay_seconds=0):
     logger.info(f"Scheduling... {func.__name__=}")
 
     def run_func():
