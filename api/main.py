@@ -1,16 +1,26 @@
+# Python builtin deps
 import asyncio
+from datetime import timedelta
 import json
 import logging
 from typing import Callable, List
 
-from models import DeleteRequest, ConfigSaveRequest
-from fastapi import FastAPI, UploadFile, WebSocket
+# 3rd party deps
+import jwt
+
+from fastapi import FastAPI, UploadFile, WebSocket, status, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
+from fastapi.security import OAuth2PasswordBearer
+from fastapi_jwt_auth import AuthJWT
+from fastapi_jwt_auth.exceptions import AuthJWTException
 from starlette.responses import JSONResponse
 from starlette.websockets import WebSocketDisconnect
 
-from utils import get_shuffled_copy, run_on_interval, run_back_to_back
+# Local deps
 from app import Corganize
+from auth import JWT_KEY, decode_jwt, get_jwt
+from models import DeleteRequest, ConfigSaveRequest, Token
+from utils import get_shuffled_copy, run_on_interval, run_back_to_back
 
 FETCH_LIMIT = 250
 
@@ -19,7 +29,16 @@ logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
 
 fastapi_app = FastAPI()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 sockets: List[WebSocket] = []
+
+@AuthJWT.load_config
+def get_config():
+    from pydantic import BaseModel
+    class Settings(BaseModel):
+        authjwt_secret_key: str = JWT_KEY
+
+    return Settings()
 
 
 def get_broadcast_function(topic: str) -> Callable[[dict], None]:
@@ -51,10 +70,30 @@ run_on_interval(
 )
 
 
+def verify_jwt_token(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = decode_jwt(token)
+        if "sub" not in payload:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+        return payload
+    except jwt.PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid JWT token")
+
+
 @fastapi_app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket, token: str = Query(...), Authorize: AuthJWT = Depends()):
     await websocket.accept()
     logger.info("Socket open")
+
+    try:
+        Authorize.jwt_required("websocket", token=token)
+    except AuthJWTException as err:
+        logger.error(err)
+        await websocket.close()
+        return
+
     sockets.append(websocket)
 
     try:
@@ -82,21 +121,21 @@ def unicorn_exception_handler(*args, **kwargs):
 
 
 @fastapi_app.get("/images/shuffled")
-def get_images():
+def get_images(_: dict = Depends(verify_jwt_token)):
     filenames = get_shuffled_copy(corganize.get_image_filenames())
     logger.info(f"{len(filenames)=}")
     return dict(filenames=filenames[:FETCH_LIMIT])
 
 
 @fastapi_app.get("/images/recent")
-def get_recent_images():
+def get_recent_images(_: dict = Depends(verify_jwt_token)):
     filenames = corganize.get_recent_image_filenames()
     logger.info(f"{len(filenames)=}")
     return dict(filenames=filenames[:FETCH_LIMIT])
 
 
 @fastapi_app.delete("/images")
-def delete_images(body: DeleteRequest):
+def delete_images(body: DeleteRequest, _: dict = Depends(verify_jwt_token)):
     corganize.delete(body.filenames)
     return JSONResponse(
         status_code=202,
@@ -105,12 +144,12 @@ def delete_images(body: DeleteRequest):
 
 
 @fastapi_app.get("/config")
-def get_config():
+def get_config(_: dict = Depends(verify_jwt_token)):
     return corganize.config
 
 
 @fastapi_app.put("/config")
-def save_config(body: ConfigSaveRequest):
+def save_config(body: ConfigSaveRequest, _: dict = Depends(verify_jwt_token)):
     corganize.set_config(body)
     return dict(message="success")
 
@@ -134,3 +173,16 @@ def upload_file(file: UploadFile):
         file.file.close()
 
     return dict(path=local_path)
+
+
+# Endpoint to receive the TOTP token, validate it, and return a JWT token
+@fastapi_app.post("/token", response_model=Token)
+async def login(payload: dict):
+    access_token = get_jwt(payload, timedelta(days=7))
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid TOTP token",
+        )
+
+    return {"access_token": access_token, "token_type": "bearer"}

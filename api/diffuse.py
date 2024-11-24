@@ -159,16 +159,7 @@ class DiffusePresetCollection:
         return get_shuffled_copy(enabled)[:count]
 
     @staticmethod
-    def from_file(default_path: str, override_path: str = None):
-        def _get_config():
-            for path in (override_path, default_path):
-                if path and os.path.exists(path):
-                    with open(path) as fp:
-                        return json.load(fp)
-            raise RuntimeError("Config files not found")
-
-        config = _get_config()
-
+    def from_dict(config: dict):
         return DiffusePresetCollection(dict(
             config=config,
             presets=config["presets"]
@@ -176,7 +167,8 @@ class DiffusePresetCollection:
 
 
 if __name__ == "__main__":
-    collection = DiffusePresetCollection.from_file(
-        "mnt/data/diffusion/config.json")
+    from conf import get_config
+    config = get_config(override_path="mnt/data/config.json")
+    collection = DiffusePresetCollection.from_dict(config)
     preset = collection.select(1)[0]
     print(json.dumps({**preset._og, **preset.payload}, indent=2))

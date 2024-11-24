@@ -15,3 +15,8 @@ class ConfigSaveRequest(BaseModel):
     max_images_allowed: int
     diffusion_url: str
     diffusion_sample_size: int
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

@@ -35,5 +35,10 @@
       "preset_name": "fantasy_mountain_range",
       "prompt": "fantasy mountain range at dawn"
     }
-  ]
+  ],
+  "auth": {
+    "enabled": true,
+    "type": "totp",
+    "totp": {}
+  }
 }

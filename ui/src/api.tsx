@@ -1,4 +1,23 @@
+import axiosss from "axios";
+import Cookies from "js-cookie";
 import ReconnectingWebSocket from "reconnecting-websocket";
+
+// Create an Axios instance
+const apiClient = axiosss.create();
+
+// Add an interceptor to include the Bearer token from cookies
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = Cookies.get("jwt");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
 
 export type WebsocketMessage = {
   topic: string;
@@ -10,9 +29,10 @@ export type WebsocketListener = (message: WebsocketMessage) => void;
 const WEBSOCKET_LISTENERS: WebsocketListener[] = [];
 
 const WEBSOCKET_URL = (() => {
+  const token = Cookies.get("jwt");
   const { protocol, hostname, port } = window.location;
   let wsProtocol = protocol === "https" ? "wss" : "ws";
-  return `${wsProtocol}://${hostname}:${port}/api/ws`;
+  return `${wsProtocol}://${hostname}:${port}/api/ws?token=${token}`;
 })();
 
 new ReconnectingWebSocket(WEBSOCKET_URL).onmessage = ({ data }) => {
@@ -28,3 +48,14 @@ export const unsubscribe = (listener: WebsocketListener) => {
   const i = WEBSOCKET_LISTENERS.indexOf(listener);
   WEBSOCKET_LISTENERS.splice(i, 1);
 };
+
+export const axios = apiClient;
+
+export const setJwt = (token: string) => {
+  Cookies.set('jwt', token, {
+    expires: 7,
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict',
+  });
+}

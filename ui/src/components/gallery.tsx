@@ -1,4 +1,4 @@
-import { subscribe, unsubscribe } from "@/ws";
+import { axios, subscribe, unsubscribe } from "@/api";
 import { Center, VStack } from "@chakra-ui/react";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { useDoubleTap } from "use-double-tap";
@@ -53,8 +53,9 @@ const Gallery = ({ fileFetchUrl }: { fileFetchUrl: string }) => {
     containerRef?.current?.focus();
     setTimeout(() => {
       // one-time data load
-      fetch(fileFetchUrl)
-        .then((r) => r.json())
+      axios
+        .get(fileFetchUrl)
+        .then((r) => r.data)
         .then(({ filenames }: { filenames: string[] }) => {
           setImages(filenames.map((filename) => ({ filename, isActive: true })));
         });
@@ -71,19 +72,23 @@ const Gallery = ({ fileFetchUrl }: { fileFetchUrl: string }) => {
     if (!img.isActive) {
       return;
     }
-    fetch("/api/images", {
-      method: "delete",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        filenames: [img.filename],
-      }),
-    }).then(() => {
-      img.isActive = false;
-      setImages((prevImages) => [...prevImages]);
-    });
+    axios
+      .delete(
+        "/api/images",
+        {
+          data: {
+            filenames: [img.filename],
+          },
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        },
+      )
+      .then(() => {
+        img.isActive = false;
+        setImages((prevImages) => [...prevImages]);
+      });
   }, []);
 
   const doubleTapBind = useDoubleTap(({ target: { id } }) => {

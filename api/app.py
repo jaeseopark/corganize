@@ -11,16 +11,11 @@ import requests
 from urllib.parse import urljoin
 from PIL import Image
 
+from const import IMG_DIR
+from conf import get_config
 from models import ConfigSaveRequest
 from utils import get_old_files
 from diffuse import DiffusePreset, DiffusePresetCollection
-
-DATA_DIR = "/data"
-IMG_DIR = os.path.join(DATA_DIR, "images")
-DEFAULT_CONFIG_PATH = "./default_config.json"
-OVERRIDE_CONFIG_PATH = os.getenv("OVERRIDE_CONFIG_PATH")
-DEFAULT_OVERRIDE_CONFIG_PATH = os.path.join(
-    DATA_DIR, "diffusion", "config.json")
 
 os.makedirs(IMG_DIR, exist_ok=True)
 
@@ -30,10 +25,7 @@ lock = threading.Lock()
 
 def select_presets(count: int) -> List[DiffusePreset]:
     logger.info("Accessing local FS for diffusion presets...")
-    collection = DiffusePresetCollection.from_file(
-        default_path=DEFAULT_CONFIG_PATH,
-        override_path=OVERRIDE_CONFIG_PATH or DEFAULT_OVERRIDE_CONFIG_PATH
-    )
+    collection = DiffusePresetCollection.from_dict(get_config())
     return collection.select(count)
 
 

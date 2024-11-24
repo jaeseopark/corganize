@@ -1,6 +1,6 @@
+import { axios, subscribe, unsubscribe } from "@/api";
 import { Button } from "@/components/ui/button";
 import { toaster } from "@/components/ui/toaster";
-import { subscribe, unsubscribe } from "@/ws";
 import { Flex, Textarea } from "@chakra-ui/react";
 import { useCallback, useEffect, useState } from "preact/hooks";
 
@@ -20,19 +20,27 @@ const Admin = () => {
       return;
     }
 
-    fetch("/api/config", {
-      method: "put",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(parsedConfig),
-    }).then(() => {
-      toaster.create({
-        title: "Saved",
-        type: "success",
+    axios
+      .put("/api/config", parsedConfig, {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      })
+      .then((r) => {
+        toaster.create({
+          title: "Saved",
+          type: "success",
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+        toaster.create({
+          title: "Error",
+          description: "Something went wrong. check console logs.",
+          type: "error",
+        });
       });
-    });
   }, [config]);
 
   const handleChangeNotes = useCallback((event) => {
@@ -40,8 +48,9 @@ const Admin = () => {
   }, []);
 
   useEffect(() => {
-    fetch("/api/config")
-      .then((r) => r.json())
+    axios
+      .get("/api/config")
+      .then((r) => r.data)
       .then((value) => {
         setConfig(JSON.stringify(value, null, 2));
         setReady(true);
