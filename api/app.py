@@ -97,6 +97,13 @@ class Corganize:
         if len(filenames) > self.config["max_images_allowed"]:
             msg = f"Library size is too big. {len(filenames)=} {self.config['max_images_allowed']=}"
             logger.info(msg)
+            self.broadcast_diffusion("skipped", dict(
+                message="Library size is too big",
+                metadata=dict(
+                    size=len(filenames),
+                    limit=self.config['max_images_allowed']
+                )
+            ))
             return
 
         sample_size = self.config["diffusion_sample_size"]
