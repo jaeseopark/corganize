@@ -1,5 +1,5 @@
 import os
-from random import randint, uniform
+from random import choices, randint, uniform
 import re
 from typing import Any, List
 import json
@@ -139,24 +139,21 @@ class DiffusePreset:
         return re.sub(r'[^a-zA-Z0-9]', '-', pname+mname)[:MAX_PRESET_LEN].strip("-")
 
 
-def _expand(preset_root: dict):
-    conf = preset_root.get("config")
-
-    expanded: List[DiffusePreset] = []
-    for preset in preset_root.get("presets", []):
-        w = preset.get("sampling_weight", 1)
-        for _ in range(w):
-            expanded.append(DiffusePreset(preset, conf))
-    return expanded
-
-
 class DiffusePresetCollection:
     def __init__(self, preset_root: dict):
-        self.expanded_requests = _expand(preset_root)
+        self.preset_root = preset_root
 
     def select(self, count: int) -> List[DiffusePreset]:
-        enabled = [r for r in self.expanded_requests if r.enabled]
-        return get_shuffled_copy(enabled)[:count]
+        conf = self.preset_root.get("config", dict())
+        preset_dicts = self.preset_root.get("presets", [])
+        presets = [DiffusePreset(p, conf) for p in preset_dicts]
+        weighted = [p for p in presets if p.enabled]
+        selected = choices(
+            weighted,
+            weights=[p._og.get("sampling_weight", 1) for p in weighted],
+            k=count
+        )
+        return [DiffusePreset(p._og, conf) for p in selected]
 
     @staticmethod
     def from_dict(config: dict):
