@@ -195,3 +195,8 @@ async def login(payload: dict):
         )
 
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@fastapi_app.get("/jwt/check")
+def check_jwt(_: dict = Depends(verify_jwt_token)):
+    return dict(message="success")

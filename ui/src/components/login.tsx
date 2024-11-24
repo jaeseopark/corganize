@@ -1,7 +1,10 @@
 import { axios, setJwt } from "@/api";
+import { Button } from "@/components/ui/button";
+import { AUTHENTICATED_ROUTES } from "@/routes";
+import { Box, Center, Heading, Input, VStack } from "@chakra-ui/react";
 import { useState } from "preact/hooks";
 
-const Login = () => {
+const Login = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
   // State to store the OTP value
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
@@ -41,33 +44,42 @@ const Login = () => {
       });
   };
 
-  if (isSuccess) {
-    return <div>You can now access other routes</div>;
+  if (isAuthenticated || isSuccess) {
+    return (
+      <Center>
+        <VStack>
+          <Box>You have unlocked additional routes:</Box>
+          {Object.keys(AUTHENTICATED_ROUTES).map((path) => (
+            <Button>
+              <a key={path} href={path}>
+                {path}
+              </a>
+            </Button>
+          ))}
+        </VStack>
+      </Center>
+    );
   }
-
   return (
-    <div>
-      <h2>Verify Your OTP</h2>
+    <Center>
       <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="otp">Enter OTP:</label>
-          <input
+        <VStack>
+          <Heading>Verify Your OTP</Heading>
+          <Input
             id="otp"
             name="otp"
             type="text"
             value={otp}
             onChange={handleOtpChange}
             autoComplete="one-time-code" // Enables autofill for OTP
-            placeholder="Enter 6-digit OTP"
+            placeholder="Enter OTP"
             maxLength="6"
           />
-        </div>
+        </VStack>
         {error && <p style={{ color: "red" }}>{error}</p>}
-        <div>
-          <button type="submit">Submit OTP</button>
-        </div>
+        <Button type="submit">Submit</Button>
       </form>
-    </div>
+    </Center>
   );
 };
 
