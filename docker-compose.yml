@@ -6,7 +6,7 @@ services:
       - ./nginx/templates/dev.conf.template:/etc/nginx/templates/default.conf.template:ro
       - ./mnt/data/images:/images:ro
     ports:
-      - "5824:80"
+      - "${CRG_PORT:-5824}:80"
     depends_on:
       - "ui"
       - "api"
