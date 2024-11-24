@@ -1,13 +1,30 @@
+## Development
+
 ```shell
-UID=$(id -u) GID=$(id -g) docker-compose up --build
+UID=$(id -u) GID=$(id -g) docker-compose -f docker-compose-dev.yml up --build
 ```
 
 ```shell
-UID=$(id -u) GID=$(id -g) docker-compose up --build -d
+UID=$(id -u) GID=$(id -g) docker-compose -f docker-compose-dev.yml up --build -d
 docker-compose logs --tail=100 -f api
 ```
 
-## Environment Variables
+## Packaging for Production
+
+```shell
+# API
+TODO: work in progress...
+# UI
+TODO: work in progress...
+```
+
+## Usage
+
+```shell
+UID=$(id -u) GID=$(id -g) docker-compose up -d
+```
+
+### Environment Variables
 
 | Name                    | Required | Description                                                                           |
 | ----------------------- | -------- | ------------------------------------------------------------------------------------- |
@@ -17,7 +34,9 @@ docker-compose logs --tail=100 -f api
 | `MAX_IMAGES_ALLOWED`    | No       | Number of images allowed in the library. Defaults to 2000.                            |
 | `DIFFUSION_SAMPLE_SIZE` | No       | Number of presets to select in each round of diffusion. Defaults to 4.                |
 
-## Preset
+## Guide to Using Presets
 
 - `sampling_weight`: Liklihood of the preset getting selected in the sampling process.
 - `batch_count`: How many images to diffuse when the preset does get selected.
+
+TODO: more instructions
