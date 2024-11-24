@@ -13,7 +13,7 @@ const App = () => {
 
   useEffect(() => {
     axios
-      .get("/api/config")
+      .get("/api/envvars")
       .then((r) => {
         setAuthenticated(true);
         setAttempted(true);

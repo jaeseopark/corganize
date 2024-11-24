@@ -5,13 +5,13 @@ import { Flex, Textarea } from "@chakra-ui/react";
 import { useCallback, useEffect, useState } from "preact/hooks";
 
 const Admin = () => {
-  const [config, setConfig] = useState<string>("");
+  const [envvars, setEnvvars] = useState<string>("");
   const [isReady, setReady] = useState(false);
 
   const handleSave = useCallback(() => {
-    let parsedConfig;
+    let parsedEnvvars;
     try {
-      parsedConfig = JSON.parse(config);
+      parsedEnvvars = JSON.parse(envvars);
     } catch (e) {
       toaster.create({
         title: "Invalid JSON format",
@@ -21,7 +21,7 @@ const Admin = () => {
     }
 
     axios
-      .put("/api/config", parsedConfig, {
+      .put("/api/envvars", parsedEnvvars, {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
@@ -41,18 +41,18 @@ const Admin = () => {
           type: "error",
         });
       });
-  }, [config]);
+  }, [envvars]);
 
   const handleChangeNotes = useCallback((event) => {
-    setConfig(event.target.value);
+    setEnvvars(event.target.value);
   }, []);
 
   useEffect(() => {
     axios
-      .get("/api/config")
+      .get("/api/envvars")
       .then((r) => r.data)
       .then((value) => {
-        setConfig(JSON.stringify(value, null, 2));
+        setEnvvars(JSON.stringify(value, null, 2));
         setReady(true);
       });
 
@@ -75,7 +75,7 @@ const Admin = () => {
   return (
     <Flex direction="column" width="100%" height="100%" gap="4" padding="1em">
       <Textarea disabled={!isReady} onChange={handleChangeNotes} height="100%">
-        {config}
+        {envvars}
       </Textarea>
       <Button onClick={handleSave} disabled={!isReady}>
         Save

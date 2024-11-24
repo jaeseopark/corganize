@@ -17,6 +17,7 @@ from starlette.responses import JSONResponse
 from starlette.websockets import WebSocketDisconnect
 
 # Local deps
+from conf import backup_config
 from app import Corganize
 from auth import JWT_KEY, decode_jwt, get_jwt
 from models import DeleteRequest, ConfigSaveRequest, Token
@@ -32,9 +33,11 @@ fastapi_app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 sockets: List[WebSocket] = []
 
+
 @AuthJWT.load_config
-def get_config():
+def get_ws_auth_config():
     from pydantic import BaseModel
+
     class Settings(BaseModel):
         authjwt_secret_key: str = JWT_KEY
 
@@ -143,14 +146,20 @@ def delete_images(body: DeleteRequest, _: dict = Depends(verify_jwt_token)):
     )
 
 
-@fastapi_app.get("/config")
-def get_config(_: dict = Depends(verify_jwt_token)):
-    return corganize.config
+@fastapi_app.get("/envvars")
+def get_envvars(_: dict = Depends(verify_jwt_token)):
+    return corganize.envvars
 
 
-@fastapi_app.put("/config")
-def save_config(body: ConfigSaveRequest, _: dict = Depends(verify_jwt_token)):
-    corganize.set_config(body)
+@fastapi_app.put("/envvars")
+def save_envvars(body: ConfigSaveRequest, _: dict = Depends(verify_jwt_token)):
+    corganize.override_envvars(body)
+    return dict(message="success")
+
+
+@fastapi_app.post("/config/backup")
+def _backup_config(_: dict = Depends(verify_jwt_token)):
+    backup_config()
     return dict(message="success")
 
 

@@ -61,7 +61,7 @@ def _diffuse(base_url: str, preset: DiffusePreset):
 
 class Corganize:
     filenames_to_delete: Set[str] = set()
-    config = dict(
+    envvars = dict(
         diffusion_enabled=True,
         notes="",
         auto_delete_days=int(os.getenv("AUTO_DELETE_DAYS", "3")),
@@ -84,7 +84,7 @@ class Corganize:
         )
 
     def diffuse(self):
-        if not self.config["diffusion_enabled"]:
+        if not self.envvars["diffusion_enabled"]:
             logger.info("Diffusion disabled.")
             self.broadcast_diffusion("skipped", dict(
                 message="diffusion is disabled in the app config"
@@ -94,19 +94,19 @@ class Corganize:
         logger.info("Diffusing...")
 
         filenames = self.get_image_filenames()
-        if len(filenames) > self.config["max_images_allowed"]:
-            msg = f"Library size is too big. {len(filenames)=} {self.config['max_images_allowed']=}"
+        if len(filenames) > self.envvars["max_images_allowed"]:
+            msg = f"Library size is too big. {len(filenames)=} {self.envvars['max_images_allowed']=}"
             logger.info(msg)
             self.broadcast_diffusion("skipped", dict(
                 message="Library size is too big",
                 metadata=dict(
                     size=len(filenames),
-                    limit=self.config['max_images_allowed']
+                    limit=self.envvars['max_images_allowed']
                 )
             ))
             return
 
-        sample_size = self.config["diffusion_sample_size"]
+        sample_size = self.envvars["diffusion_sample_size"]
         presets = select_presets(sample_size)
 
         self.broadcast_diffusion("pending", dict(
@@ -120,7 +120,7 @@ class Corganize:
                 preset_name=preset.preset_name,
                 batch_count=preset.payload["batch_count"]
             ))
-            _diffuse(self.config["diffusion_url"], preset)
+            _diffuse(self.envvars["diffusion_url"], preset)
             self.broadcast_diffusion("partially-done", dict(
                 preset_name=preset.preset_name,
                 batch_count=preset.payload["batch_count"]
@@ -128,8 +128,8 @@ class Corganize:
 
         self.broadcast_diffusion("done")
 
-    def set_config(self, config: ConfigSaveRequest):
-        self.config = config.__dict__
+    def override_envvars(self, config: ConfigSaveRequest):
+        self.envvars = config.__dict__
 
     def delete(self, filenames: List[str]):
         lock.acquire()
@@ -142,7 +142,7 @@ class Corganize:
         logger.info("Cleanup in progress...")
         self.broadcast_cleanup("in progress")
         old_filenames = get_old_files(
-            IMG_DIR, age_seconds=self.config["auto_delete_days"]*24*3600)
+            IMG_DIR, age_seconds=self.envvars["auto_delete_days"]*24*3600)
         self.filenames_to_delete.update(old_filenames)
         for filename in self.filenames_to_delete:
             os.remove(os.path.join(IMG_DIR, filename))
