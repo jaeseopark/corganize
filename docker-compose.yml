@@ -23,7 +23,6 @@ services:
       UID: ${UID}
       GID: ${GID}
   api:
-    image: corganize:latest
     build:
       context: api
     working_dir: /app/api
