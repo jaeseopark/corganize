@@ -3,7 +3,7 @@ import json
 import logging
 from typing import Callable, List
 
-from models import DeleteRequest, NoteSaveRequest
+from models import DeleteRequest, ConfigSaveRequest
 from fastapi import FastAPI, UploadFile, WebSocket
 from fastapi.responses import FileResponse
 from starlette.responses import JSONResponse
@@ -20,10 +20,26 @@ logger.addHandler(logging.StreamHandler())
 
 fastapi_app = FastAPI()
 sockets: List[WebSocket] = []
+
+
+def get_broadcast_function(topic: str) -> Callable[[dict], None]:
+    def broadcast(payload: dict) -> None:
+        async def broadcast_async():
+            for socket in sockets:
+                await socket.send_text(json.dumps(dict(
+                    topic=topic,
+                    payload=payload
+                )))
+        asyncio.run(broadcast_async())
+    return broadcast
+
+
 corganize = Corganize()
+corganize._broadcast_cleanup = get_broadcast_function("cleanup")
+corganize._broadcast_diffusion = get_broadcast_function("diffusion")
 
 run_back_to_back(
-    corganize.generate,
+    corganize.diffuse,
     pause_seconds=30,  # Let server cool down for 30 s before the next request
     initial_delay_seconds=5
 )
@@ -47,18 +63,6 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         sockets.remove(websocket)
         logger.info("Socket closed")
-
-
-def get_broadcast_function(topic: str) -> Callable[[dict], None]:
-    def broadcast(payload: dict) -> None:
-        async def broadcast_async():
-            for socket in sockets:
-                await socket.send_text(json.dumps(dict(
-                    topic=topic,
-                    payload=payload
-                )))
-        asyncio.run(broadcast_async())
-    return broadcast
 
 
 @fastapi_app.exception_handler(AssertionError)
@@ -100,14 +104,14 @@ def delete_images(body: DeleteRequest):
     )
 
 
-@fastapi_app.get("/notes")
-def get_notes():
-    return dict(value=corganize.get_notes())
+@fastapi_app.get("/config")
+def get_config():
+    return corganize.config
 
 
-@fastapi_app.put("/notes")
-def save_notes(body: NoteSaveRequest):
-    corganize.save_notes(body.value)
+@fastapi_app.put("/config")
+def save_config(body: ConfigSaveRequest):
+    corganize.set_config(body)
     return dict(message="success")
 
 

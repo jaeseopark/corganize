@@ -37,4 +37,4 @@ services:
       UID: ${UID}
       GID: ${GID}
       TZ: America/Denver
-      DF_URL: http://atlas:7859
+      DIFFUSION_URL: http://atlas:7859

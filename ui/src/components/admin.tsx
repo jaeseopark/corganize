@@ -1,55 +1,77 @@
 import { Button } from "@/components/ui/button";
-import { Toaster, toaster } from "@/components/ui/toaster";
-import { Textarea } from "@chakra-ui/react";
+import { toaster } from "@/components/ui/toaster";
+import { subscribe, unsubscribe } from "@/ws";
+import { Flex, Textarea } from "@chakra-ui/react";
 import { useCallback, useEffect, useState } from "preact/hooks";
 
 const Admin = () => {
-  const [notes, setNotes] = useState("");
+  const [config, setConfig] = useState<string>("");
   const [isReady, setReady] = useState(false);
 
   const handleSave = useCallback(() => {
-    fetch("/api/notes", {
+    let parsedConfig;
+    try {
+      parsedConfig = JSON.parse(config);
+    } catch (e) {
+      toaster.create({
+        title: "Invalid JSON format",
+        type: "error",
+      });
+      return;
+    }
+
+    fetch("/api/config", {
       method: "put",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        value: notes,
-      }),
-    })
-      .then((r) => r.json())
-      .then(() => {
-        toaster.create({
-          title: "Saved",
-          type: "success",
-        });
+      body: JSON.stringify(parsedConfig),
+    }).then(() => {
+      toaster.create({
+        title: "Saved",
+        type: "success",
       });
-  }, [notes]);
+    });
+  }, [config]);
 
   const handleChangeNotes = useCallback((event) => {
-    setNotes(event.target.value);
+    setConfig(event.target.value);
   }, []);
 
   useEffect(() => {
-    fetch("/api/notes")
+    fetch("/api/config")
       .then((r) => r.json())
-      .then(({ value }) => {
-        setNotes(value);
+      .then((value) => {
+        setConfig(JSON.stringify(value, null, 2));
         setReady(true);
       });
+
+    const listener = (message) => {
+      toaster.create({
+        title: message.topic,
+        description: JSON.stringify(message.payload),
+        type: "info",
+      });
+      console.log(message);
+    };
+
+    subscribe(listener);
+
+    return () => {
+      unsubscribe(listener);
+    };
   }, []);
 
   return (
-    <div>
-      <Toaster />
-      <Textarea disabled={!isReady} onChange={handleChangeNotes}>
-        {notes}
+    <Flex direction="column" width="100%" height="100%" gap="4" padding="1em">
+      <Textarea disabled={!isReady} onChange={handleChangeNotes} height="100%">
+        {config}
       </Textarea>
       <Button onClick={handleSave} disabled={!isReady}>
         Save
       </Button>
-    </div>
+    </Flex>
   );
 };
 

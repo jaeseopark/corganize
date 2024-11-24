@@ -1,0 +1,39 @@
+{
+  "templates": {
+    "default": {
+      "enabled": false,
+      "model": "sd15_default.ckpt",
+      "batch_count": 1,
+      "width": 500,
+      "height": 625,
+      "steps": 40,
+      "clip_skip": 1,
+      "guidance_scale": 3,
+      "upscaler": null,
+      "sampler": "DPM++ 2M Karras",
+      "loras": []
+    }
+  },
+  "allowed_keys": [
+    "prompt",
+    "negative_prompt",
+    "sampler",
+    "steps",
+    "model",
+    "width",
+    "height",
+    "guidance_scale",
+    "batch_count",
+    "clip_skip",
+    "loras",
+    "upscaler"
+  ],
+  "saved_prompts": {},
+  "presets": [
+    {
+      "enabled": true,
+      "preset_name": "fantasy_mountain_range",
+      "prompt": "fantasy mountain range at dawn"
+    }
+  ]
+}

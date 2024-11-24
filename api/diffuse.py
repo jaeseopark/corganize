@@ -105,12 +105,13 @@ def _get_payload_and_enabled(preset: dict, conf: dict) -> dict:
     return trimmed_payload, preset.get("enabled", True)
 
 
-class DiffuseRequest:
+class DiffusePreset:
     def __init__(self, preset: dict, conf: dict):
         conf = conf or dict()
         self._og = preset
 
         preset = json.loads(json.dumps(preset))
+        assert "preset_name" in preset, "'preset_name' must be set"
         preset["prompt"] = preset.get("prompt", "")
 
         default_model = conf.get("templates", dict()).get(
@@ -141,47 +142,41 @@ class DiffuseRequest:
 def _expand(preset_root: dict):
     conf = preset_root.get("config")
 
-    expanded: List[DiffuseRequest] = []
+    expanded: List[DiffusePreset] = []
     for preset in preset_root.get("presets", []):
-        expanded += ([DiffuseRequest(preset, conf)] * preset.get("weight", 1))
+        w = preset.get("sampling_weight", 1)
+        for _ in range(w):
+            expanded.append(DiffusePreset(preset, conf))
     return expanded
 
 
-class DiffuseRequestCollection:
+class DiffusePresetCollection:
     def __init__(self, preset_root: dict):
         self.expanded_requests = _expand(preset_root)
 
-    def select(self, count: int) -> List[DiffuseRequest]:
+    def select(self, count: int) -> List[DiffusePreset]:
         enabled = [r for r in self.expanded_requests if r.enabled]
         return get_shuffled_copy(enabled)[:count]
 
     @staticmethod
-    def from_dir(dir: str):
-        contents = dict(
-            allowed_keys=None,
-            saved_prompts=None,
-            templates=None
-        )
+    def from_file(default_path: str, override_path: str = None):
+        def _get_config():
+            for path in (override_path, default_path):
+                if path and os.path.exists(path):
+                    with open(path) as fp:
+                        return json.load(fp)
+            raise RuntimeError("Config files not found")
 
-        for key in contents.keys():
-            with open(os.path.join(dir, f"{key}.json")) as fp:
-                contents[key] = json.load(fp)
+        config = _get_config()
 
-        contents["presets"] = list()
-        preset_dir = os.path.join(dir, "presets")
-        for filename in os.listdir(preset_dir):
-            with open(os.path.join(preset_dir, filename)) as fp:
-                preset = json.load(fp)
-                preset["preset_name"] = filename.strip(".json")
-                contents["presets"].append(preset)
-
-        return DiffuseRequestCollection(dict(
-            config=contents,
-            presets=contents["presets"]
+        return DiffusePresetCollection(dict(
+            config=config,
+            presets=config["presets"]
         ))
 
 
 if __name__ == "__main__":
-    collection = DiffuseRequestCollection.from_dir("mnt/data/diffusion")
+    collection = DiffusePresetCollection.from_file(
+        "mnt/data/diffusion/config.json")
     preset = collection.select(1)[0]
     print(json.dumps({**preset._og, **preset.payload}, indent=2))
