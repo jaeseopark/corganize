@@ -4,9 +4,6 @@ import os
 from const import BACKUP_DIR, DEFAULT_CONFIG_PATH, DEFAULT_OVERRIDE_CONFIG_PATH, OVERRIDE_CONFIG_PATH
 
 
-os.makedirs(BACKUP_DIR, exist_ok=True)
-
-
 def get_config(default_path=DEFAULT_CONFIG_PATH, override_path=OVERRIDE_CONFIG_PATH or DEFAULT_OVERRIDE_CONFIG_PATH):
     def _get_config():
         for path in (override_path, default_path):
@@ -24,6 +21,8 @@ def save_config(config: dict, path=OVERRIDE_CONFIG_PATH or DEFAULT_OVERRIDE_CONF
 
 
 def backup_config(config=None) -> str:
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+
     config = config or get_config()
     formatted = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     backup_path = os.path.join(BACKUP_DIR, f"{formatted}.json")
