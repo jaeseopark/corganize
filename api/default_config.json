@@ -1,7 +1,6 @@
 {
   "templates": {
     "default": {
-      "enabled": false,
       "model": "sd15_default.ckpt",
       "batch_count": 1,
       "width": 500,
@@ -31,7 +30,6 @@
   "saved_prompts": {},
   "presets": [
     {
-      "enabled": true,
       "preset_name": "fantasy_mountain_range",
       "prompt": "fantasy mountain range at dawn"
     }

@@ -17,7 +17,7 @@ from starlette.responses import JSONResponse
 from starlette.websockets import WebSocketDisconnect
 
 # Local deps
-from conf import backup_config
+from conf import backup_config, get_config, save_config
 from app import Corganize
 from auth import JWT_KEY, decode_jwt, get_jwt
 from models import DeleteRequest, ConfigSaveRequest, Token
@@ -157,10 +157,21 @@ def save_envvars(body: ConfigSaveRequest, _: dict = Depends(verify_jwt_token)):
     return dict(message="success")
 
 
+@fastapi_app.get("/config")
+def _get_config(_: dict = Depends(verify_jwt_token)):
+    return get_config()
+
+
+@fastapi_app.put("/config")
+def _save_config(body: dict, _: dict = Depends(verify_jwt_token)):
+    save_config(body)
+    return dict(message="success")
+
+
 @fastapi_app.post("/config/backup")
 def _backup_config(_: dict = Depends(verify_jwt_token)):
-    backup_config()
-    return dict(message="success")
+    backup_path = backup_config()
+    return dict(message="success", path=backup_path)
 
 
 @fastapi_app.get("/file", response_class=FileResponse)

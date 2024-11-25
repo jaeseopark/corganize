@@ -36,7 +36,7 @@ UID=$(id -u) GID=$(id -g) docker-compose up -d
 
 ## Guide to Using Presets
 
-- `sampling_weight`: Liklihood of the preset getting selected in the sampling process.
+- `weight`: Liklihood of the preset getting selected in the sampling process.
 - `batch_count`: How many images to diffuse when the preset does get selected.
 
 TODO: more instructions

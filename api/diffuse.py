@@ -71,7 +71,7 @@ def consume_templates(preset: dict, available_templates):
     return merge(preset, acc=acc)
 
 
-def _get_payload_and_enabled(preset: dict, conf: dict) -> dict:
+def _get_payload(preset: dict, conf: dict) -> dict:
     """
     See https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/API
     """
@@ -102,7 +102,7 @@ def _get_payload_and_enabled(preset: dict, conf: dict) -> dict:
         "seed": randint(0, 2**32 - 1)
     }
 
-    return trimmed_payload, preset.get("enabled", True)
+    return trimmed_payload
 
 
 class DiffusePreset:
@@ -126,7 +126,7 @@ class DiffusePreset:
         # The latter 2 are just for inheritance purposes, so they can be put at the end.
         preset["templates"] = preset.get("templates", []) + [model, "default"]
 
-        self.payload, self.enabled = _get_payload_and_enabled(preset, conf)
+        self.payload = _get_payload(preset, conf)
 
     @property
     def preset_name(self) -> str:
@@ -147,10 +147,9 @@ class DiffusePresetCollection:
         conf = self.preset_root.get("config", dict())
         preset_dicts = self.preset_root.get("presets", [])
         presets = [DiffusePreset(p, conf) for p in preset_dicts]
-        weighted = [p for p in presets if p.enabled]
         selected = choices(
-            weighted,
-            weights=[p._og.get("sampling_weight", 1) for p in weighted],
+            presets,
+            weights=[p._og.get("weight", 1) for p in presets],
             k=count
         )
         return [DiffusePreset(p._og, conf) for p in selected]
