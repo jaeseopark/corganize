@@ -1,6 +1,6 @@
 from random import choices, randint, uniform
 import re
-from typing import Any, List
+from typing import Any, Callable, List
 import json
 
 from utils import get_shuffled_copy
@@ -18,75 +18,88 @@ def randomize(obj: Any):
             return s
 
         first_pass = _randomize(obj)
-        second_pass = _randomize(f"[{first_pass}]")
-        return second_pass
+        if not first_pass:
+            return ""
+        return _randomize(f"[{first_pass}]")
 
     return obj
 
 
-def resolve(prompt: str, prompt_lookup: dict):
-    prompt = randomize(prompt)
-    matches = re.findall(r"(\/[a-zA-Z0-9_]+)", prompt)
-    for match in matches:
-        key = match.strip("/")
-        if key in prompt_lookup:
-            resolved = resolve(prompt_lookup[key], prompt_lookup)
-            prompt = prompt.replace(match, resolved, 1)
+def get_resolve_func(prompt_lookup: dict):
+    def _resolve(prompt: str):
+        prompt = randomize(prompt)
+        matches = re.findall(r"(\/[a-zA-Z0-9_]+)", prompt)
+        for match in matches:
+            key = match.strip("/")
+            if key in prompt_lookup:
+                resolved = _resolve(prompt_lookup[key])
+                prompt = prompt.replace(match, resolved, 1)
 
-    return prompt
+        return prompt
 
-
-def merge(target: dict, acc: dict):
-    target = {**target}
-
-    for key in ("prompt", "negative_prompt"):
-        combined_values = [s for s in ([target[key]] + [acc[key]]) if s]
-        target[key] = ",".join(combined_values)
-
-    for key in ("prompt_elements", "loras"):
-        target[key].extend(acc[key])
-
-    return {**acc, **target}
+    return _resolve
 
 
-def consume_templates(preset: dict, available_templates):
-    available_templates = available_templates or dict()
-    preset = json.loads(json.dumps(preset))
+class TemplateConsumer:
+    """
+    Consumes all downstream templates and returns 1 final dictionary.
+    Works with any depths -- i.e. nested template references.
+    """
+    templates: dict
+    _resolve: Callable
 
-    # Assign defualt values
-    for key in ("prompt", "negative_prompt"):
-        preset[key] = preset.get(key, "")
-    for key in ("prompt_elements", "loras"):
-        preset[key] = preset.get(key, list())
+    def __init__(self, templates: dict, resolve: Callable) -> None:
+        self.templates = templates or dict()
+        self._resolve = resolve
 
-    acc = dict(prompt="", negative_prompt="", prompt_elements=[], loras=[])
-    for template_name in reversed(preset.get("templates", [])):
+    def _merge(self, target: dict, acc: dict) -> dict:
+        target = {**target}
 
-        template_name = randomize(template_name)
-        template = available_templates.get(template_name, dict())
-        template = consume_templates(template, available_templates)
+        for key in ("prompt", "negative_prompt"):
+            resolved_target = self._resolve(target[key])
+            resolved_acc = self._resolve(acc[key])
+            combined_values = [s for s in [resolved_target, resolved_acc] if s]
+            target[key] = ",".join(combined_values)
 
-        acc = merge(template, acc=acc)
+        for key in ("prompt_elements", "loras"):
+            target[key].extend([v for v in acc[key] if v])
 
-    return merge(preset, acc=acc)
+        return {**acc, **target}
+
+    def consume(self, preset: dict) -> dict:
+        preset = json.loads(json.dumps(preset))
+
+        # Assign defualt values
+        for key in ("prompt", "negative_prompt"):
+            preset[key] = preset.get(key, "")
+        for key in ("prompt_elements", "loras"):
+            preset[key] = preset.get(key, list())
+
+        acc = dict(prompt="", negative_prompt="", prompt_elements=[], loras=[])
+        for template_name in reversed(preset.get("templates", [])):
+
+            template_name = randomize(template_name)
+            template = self.templates.get(template_name, dict())
+            template = self.consume(template)
+
+            acc = self._merge(template, acc=acc)
+
+        return self._merge(preset, acc=acc)
 
 
 def _get_payload(preset: dict, conf: dict) -> dict:
     """
     See https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/API
     """
-    preset = consume_templates(
-        preset,
-        available_templates=conf.get("templates")
-    )
-    saved_prompts = conf.get("saved_prompts")
+    resolve = get_resolve_func(conf.get("saved_prompts"))
+    template_consumer = TemplateConsumer(conf.get("templates"), resolve)
+    preset = template_consumer.consume(preset)
 
     # Add keywords
-    kws = [resolve(kw, saved_prompts)
-           for kw in preset.get("prompt_elements", [])]
+    kws = [resolve(kw) for kw in preset.get("prompt_elements", [])]
 
     prompt = ",".join([kw for kw in kws if kw] + [preset["prompt"]])
-    preset["prompt"] = resolve(prompt, saved_prompts)
+    preset["prompt"] = resolve(prompt)
 
     for lora in preset.get("loras", []):
         weight = lora.get("weight")
