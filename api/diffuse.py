@@ -1,6 +1,6 @@
 from random import choices, randint, uniform
 import re
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Union
 import json
 
 from utils import get_shuffled_copy
@@ -52,6 +52,30 @@ class TemplateConsumer:
         self.templates = templates or dict()
         self._resolve = resolve
 
+    @staticmethod
+    def _get_templates(preset: dict) -> List[Union[str, dict]]:
+        templates = preset.get("templates", [])
+
+        if isinstance(templates, dict) and "one_of" in templates:
+            templates = [dict(
+                one_of=templates["one_of"]
+            )]
+        assert isinstance(templates, list), "'templates' must be a list"
+
+        return list(reversed(templates))
+
+    @staticmethod
+    def _sanitize(preset: dict) -> dict:
+        preset = json.loads(json.dumps(preset))
+
+        # Assign defualt values
+        for key in ("prompt", "negative_prompt"):
+            preset[key] = preset.get(key, "")
+        for key in ("prompt_elements", "loras"):
+            preset[key] = preset.get(key, list())
+
+        return preset
+
     def _merge(self, target: dict, acc: dict) -> dict:
         target = {**target}
 
@@ -67,24 +91,38 @@ class TemplateConsumer:
         return {**acc, **target}
 
     def consume(self, preset: dict) -> dict:
-        preset = json.loads(json.dumps(preset))
-
-        # Assign defualt values
-        for key in ("prompt", "negative_prompt"):
-            preset[key] = preset.get(key, "")
-        for key in ("prompt_elements", "loras"):
-            preset[key] = preset.get(key, list())
-
+        assert isinstance(preset, dict), "preset must be be dictionary"
+        preset = TemplateConsumer._sanitize(preset)
+        templates = TemplateConsumer._get_templates(preset)
         acc = dict(prompt="", negative_prompt="", prompt_elements=[], loras=[])
-        for template_name in reversed(preset.get("templates", [])):
 
-            template_name = randomize(template_name)
-            template = self.templates.get(template_name, dict())
+        for template_ref in templates:
+            template_ref: Union[str, object] = randomize(template_ref)
+            if isinstance(template_ref, str):
+                template = self.templates.get(template_ref, dict())
+            elif isinstance(template_ref, object) and "one_of" in template_ref:
+                candidates: List[dict] = template_ref["one_of"]
+                assert len(candidates) > 0, "at least 1 candidate is required."
+                weights = [c.get("_weight", 1) for c in candidates]
+                template = choices(candidates, weights, k=1)[0]
+            else:
+                raise RuntimeError("'template_ref' data type is wrong")
+
             template = self.consume(template)
 
             acc = self._merge(template, acc=acc)
 
         return self._merge(preset, acc=acc)
+
+
+def randomize_lora(loras: list):
+    ret_loras = []
+    for lora in loras:
+        if "one_of" in lora:
+            candidates: List[dict] = lora["one_of"]
+            lora = choices(candidates, k=1)
+        ret_loras.append(lora)
+    return ret_loras
 
 
 def _get_payload(preset: dict, conf: dict) -> dict:
@@ -101,7 +139,7 @@ def _get_payload(preset: dict, conf: dict) -> dict:
     prompt = ",".join([kw for kw in kws if kw] + [preset["prompt"]])
     preset["prompt"] = resolve(prompt)
 
-    for lora in preset.get("loras", []):
+    for lora in randomize_lora(preset.get("loras", [])):
         weight = lora.get("weight")
         if not isinstance(weight, list):
             continue
