@@ -1,4 +1,3 @@
-import os
 from random import choices, randint, uniform
 import re
 from typing import Any, List
@@ -6,7 +5,7 @@ import json
 
 from utils import get_shuffled_copy
 
-MAX_PRESET_LEN = 30
+MAX_FILENAME_LEN = 64
 
 
 def randomize(obj: Any):
@@ -62,6 +61,7 @@ def consume_templates(preset: dict, available_templates):
 
     acc = dict(prompt="", negative_prompt="", prompt_elements=[], loras=[])
     for template_name in reversed(preset.get("templates", [])):
+
         template_name = randomize(template_name)
         template = available_templates.get(template_name, dict())
         template = consume_templates(template, available_templates)
@@ -133,10 +133,11 @@ class DiffusePreset:
         return self._og.get("preset_name")
 
     @property
-    def prefix(self) -> str:
-        pname = self.preset_name or ""
-        mname = self.payload.get("model", "")
-        return re.sub(r'[^a-zA-Z0-9]', '-', pname+mname)[:MAX_PRESET_LEN].strip("-")
+    def filename_prefix(self) -> str:
+        pname = self.preset_name
+        mname = self.payload["model"]
+        concat_name = f"{pname}-{mname}"
+        return re.sub(r'[^a-zA-Z0-9]', '-', concat_name)[:MAX_FILENAME_LEN].strip("-")
 
 
 class DiffusePresetCollection:

@@ -5,7 +5,6 @@ import os
 import json
 import threading
 from typing import Callable, List, Set
-import uuid
 
 import requests
 from urllib.parse import urljoin
@@ -14,7 +13,7 @@ from PIL import Image
 from const import IMG_DIR
 from conf import get_config
 from models import ConfigSaveRequest
-from utils import get_old_files
+from utils import get_epoch_millis, get_old_files
 from diffuse import DiffusePreset, DiffusePresetCollection
 
 os.makedirs(IMG_DIR, exist_ok=True)
@@ -30,8 +29,8 @@ def select_presets(count: int) -> List[DiffusePreset]:
 
 
 def _diffuse(base_url: str, preset: DiffusePreset):
-    logger.info(f"{preset.preset_name=}")
-    logger.info(f"payload: {json.dumps(preset.payload)}")
+    filename = f"{preset.filename_prefix}-{get_epoch_millis()}.crgimg"
+    logger.info(f"{preset.preset_name=} {filename=} payload={json.dumps(preset.payload)}")
 
     url = urljoin(base_url, "sdapi/v1/txt2img")
     r = requests.post(url, json=preset.payload)
@@ -40,7 +39,6 @@ def _diffuse(base_url: str, preset: DiffusePreset):
     r.raise_for_status()
 
     for img_b64_str in r.json().get("images", []):
-        filename = f"{preset.prefix}-{uuid.uuid4()}.crgimg"
         dest_path = os.path.join(IMG_DIR, filename)
         pillow_image = Image.open(
             io.BytesIO(base64.b64decode(img_b64_str)))
