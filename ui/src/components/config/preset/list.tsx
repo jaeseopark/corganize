@@ -2,12 +2,12 @@ import { ProgressBar, ProgressRoot } from "@/components/ui/progress";
 import { Box, Button, HStack, ProgressLabel, ProgressValueText, Table } from "@chakra-ui/react";
 
 const PresetListView = ({ presets, setEditIndex }: { presets: any[]; setEditIndex: (number) => void }) => {
-  const sumSamplingWeights = presets.reduce((acc, next) => {
+  const sumW = presets.reduce((acc, next) => {
     return acc + (next.weight || 1);
   }, 0);
 
   const getWeightPercStr = (w: number) => {
-    return ((w * 100) / sumSamplingWeights).toFixed(1);
+    return ((w * 100) / sumW).toFixed(1);
   };
 
   return (
@@ -28,7 +28,7 @@ const PresetListView = ({ presets, setEditIndex }: { presets: any[]; setEditInde
             return (
               <Table.Row>
                 <Table.Cell>
-                  <ProgressRoot defaultValue={0} value={(w * 100) / sumSamplingWeights} maxW="150px">
+                  <ProgressRoot defaultValue={0} value={(w * 100) / sumW} maxW="150px">
                     <HStack gap="5">
                       <ProgressLabel>{w}</ProgressLabel>
                       <ProgressBar flex="1" />
@@ -50,7 +50,7 @@ const PresetListView = ({ presets, setEditIndex }: { presets: any[]; setEditInde
         </Table.Body>
         <Table.Footer>
           <Table.Row>
-            <Table.Cell>{sumSamplingWeights}</Table.Cell>
+            <Table.Cell>{sumW}</Table.Cell>
           </Table.Row>
         </Table.Footer>
       </Table.Root>
