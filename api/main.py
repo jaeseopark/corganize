@@ -85,7 +85,7 @@ def verify_jwt_token(token: str = Depends(oauth2_scheme)):
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid JWT token")
 
 
-@fastapi_app.websocket("/ws")
+# @fastapi_app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: str = Query(...), Authorize: AuthJWT = Depends()):
     await websocket.accept()
     logger.info("Socket open")
