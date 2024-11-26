@@ -2,6 +2,8 @@ import axiosss from "axios";
 import Cookies from "js-cookie";
 import ReconnectingWebSocket from "reconnecting-websocket";
 
+const WS_ENABLED = false;
+
 // Create an Axios instance
 const apiClient = axiosss.create();
 
@@ -28,17 +30,19 @@ export type WebsocketListener = (message: WebsocketMessage) => void;
 
 const WEBSOCKET_LISTENERS: WebsocketListener[] = [];
 
-const WEBSOCKET_URL = (() => {
-  const token = Cookies.get("jwt");
-  const { protocol, hostname, port } = window.location;
-  let wsProtocol = protocol === "https" ? "wss" : "ws";
-  return `${wsProtocol}://${hostname}:${port}/api/ws?token=${token}`;
-})();
+if (WS_ENABLED) {
+  const WEBSOCKET_URL = (() => {
+    const token = Cookies.get("jwt");
+    const { protocol, hostname, port } = window.location;
+    let wsProtocol = protocol === "https" ? "wss" : "ws";
+    return `${wsProtocol}://${hostname}:${port}/api/ws?token=${token}`;
+  })();
 
-new ReconnectingWebSocket(WEBSOCKET_URL).onmessage = ({ data }) => {
-  const message = JSON.parse(data);
-  WEBSOCKET_LISTENERS.forEach((listener) => listener(message));
-};
+  new ReconnectingWebSocket(WEBSOCKET_URL).onmessage = ({ data }) => {
+    const message = JSON.parse(data);
+    WEBSOCKET_LISTENERS.forEach((listener) => listener(message));
+  };
+}
 
 export const subscribe = (listener: WebsocketListener) => {
   WEBSOCKET_LISTENERS.push(listener);
@@ -52,10 +56,10 @@ export const unsubscribe = (listener: WebsocketListener) => {
 export const axios = apiClient;
 
 export const setJwt = (token: string) => {
-  Cookies.set('jwt', token, {
+  Cookies.set("jwt", token, {
     expires: 7,
-    path: '/',
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Strict',
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
   });
-}
+};
