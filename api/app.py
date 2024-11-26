@@ -59,7 +59,7 @@ def _diffuse(base_url: str, preset: DiffusePreset):
 
         logger.info(f"Image saved. {content_length=} kB, {dest_path=}")
 
-    logger.info("Generation done")
+    logger.info(f"Generation done: {preset_name=}")
 
 
 class Corganize:
@@ -133,6 +133,7 @@ class Corganize:
             ))
 
         self.broadcast_diffusion("done")
+        logger.info("Generation done: all")
 
     def override_envvars(self, config: ConfigSaveRequest):
         self.envvars = config.__dict__
