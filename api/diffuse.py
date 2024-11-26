@@ -65,7 +65,8 @@ class TemplateConsumer:
         return list(reversed(templates))
 
     @staticmethod
-    def _sanitize(preset: dict) -> dict:
+    def _validate_and_sanitize(preset: dict) -> dict:
+        assert isinstance(preset, dict), "preset must be be dictionary"
         preset = json.loads(json.dumps(preset))
 
         # Assign defualt values
@@ -73,6 +74,9 @@ class TemplateConsumer:
             preset[key] = preset.get(key, "")
         for key in ("prompt_elements", "loras"):
             preset[key] = preset.get(key, list())
+
+        assert isinstance(preset["prompt_elements"],
+                          list), "prompt_elements must be a list"
 
         return preset
 
@@ -91,8 +95,7 @@ class TemplateConsumer:
         return {**acc, **target}
 
     def consume(self, preset: dict) -> dict:
-        assert isinstance(preset, dict), "preset must be be dictionary"
-        preset = TemplateConsumer._sanitize(preset)
+        preset = TemplateConsumer._validate_and_sanitize(preset)
         templates = TemplateConsumer._get_templates(preset)
         acc = dict(prompt="", negative_prompt="", prompt_elements=[], loras=[])
 
@@ -125,10 +128,11 @@ def randomize_lora(loras: list):
     return ret_loras
 
 
-def _validate(payload: dict):
+def _validate_final_payload(payload: dict):
     lora_names = [lora["file"] for lora in payload.get("loras", [])]
     unique_lora_names = set(lora_names)
-    assert len(lora_names) == len(unique_lora_names), "duplicate loras should not exist"
+    assert len(lora_names) == len(
+        unique_lora_names), "duplicate loras should not exist"
 
 
 def _get_payload(preset: dict, conf: dict) -> dict:
@@ -159,7 +163,7 @@ def _get_payload(preset: dict, conf: dict) -> dict:
         "seed": randint(0, 2**32 - 1)
     }
 
-    _validate(trimmed_payload)
+    _validate_final_payload(trimmed_payload)
 
     return trimmed_payload
 
@@ -183,7 +187,10 @@ class DiffusePreset:
 
         # In the order of descreasing importance
         # The latter 2 are just for inheritance purposes, so they can be put at the end.
-        preset["templates"] = preset.get("templates", []) + [model, "default"]
+        # TODO support dictionary here, for now just put an assert statement
+        templates = preset.get("templates", [])
+        assert isinstance(templates, list), "'templates' must be a list"
+        preset["templates"] = templates + [model, "default"]
 
         self.payload = _get_payload(preset, conf)
 
@@ -225,6 +232,14 @@ class DiffusePresetCollection:
 if __name__ == "__main__":
     from conf import get_config
     config = get_config(override_path="mnt/data/config.json")
-    collection = DiffusePresetCollection.from_dict(config)
-    preset = collection.select(1)[0]
-    print(json.dumps({**preset._og, **preset.payload}, indent=2))
+
+    upper_bound=500
+    should_print_each_payload=False
+    for i in range(500):
+        if i % 10 == 0:
+            print(f"{i}/{upper_bound} ({i/upper_bound})")
+        # keep calling until something fails
+        collection = DiffusePresetCollection.from_dict(config)
+        preset = collection.select(1)[0]
+        if should_print_each_payload:
+            print(json.dumps({**preset._og, **preset.payload}, indent=2))
