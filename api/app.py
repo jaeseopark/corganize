@@ -30,7 +30,9 @@ def select_presets(count: int) -> List[DiffusePreset]:
 
 def _diffuse(base_url: str, preset: DiffusePreset):
     filename = f"{preset.filename_prefix}-{get_epoch_millis()}.crgimg"
-    logger.info(f"{preset.preset_name=} {filename=} payload={json.dumps(preset.payload)}")
+    paylod_str = json.dumps(preset.payload)
+    preset_name = preset.preset_name
+    logger.info(f"{preset_name=} {filename=} payload={paylod_str}")
 
     url = urljoin(base_url, "sdapi/v1/txt2img")
     r = requests.post(url, json=preset.payload)
@@ -52,6 +54,9 @@ def _diffuse(base_url: str, preset: DiffusePreset):
             img_file_buffer.seek(0)
             fp.write(img_file_buffer.read())
 
+        with open(dest_path+".json", "w") as fp:
+            json.dump(preset.payload, fp, indent=2)
+
         logger.info(f"Image saved. {content_length=} kB, {dest_path=}")
 
     logger.info("Generation done")
@@ -71,7 +76,10 @@ class Corganize:
     _broadcast_cleanup: Callable
 
     def get_image_filenames(self):
-        return [filename for filename in os.listdir(IMG_DIR) if filename not in self.filenames_to_delete]
+        def _is_valid(filename: str) -> bool:
+            return filename not in self.filenames_to_delete \
+                and filename.endswith(".crgimg")
+        return [filename for filename in os.listdir(IMG_DIR) if _is_valid(filename)]
 
     def get_recent_image_filenames(self):
         return sorted(
@@ -139,8 +147,8 @@ class Corganize:
         lock.acquire()
         logger.info("Cleanup in progress...")
         self.broadcast_cleanup("in progress")
-        old_filenames = get_old_files(
-            IMG_DIR, age_seconds=self.envvars["auto_delete_days"]*24*3600)
+        threshold = self.envvars["auto_delete_days"]*24*3600
+        old_filenames = get_old_files(IMG_DIR, age_seconds=threshold)
         self.filenames_to_delete.update(old_filenames)
         for filename in self.filenames_to_delete:
             os.remove(os.path.join(IMG_DIR, filename))

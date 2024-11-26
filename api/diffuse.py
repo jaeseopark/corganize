@@ -125,6 +125,12 @@ def randomize_lora(loras: list):
     return ret_loras
 
 
+def _validate(payload: dict):
+    lora_names = [lora["file"] for lora in payload.get("loras", [])]
+    unique_lora_names = set(lora_names)
+    assert len(lora_names) == len(unique_lora_names), "duplicate loras should not exist"
+
+
 def _get_payload(preset: dict, conf: dict) -> dict:
     """
     See https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/API
@@ -152,6 +158,8 @@ def _get_payload(preset: dict, conf: dict) -> dict:
         **{k: randomize(v) for k, v in preset.items() if allowed_keys is None or k in allowed_keys},
         "seed": randint(0, 2**32 - 1)
     }
+
+    _validate(trimmed_payload)
 
     return trimmed_payload
 
