@@ -13,7 +13,7 @@ from PIL import Image
 from const import IMG_DIR
 from conf import get_config
 from models import ConfigSaveRequest
-from utils import get_epoch_millis, get_old_files
+from utils import get_old_files
 from diffuse import DiffusePreset, DiffusePresetCollection
 
 os.makedirs(IMG_DIR, exist_ok=True)
@@ -28,17 +28,27 @@ def select_presets(count: int) -> List[DiffusePreset]:
     return collection.select(count)
 
 
-def _diffuse(base_url: str, basename_wo_ext: str, payload: dict):
-    with open(os.path.join(IMG_DIR, f"{basename_wo_ext}.json"), "w") as fp:
+def _diffuse(base_url: str, preset: DiffusePreset, prev_img_b64: str = None, url_path: str = None, basename_override: str = None):
+    basename_wo_ext, payload = preset.get_basename_and_payload()
+    with open(os.path.join(IMG_DIR, f"{basename_override or basename_wo_ext}.json"), "w") as fp:
         json.dump(payload, fp, indent=2)
 
-    url = urljoin(base_url, "sdapi/v1/txt2img")
+    if prev_img_b64:
+        payload.update(dict(
+            init_images=[prev_img_b64]
+        ))
+
+    url = urljoin(base_url, url_path or "sdapi/v1/txt2img")
     r = requests.post(url, json=payload)
     if r.status_code >= 400:
         logger.error(r.text)
     r.raise_for_status()
 
     for i, img_b64_str in enumerate(r.json().get("images", [])):
+        if preset.next:
+            logger.info("Next preset found. Calling _diffuse again...")
+            return _diffuse(base_url, preset.next, img_b64_str, "sdapi/v1/img2img", basename_override=basename_wo_ext)
+
         img_file_buffer = io.BytesIO()
         pillow_image = Image.open(io.BytesIO(base64.b64decode(img_b64_str)))
         pillow_image.save(
@@ -50,7 +60,8 @@ def _diffuse(base_url: str, basename_wo_ext: str, payload: dict):
         )
         content_length = img_file_buffer.tell() // 1000
 
-        img_path = os.path.join(IMG_DIR, f"{basename_wo_ext}-{i}.crgimg")
+        img_path = os.path.join(
+            IMG_DIR, f"{basename_override or basename_wo_ext}-{i}.crgimg")
         with open(img_path, 'wb') as fp:
             img_file_buffer.seek(0)
             fp.write(img_file_buffer.read())
@@ -110,23 +121,21 @@ class Corganize:
 
         sample_size = self.envvars["diffusion_sample_size"]
         for _ in range(sample_size):
-            # Doing this in a for loop because the #presets may be lower than sample_size
+            # Doing this in a for loop because the # of presets may be lower than sample_size
             presets = select_presets(1)
 
             for preset in presets:
-                basename_wo_ext, payload = preset.get_basename_and_payload()
-                batch_count = payload["batch_count"]
                 self.broadcast_diffusion("processing", dict(
                     preset_name=preset.preset_name,
-                    batch_count=batch_count
                 ))
                 logger.info(f"Starting {preset.preset_name=}")
-                _diffuse(self.envvars["diffusion_url"],
-                         basename_wo_ext, payload)
+                _diffuse(
+                    self.envvars["diffusion_url"],
+                    preset
+                )
                 logger.info(f"Generation done: {preset.preset_name=}")
                 self.broadcast_diffusion("partially-done", dict(
                     preset_name=preset.preset_name,
-                    batch_count=batch_count
                 ))
 
         self.broadcast_diffusion("done")

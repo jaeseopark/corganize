@@ -58,6 +58,10 @@ def get_resolve_func(prompt_lookup: dict):
     return _resolve
 
 
+def _get_template_weight(c):
+    return c.get("_weight", 1) if isinstance(c, dict) else 1
+
+
 class TemplateConsumer:
     """
     Consumes all downstream templates and returns 1 final dictionary.
@@ -112,25 +116,31 @@ class TemplateConsumer:
 
         return {**acc, **target}
 
+    def get_template(self, template_ref: Union[str, dict]) -> dict:
+        if isinstance(template_ref, str):
+            template_ref = randomize(template_ref)
+            return self.templates.get(template_ref, dict())
+        elif isinstance(template_ref, dict):
+            if "one_of" not in template_ref:
+                # This is the template definition.
+                return template_ref
+
+            candidates: List[Union[str, dict]] = template_ref["one_of"]
+            assert len(candidates) > 0, "at least 1 candidate is required."
+            weights = [_get_template_weight(c) for c in candidates]
+            template_ref = choices(candidates, weights, k=1)[0]
+            return self.get_template(template_ref)
+
+        raise RuntimeError("a template reference must be either a string or a dict")
+
     def consume(self, preset: dict) -> dict:
         preset = TemplateConsumer._validate_and_sanitize(preset)
         templates = TemplateConsumer._get_templates(preset)
         acc = dict(prompt="", negative_prompt="", prompt_elements=[], loras=[])
 
         for template_ref in templates:
-            template_ref: Union[str, object] = randomize(template_ref)
-            if isinstance(template_ref, str):
-                template = self.templates.get(template_ref, dict())
-            elif isinstance(template_ref, object) and "one_of" in template_ref:
-                candidates: List[dict] = template_ref["one_of"]
-                assert len(candidates) > 0, "at least 1 candidate is required."
-                weights = [c.get("_weight", 1) for c in candidates]
-                template = choices(candidates, weights, k=1)[0]
-            else:
-                raise RuntimeError("'template_ref' data type is wrong")
-
+            template = self.get_template(template_ref)
             template = self.consume(template)
-
             acc = self._merge(template, acc=acc)
 
         return self._merge(preset, acc=acc)
@@ -191,6 +201,7 @@ def _get_payload(preset: dict, conf: dict) -> dict:
 class DiffusePreset:
     _specs: dict
     _conf: dict
+    next = None  # type: DiffusePreset
 
     def __init__(self, preset: dict, conf: dict):
         conf = conf or dict()
@@ -209,6 +220,10 @@ class DiffusePreset:
 
         self._specs = preset
         self._conf = conf
+
+        next = preset.get("next")
+        if next:
+            self.next = DiffusePreset(next, conf)
 
     def get_basename_and_payload(self) -> Tuple[str, dict]:
         payload = _get_payload(self._specs, self._conf)

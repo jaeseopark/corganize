@@ -3,8 +3,8 @@
     "default": {
       "model": "sd15_default.ckpt",
       "batch_count": 1,
-      "width": 500,
-      "height": 625,
+      "width": 512,
+      "height": 512,
       "steps": 40,
       "clip_skip": 1,
       "guidance_scale": 3,
