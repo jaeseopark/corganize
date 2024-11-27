@@ -1,11 +1,28 @@
+from functools import reduce
 from random import choices, randint, uniform
 import re
-from typing import Any, Callable, List, Union
+from typing import Any, Callable, List, Tuple, Union
 import json
 
-from utils import get_shuffled_copy
+from utils import get_epoch_millis
 
 MAX_FILENAME_LEN = 64
+
+
+def _deconstruct_candidate(candidates: List[str]):
+    def _get_value_weight(candidate: str):
+        matches = re.findall(r"^\s*((0|[1-9]\d*)(\.\d+)?)\:(.+)*$", candidate)
+        if not matches:
+            return candidate, 1
+        return matches[0][-1], float(matches[0][0])
+
+    def _reducer(acc, candidate):
+        value, weight = _get_value_weight(candidate)
+        acc[0].append(value)
+        acc[1].append(weight)
+        return acc
+
+    return reduce(_reducer, candidates, ([], []))
 
 
 def randomize(obj: Any):
@@ -14,7 +31,8 @@ def randomize(obj: Any):
             matches = re.findall(r"(\[[^\[\]]+\])", s)
             for match in matches:
                 candidates = match.strip("[").strip("]").split("|")
-                s = s.replace(match, get_shuffled_copy(candidates)[0])
+                values, weights = _deconstruct_candidate(candidates)
+                s = s.replace(match, choices(values, weights, k=1)[0], 1)
             return s
 
         first_pass = _randomize(obj)
@@ -133,6 +151,8 @@ def _validate_final_payload(payload: dict):
     unique_lora_names = set(lora_names)
     assert len(lora_names) == len(
         unique_lora_names), "duplicate loras should not exist"
+    assert payload.get("batch_count", 1) == 1, "'batch_count' should be 1"
+    assert payload.get("model"), "'model' must be set"
 
 
 def _get_payload(preset: dict, conf: dict) -> dict:
@@ -169,41 +189,36 @@ def _get_payload(preset: dict, conf: dict) -> dict:
 
 
 class DiffusePreset:
+    _specs: dict
+    _conf: dict
+
     def __init__(self, preset: dict, conf: dict):
         conf = conf or dict()
-        self._og = preset
 
         preset = json.loads(json.dumps(preset))
         assert "preset_name" in preset, "'preset_name' must be set"
         preset["prompt"] = preset.get("prompt", "")
-
-        default_model = conf.get("templates", dict()).get(
-            "default", dict()).get("model")
-        model = preset.get("model", default_model)
-        assert model, "'model' must be set either in the default template or in each preset"
-
-        model = randomize(model)
-        preset["model"] = model
+        assert isinstance(preset["prompt"], str), "prompt must be a string"
 
         # In the order of descreasing importance
         # The latter 2 are just for inheritance purposes, so they can be put at the end.
         # TODO support dictionary here, for now just put an assert statement
         templates = preset.get("templates", [])
         assert isinstance(templates, list), "'templates' must be a list"
-        preset["templates"] = templates + [model, "default"]
+        preset["templates"] = templates + ["default"]
 
-        self.payload = _get_payload(preset, conf)
+        self._specs = preset
+        self._conf = conf
+
+    def get_basename_and_payload(self) -> Tuple[str, dict]:
+        payload = _get_payload(self._specs, self._conf)
+        basename = re.sub(
+            r'[^a-zA-Z0-9]', '-', f"{self.preset_name}-{payload['model']}")[:MAX_FILENAME_LEN]
+        return f"{basename}-{get_epoch_millis()}", payload
 
     @property
     def preset_name(self) -> str:
-        return self._og.get("preset_name")
-
-    @property
-    def filename_prefix(self) -> str:
-        pname = self.preset_name
-        mname = self.payload["model"]
-        concat_name = f"{pname}-{mname}"
-        return re.sub(r'[^a-zA-Z0-9]', '-', concat_name)[:MAX_FILENAME_LEN].strip("-")
+        return self._specs.get("preset_name")
 
 
 class DiffusePresetCollection:
@@ -216,10 +231,10 @@ class DiffusePresetCollection:
         presets = [DiffusePreset(p, conf) for p in preset_dicts]
         selected = choices(
             presets,
-            weights=[p._og.get("weight", 1) for p in presets],
+            weights=[p._specs.get("weight", 1) for p in presets],
             k=count
         )
-        return [DiffusePreset(p._og, conf) for p in selected]
+        return [DiffusePreset(p._specs, conf) for p in selected]
 
     @staticmethod
     def from_dict(config: dict):
@@ -233,13 +248,7 @@ if __name__ == "__main__":
     from conf import get_config
     config = get_config(override_path="mnt/data/config.json")
 
-    upper_bound=500
-    should_print_each_payload=False
-    for i in range(500):
-        if i % 10 == 0:
-            print(f"{i}/{upper_bound} ({i/upper_bound})")
-        # keep calling until something fails
-        collection = DiffusePresetCollection.from_dict(config)
-        preset = collection.select(1)[0]
-        if should_print_each_payload:
-            print(json.dumps({**preset._og, **preset.payload}, indent=2))
+    collection = DiffusePresetCollection.from_dict(config)
+    preset = collection.select(1)[0]
+    _, payload = preset.get_basename_and_payload()
+    print(json.dumps({**preset._specs, **payload}, indent=2))

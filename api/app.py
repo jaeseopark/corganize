@@ -28,38 +28,34 @@ def select_presets(count: int) -> List[DiffusePreset]:
     return collection.select(count)
 
 
-def _diffuse(base_url: str, preset: DiffusePreset):
-    filename = f"{preset.filename_prefix}-{get_epoch_millis()}.crgimg"
-    paylod_str = json.dumps(preset.payload)
-    preset_name = preset.preset_name
-    logger.info(f"{preset_name=} {filename=} payload={paylod_str}")
+def _diffuse(base_url: str, basename_wo_ext: str, payload: dict):
+    with open(os.path.join(IMG_DIR, f"{basename_wo_ext}.json"), "w") as fp:
+        json.dump(payload, fp, indent=2)
 
     url = urljoin(base_url, "sdapi/v1/txt2img")
-    r = requests.post(url, json=preset.payload)
+    r = requests.post(url, json=payload)
     if r.status_code >= 400:
         logger.error(r.text)
     r.raise_for_status()
 
-    for img_b64_str in r.json().get("images", []):
-        dest_path = os.path.join(IMG_DIR, filename)
-        pillow_image = Image.open(
-            io.BytesIO(base64.b64decode(img_b64_str)))
-
+    for i, img_b64_str in enumerate(r.json().get("images", [])):
         img_file_buffer = io.BytesIO()
-        pillow_image.save(img_file_buffer, format="jpeg",
-                          quality=70, optimize=True, progressive=True)
+        pillow_image = Image.open(io.BytesIO(base64.b64decode(img_b64_str)))
+        pillow_image.save(
+            img_file_buffer,
+            format="jpeg",
+            quality=70,
+            optimize=True,
+            progressive=True
+        )
         content_length = img_file_buffer.tell() // 1000
 
-        with open(dest_path, 'wb') as fp:
+        img_path = os.path.join(IMG_DIR, f"{basename_wo_ext}-{i}.crgimg")
+        with open(img_path, 'wb') as fp:
             img_file_buffer.seek(0)
             fp.write(img_file_buffer.read())
 
-        with open(dest_path+".json", "w") as fp:
-            json.dump(preset.payload, fp, indent=2)
-
-        logger.info(f"Image saved. {content_length=} kB, {dest_path=}")
-
-    logger.info(f"Generation done: {preset_name=}")
+        logger.info(f"Image saved. {content_length=} kB, {img_path=}")
 
 
 class Corganize:
@@ -113,24 +109,25 @@ class Corganize:
             return
 
         sample_size = self.envvars["diffusion_sample_size"]
-        presets = select_presets(sample_size)
+        for _ in range(sample_size):
+            # Doing this in a for loop because the #presets may be lower than sample_size
+            presets = select_presets(1)
 
-        self.broadcast_diffusion("pending", dict(
-            preset_names=[p.preset_name for p in presets],
-            count=len(presets),
-            sample_size=sample_size
-        ))
-
-        for preset in presets:
-            self.broadcast_diffusion("processing", dict(
-                preset_name=preset.preset_name,
-                batch_count=preset.payload["batch_count"]
-            ))
-            _diffuse(self.envvars["diffusion_url"], preset)
-            self.broadcast_diffusion("partially-done", dict(
-                preset_name=preset.preset_name,
-                batch_count=preset.payload["batch_count"]
-            ))
+            for preset in presets:
+                basename_wo_ext, payload = preset.get_basename_and_payload()
+                batch_count = payload["batch_count"]
+                self.broadcast_diffusion("processing", dict(
+                    preset_name=preset.preset_name,
+                    batch_count=batch_count
+                ))
+                logger.info(f"Starting {preset.preset_name=}")
+                _diffuse(self.envvars["diffusion_url"],
+                         basename_wo_ext, payload)
+                logger.info(f"Generation done: {preset.preset_name=}")
+                self.broadcast_diffusion("partially-done", dict(
+                    preset_name=preset.preset_name,
+                    batch_count=batch_count
+                ))
 
         self.broadcast_diffusion("done")
         logger.info("Generation done: all")
