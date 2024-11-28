@@ -1,6 +1,6 @@
 from typing import Callable
 from diffuse.preset import DiffusePreset
-from const import DATA_DIR, IMG_DIR
+from const import IMG_DIR
 from PIL import Image
 from urllib.parse import urljoin
 import requests
@@ -130,9 +130,6 @@ def _set_model_checkpoint(base_url: str, desired_model_name: str):
     r = requests.get(url)
     r.raise_for_status()
     rjson: dict = r.json()
-
-    with open(os.path.join(DATA_DIR, f"sd_options-{get_epoch_millis()}.json"), "w") as fp:
-        json.dump(rjson, fp, indent=2)
 
     current_checkpoint = rjson.get("sd_model_checkpoint")
 
