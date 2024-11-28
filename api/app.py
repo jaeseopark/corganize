@@ -1,20 +1,16 @@
-import base64
-import io
 import logging
 import os
-import json
 import threading
 from typing import Callable, List, Set
 
-import requests
-from urllib.parse import urljoin
-from PIL import Image
 
 from const import IMG_DIR
 from conf import get_config
 from models import ConfigSaveRequest
 from utils import get_old_files
-from diffuse import DiffusePreset, DiffusePresetCollection
+
+from diffuse.api import DiffuseApiPayload, diffuse
+from diffuse.preset import DiffusePreset, DiffusePresetCollection
 
 os.makedirs(IMG_DIR, exist_ok=True)
 
@@ -26,47 +22,6 @@ def select_presets(count: int) -> List[DiffusePreset]:
     logger.info("Accessing local FS for diffusion presets...")
     collection = DiffusePresetCollection.from_dict(get_config())
     return collection.select(count)
-
-
-def _diffuse(base_url: str, preset: DiffusePreset, prev_img_b64: str = None, url_path: str = None, basename_override: str = None):
-    basename_wo_ext, payload = preset.get_basename_and_payload()
-    with open(os.path.join(IMG_DIR, f"{basename_override or basename_wo_ext}.json"), "w") as fp:
-        json.dump(payload, fp, indent=2)
-
-    if prev_img_b64:
-        payload.update(dict(
-            init_images=[prev_img_b64]
-        ))
-
-    url = urljoin(base_url, url_path or "sdapi/v1/txt2img")
-    r = requests.post(url, json=payload)
-    if r.status_code >= 400:
-        logger.error(r.text)
-    r.raise_for_status()
-
-    for i, img_b64_str in enumerate(r.json().get("images", [])):
-        if preset.next:
-            logger.info("Next preset found. Calling _diffuse again...")
-            return _diffuse(base_url, preset.next, img_b64_str, "sdapi/v1/img2img", basename_override=basename_wo_ext)
-
-        img_file_buffer = io.BytesIO()
-        pillow_image = Image.open(io.BytesIO(base64.b64decode(img_b64_str)))
-        pillow_image.save(
-            img_file_buffer,
-            format="jpeg",
-            quality=70,
-            optimize=True,
-            progressive=True
-        )
-        content_length = img_file_buffer.tell() // 1000
-
-        img_path = os.path.join(
-            IMG_DIR, f"{basename_override or basename_wo_ext}-{i}.crgimg")
-        with open(img_path, 'wb') as fp:
-            img_file_buffer.seek(0)
-            fp.write(img_file_buffer.read())
-
-        logger.info(f"Image saved. {content_length=} kB, {img_path=}")
 
 
 class Corganize:
@@ -84,8 +39,7 @@ class Corganize:
 
     def get_image_filenames(self):
         def _is_valid(filename: str) -> bool:
-            return filename not in self.filenames_to_delete \
-                and filename.endswith(".crgimg")
+            return filename not in self.filenames_to_delete and filename.endswith(".crgimg")
         return [filename for filename in os.listdir(IMG_DIR) if _is_valid(filename)]
 
     def get_recent_image_filenames(self):
@@ -129,10 +83,8 @@ class Corganize:
                     preset_name=preset.preset_name,
                 ))
                 logger.info(f"Starting {preset.preset_name=}")
-                _diffuse(
-                    self.envvars["diffusion_url"],
-                    preset
-                )
+                base_url = self.envvars["diffusion_url"]
+                diffuse(base_url, DiffuseApiPayload(preset))
                 logger.info(f"Generation done: {preset.preset_name=}")
                 self.broadcast_diffusion("partially-done", dict(
                     preset_name=preset.preset_name,

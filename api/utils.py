@@ -54,6 +54,6 @@ def get_old_files(directory_path: str, age_seconds: int) -> List[str]:
     return old_files
 
 
-def get_epoch_millis():
+def get_epoch_millis() -> int:
     current_time_seconds = time.time()
     return int(current_time_seconds * 1000)

@@ -1,10 +1,9 @@
 from functools import reduce
 from random import choices, randint, uniform
 import re
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Union
 import json
 
-from utils import get_epoch_millis
 
 MAX_FILENAME_LEN = 64
 
@@ -131,7 +130,8 @@ class TemplateConsumer:
             template_ref = choices(candidates, weights, k=1)[0]
             return self.get_template(template_ref)
 
-        raise RuntimeError("a template reference must be either a string or a dict")
+        msg = "a template reference must be either a string or a dict"
+        raise RuntimeError(msg)
 
     def consume(self, preset: dict) -> dict:
         preset = TemplateConsumer._validate_and_sanitize(preset)
@@ -156,16 +156,16 @@ def randomize_lora(loras: list):
     return ret_loras
 
 
-def _validate_final_payload(payload: dict):
-    lora_names = [lora["file"] for lora in payload.get("loras", [])]
+def _validate_final_req_body(req_body: dict):
+    lora_names = [lora["file"] for lora in req_body.get("loras", [])]
     unique_lora_names = set(lora_names)
     assert len(lora_names) == len(
         unique_lora_names), "duplicate loras should not exist"
-    assert payload.get("batch_count", 1) == 1, "'batch_count' should be 1"
-    assert payload.get("model"), "'model' must be set"
+    assert req_body.get("batch_count", 1) == 1, "'batch_count' should be 1"
+    assert req_body.get("model"), "'model' must be set"
 
 
-def _get_payload(preset: dict, conf: dict) -> dict:
+def _get_req_body(preset: dict, conf: dict) -> dict:
     """
     See https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/API
     """
@@ -188,14 +188,14 @@ def _get_payload(preset: dict, conf: dict) -> dict:
         lora["weight"] = uniform(weight[0], weight[1])
 
     allowed_keys = conf.get("allowed_keys")
-    trimmed_payload = {
+    trimmed_req_body = {
         **{k: randomize(v) for k, v in preset.items() if allowed_keys is None or k in allowed_keys},
         "seed": randint(0, 2**32 - 1)
     }
 
-    _validate_final_payload(trimmed_payload)
+    _validate_final_req_body(trimmed_req_body)
 
-    return trimmed_payload
+    return trimmed_req_body
 
 
 class DiffusePreset:
@@ -207,7 +207,6 @@ class DiffusePreset:
         conf = conf or dict()
 
         preset = json.loads(json.dumps(preset))
-        assert "preset_name" in preset, "'preset_name' must be set"
         preset["prompt"] = preset.get("prompt", "")
         assert isinstance(preset["prompt"], str), "prompt must be a string"
 
@@ -225,11 +224,8 @@ class DiffusePreset:
         if next:
             self.next = DiffusePreset(next, conf)
 
-    def get_basename_and_payload(self) -> Tuple[str, dict]:
-        payload = _get_payload(self._specs, self._conf)
-        basename = re.sub(
-            r'[^a-zA-Z0-9]', '-', f"{self.preset_name}-{payload['model']}")[:MAX_FILENAME_LEN]
-        return f"{basename}-{get_epoch_millis()}", payload
+    def get_req_body(self):
+        return _get_req_body(self._specs, self._conf)
 
     @property
     def preset_name(self) -> str:
@@ -265,5 +261,5 @@ if __name__ == "__main__":
 
     collection = DiffusePresetCollection.from_dict(config)
     preset = collection.select(1)[0]
-    _, payload = preset.get_basename_and_payload()
-    print(json.dumps({**preset._specs, **payload}, indent=2))
+    req_body = preset.get_req_body()
+    print(json.dumps({**preset._specs, **req_body}, indent=2))
