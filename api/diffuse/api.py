@@ -38,7 +38,7 @@ def get_i2i_req_body_provider(img_b64: str):
         req_body.update(dict(
             init_images=[img_b64]
         ))
-        return preset.get_req_body()
+        return req_body
 
     return provider
 

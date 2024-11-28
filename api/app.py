@@ -10,7 +10,7 @@ from models import ConfigSaveRequest
 from utils import get_old_files
 
 from diffuse.api import DiffuseApiPayload, diffuse
-from diffuse.preset import DiffusePreset, DiffusePresetCollection
+from diffuse.collection import DiffusePreset, DiffusePresetCollection
 
 os.makedirs(IMG_DIR, exist_ok=True)
 
