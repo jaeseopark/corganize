@@ -9,7 +9,7 @@ from conf import get_config
 from models import ConfigSaveRequest
 from utils import get_old_files
 
-from diffuse.api import DiffuseApiPayload, diffuse
+from diffuse.api import DiffuseApiPayload, diffuse, refresh_loras
 from diffuse.collection import DiffusePreset, DiffusePresetCollection
 
 os.makedirs(IMG_DIR, exist_ok=True)
@@ -72,6 +72,10 @@ class Corganize:
                 )
             ))
             return
+        
+        # SD does not recognize newly added files. Need a manual refresh.
+        base_url = self.envvars["diffusion_url"]
+        refresh_loras(base_url)
 
         sample_size = self.envvars["diffusion_sample_size"]
         for _ in range(sample_size):
@@ -83,7 +87,6 @@ class Corganize:
                     preset_name=preset.preset_name,
                 ))
                 logger.info(f"Starting {preset.preset_name=}")
-                base_url = self.envvars["diffusion_url"]
                 diffuse(base_url, DiffuseApiPayload(preset))
                 logger.info(f"Generation done: {preset.preset_name=}")
                 self.broadcast_diffusion("partially-done", dict(

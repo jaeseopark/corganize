@@ -38,10 +38,12 @@ def randomize_lora(loras: list):
 
 
 def _validate_final_req_body(req_body: dict):
-    lora_names = [lora["file"] for lora in req_body.get("loras", [])]
-    unique_lora_names = set(lora_names)
-    assert len(lora_names) == len(
-        unique_lora_names), "duplicate loras should not exist"
+    def _check_loras():
+        aliases = [lora["alias"] for lora in req_body.get("loras", [])]
+        msg = "duplicate loras should not exist"
+        assert len(aliases) == len(set(aliases)), msg
+
+    _check_loras()
     assert req_body.get("batch_count", 1) == 1, "'batch_count' should be 1"
     assert req_body.get("model"), "'model' must be set"
 
@@ -61,12 +63,16 @@ def _get_req_body(preset: dict, conf: dict) -> dict:
     preset["prompt"] = resolve(prompt)
 
     for lora in randomize_lora(preset.get("loras", [])):
+        alias = lora.get("alias")
         weight = lora.get("weight")
         if not isinstance(weight, list):
             continue
 
         assert len(weight) == 2, "a weight range must be 2"
-        lora["weight"] = uniform(weight[0], weight[1])
+        picked_weight = uniform(weight[0], weight[1])
+        lora["weight"] = picked_weight
+
+        preset["prompt"] += f"<lora:{alias}:{picked_weight}>"
 
     allowed_keys = conf.get("allowed_keys")
     trimmed_req_body = {
@@ -83,6 +89,7 @@ class DiffusePreset:
     _specs: dict
     _conf: dict
     next = None  # type: DiffusePreset
+    should_rediffuse: bool = False
 
     def __init__(self, preset: dict, conf: dict):
         conf = conf or dict()
@@ -100,6 +107,7 @@ class DiffusePreset:
 
         self._specs = preset
         self._conf = conf
+        self.should_rediffuse = preset.get("rediffuse") is True
 
         next = preset.get("next")
         if next:
