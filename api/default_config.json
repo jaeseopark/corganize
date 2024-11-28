@@ -1,30 +1,25 @@
 {
   "templates": {
     "default": {
-      "model": "sd15_default.ckpt",
-      "batch_count": 1,
+      "model": "v1-5-pruned-emaonly",
       "width": 512,
-      "height": 512,
-      "steps": 40,
-      "clip_skip": 1,
-      "guidance_scale": 3,
+      "height": 768,
+      "steps": 25,
+      "cfg_scale": 7,
       "upscaler": null,
-      "sampler": "DPM++ 2M Karras",
+      "sampler_name": "DPM++ 2M Karras",
       "loras": []
     }
   },
   "allowed_keys": [
     "prompt",
     "negative_prompt",
-    "sampler",
+    "sampler_name",
     "steps",
     "model",
     "width",
     "height",
-    "guidance_scale",
-    "batch_count",
-    "clip_skip",
-    "loras",
+    "cfg_scale",
     "upscaler"
   ],
   "saved_prompts": {},
