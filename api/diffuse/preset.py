@@ -72,6 +72,7 @@ def _get_req_body(preset: dict, conf: dict) -> dict:
     """
     See https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/API
     """
+    allowed_keys = conf.get("allowed_keys")
     resolve = get_resolve_func(conf.get("saved_prompts"))
     template_consumer = TemplateConsumer(conf.get("templates"), resolve)
     preset = template_consumer.consume(preset)
@@ -84,8 +85,6 @@ def _get_req_body(preset: dict, conf: dict) -> dict:
         _randomize_weights(preset.get("loras")),
         resolve
     )
-
-    allowed_keys = conf.get("allowed_keys")
 
     return {
         **{k: randomize(v) for k, v in preset.items() if allowed_keys is None or k in allowed_keys},
