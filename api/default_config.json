@@ -7,7 +7,8 @@
       "steps": 25,
       "cfg_scale": 7,
       "upscaler": null,
-      "sampler_name": "DPM++ 2M Karras",
+      "sampler_name": "DPM++ 2M",
+      "scheduler": "Karras",
       "loras": []
     }
   },
@@ -15,6 +16,7 @@
     "prompt",
     "negative_prompt",
     "sampler_name",
+    "scheduler",
     "steps",
     "model",
     "width",
