@@ -36,4 +36,5 @@ services:
       UID: ${UID}
       GID: ${GID}
       TZ: America/Denver
+      MAX_IMAGES_ALLOWED: 500
       DIFFUSION_URL: http://atlas:7861
