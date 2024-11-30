@@ -8,13 +8,11 @@ from typing import Callable, List
 # 3rd party deps
 import jwt
 
-from fastapi import FastAPI, UploadFile, WebSocket, status, Depends, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, UploadFile, WebSocket, status, Depends, HTTPException, Query, WebSocketDisconnect
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
-from starlette.responses import JSONResponse
-from starlette.websockets import WebSocketDisconnect
 
 # Local deps
 from conf import backup_config, get_config, save_config
