@@ -105,27 +105,32 @@ class Corganize:
         lock.release()
 
     def cleanup(self):
-        deleted_filenames = []
-        lock.acquire()
-        logger.info("Cleanup in progress...")
-        self.broadcast_cleanup("in progress")
-        threshold = self.envvars["auto_delete_days"]*24*3600
-        old_filenames = get_old_files(IMG_DIR, age_seconds=threshold)
-        self.filenames_to_delete.update(old_filenames)
-        for filename in self.filenames_to_delete:
-            os.remove(os.path.join(IMG_DIR, filename))
-            logger.info(f"Deleted. {filename=}")
-            deleted_filenames.append(filename)
-        self.filenames_to_delete.clear()
-        logger.info("Cleanup done")
-        self.broadcast_cleanup(
-            "done",
-            dict(
-                filenames=deleted_filenames,
-                count=len(deleted_filenames)
+        def _cleanup():
+            deleted_filenames = []
+            logger.info("Cleanup in progress...")
+            self.broadcast_cleanup("in progress")
+            threshold = self.envvars["auto_delete_days"]*24*3600
+            old_filenames = get_old_files(IMG_DIR, age_seconds=threshold)
+            self.filenames_to_delete.update(old_filenames)
+            for filename in self.filenames_to_delete:
+                os.remove(os.path.join(IMG_DIR, filename))
+                logger.info(f"Deleted. {filename=}")
+                deleted_filenames.append(filename)
+            self.filenames_to_delete.clear()
+            logger.info("Cleanup done")
+            self.broadcast_cleanup(
+                "done",
+                dict(
+                    filenames=deleted_filenames,
+                    count=len(deleted_filenames)
+                )
             )
-        )
-        lock.release()
+
+        lock.acquire()
+        try:
+            _cleanup()
+        finally:
+            lock.release()
 
     def broadcast_diffusion(self, message: dict, metadata: dict = None):
         if not self._broadcast_diffusion:

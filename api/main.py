@@ -26,6 +26,11 @@ FETCH_LIMIT = 250
 logger = logging.getLogger("corganize")
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
+logger.addHandler(logging.FileHandler("/var/log/corganize/api/app.log"))
+
+uvicorn_logger = logging.getLogger("uvicorn.error")
+uvicorn_logger.addHandler(logging.StreamHandler())
+uvicorn_logger.addHandler(logging.FileHandler("/var/log/corganize/api/uvicorn.log"))
 
 fastapi_app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

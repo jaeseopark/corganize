@@ -1,7 +1,6 @@
 import logging
 from random import sample
 import threading
-import traceback
 import os
 import time
 from typing import List
@@ -16,9 +15,8 @@ def run_on_interval(func, interval_seconds, initial_delay_seconds=0):
         threading.Timer(interval_seconds, run_func).start()
         try:
             func()
-        except:
-            # TODO: better error handling
-            traceback.print_exc()
+        except Exception as e:
+            logger.error(f"Error with {func.__name__=}", e)
 
     threading.Timer(initial_delay_seconds, run_func).start()
 
@@ -29,9 +27,9 @@ def run_back_to_back(func, pause_seconds: int, initial_delay_seconds=0):
     def run_func():
         try:
             func()
-        except:
-            # TODO: better error handling
-            traceback.print_exc()
+        except Exception as e:
+            logger.error(f"Error with {func.__name__=}", e)
+
         threading.Timer(pause_seconds, run_func).start()
 
     threading.Timer(initial_delay_seconds, run_func).start()
