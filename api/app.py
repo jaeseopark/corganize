@@ -29,8 +29,8 @@ class Corganize:
     envvars = dict(
         diffusion_enabled=True,
         notes="",
-        auto_delete_days=int(os.getenv("AUTO_DELETE_DAYS", "1")),
-        max_images_allowed=int(os.getenv("MAX_IMAGES_ALLOWED", "2500")),
+        auto_delete_days=int(os.getenv("AUTO_DELETE_DAYS", "7")),
+        max_images_allowed=int(os.getenv("MAX_IMAGES_ALLOWED", "200")),
         diffusion_url=os.getenv("DIFFUSION_URL", "").strip("/"),
         diffusion_sample_size=int(os.getenv("DIFFUSION_SAMPLE_SIZE", "4"))
     )
@@ -113,9 +113,13 @@ class Corganize:
             old_filenames = get_old_files(IMG_DIR, age_seconds=threshold)
             self.filenames_to_delete.update(old_filenames)
             for filename in self.filenames_to_delete:
-                os.remove(os.path.join(IMG_DIR, filename))
-                logger.info(f"Deleted. {filename=}")
-                deleted_filenames.append(filename)
+                path = os.path.join(IMG_DIR, filename)
+                if os.path.exists(path):
+                    os.remove(path)
+                    logger.info(f"Deleted. {filename=}")
+                    deleted_filenames.append(filename)
+                else:
+                    logger.warning(f"Not found {path=}")
             self.filenames_to_delete.clear()
             logger.info("Cleanup done")
             self.broadcast_cleanup(
