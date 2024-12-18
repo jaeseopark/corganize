@@ -10,6 +10,7 @@ def _randomize_lora(loras: List[dict]) -> List[dict]:
         if "one_of" in lora:
             candidates: List[dict] = lora["one_of"]
             lora = choices(candidates, k=1)
+        assert isinstance(lora, dict), f"lora must be a dictionary, {lora=}"
         ret_loras.append({**lora})
     return ret_loras
 
