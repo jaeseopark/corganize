@@ -29,8 +29,8 @@ class Corganize:
     envvars = dict(
         diffusion_enabled=True,
         notes="",
-        auto_delete_days=int(os.getenv("AUTO_DELETE_DAYS", "7")),
-        max_images_allowed=int(os.getenv("MAX_IMAGES_ALLOWED", "200")),
+        auto_delete_days=int(os.getenv("AUTO_DELETE_DAYS", "1")),
+        max_images_allowed=int(os.getenv("MAX_IMAGES_ALLOWED", "500")),
         diffusion_url=os.getenv("DIFFUSION_URL", "").strip("/"),
         diffusion_sample_size=int(os.getenv("DIFFUSION_SAMPLE_SIZE", "4"))
     )

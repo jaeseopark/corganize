@@ -56,7 +56,16 @@ class PromptConcatenator:
     def __init__(self, resolve: Callable) -> None:
         self.resolve = resolve
 
+    def select_and_resolve(self, kw: Union[dict, str]):
+        def select():
+            if isinstance(kw, dict):
+                assert "one_of" in kw, f"'one_of' needs to be present {kw=}"
+                return choices(kw["one_of"], k=1)
+            return kw
+
+        return self.resolve(select())
+
     def concatenate(self, prompt_elements: Union[List[str], None], prompt: str, loras: Union[List[dict], None]) -> str:
-        kws = [self.resolve(kw) for kw in prompt_elements or []]
+        kws = [self.select_and_resolve(kw) for kw in prompt_elements or []]
         prompt = ",".join([kw for kw in kws if kw] + [prompt])
         return self.resolve(prompt) + _get_lora_tags(loras or [])
