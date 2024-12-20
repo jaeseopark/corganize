@@ -91,8 +91,7 @@ class DiffuseApiPayload:
     def basename(self):
         pname = self.preset_name
         assert pname, "'preset_name' must exist"
-        model = self.req_body['model']
-        bn = re.sub(r'[^a-zA-Z0-9]', '-', f"{pname}-{model}")
+        bn = re.sub(r'[^a-zA-Z0-9]', '-', pname)
         return f"{bn[:MAX_FILENAME_LEN]}-{self._timestamp}"
 
     def get_next_payload(self, b64_img: str):
