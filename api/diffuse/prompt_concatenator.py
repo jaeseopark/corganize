@@ -3,6 +3,8 @@ from typing import Callable, List, Union
 from random import choices, uniform
 from typing import List
 
+from utils import find_duplicates
+
 
 def _randomize_lora(loras: List[dict]) -> List[dict]:
     ret_loras = []
@@ -45,8 +47,8 @@ def _get_lora_tags(loras: List[dict]) -> str:
         assert "weight" in lora, f"'weight' must be set {lora=}"
 
     aliases = [lora["alias"] for lora in loras]
-    msg = "duplicate loras should not exist"
-    assert len(aliases) == len(set(aliases)), msg
+    dups = find_duplicates(aliases)
+    assert len(dups) == 0, f"duplicate loras should not exist {dups=}"
 
     def get_tag(lora: dict):
         return f"<lora:{lora['alias']}:{lora['weight']}>"

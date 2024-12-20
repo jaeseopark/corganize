@@ -4,6 +4,7 @@ import threading
 import os
 import time
 from typing import List
+from collections import Counter
 
 logger = logging.getLogger("corganize")
 
@@ -55,3 +56,9 @@ def get_old_files(directory_path: str, age_seconds: int) -> List[str]:
 def get_epoch_millis() -> int:
     current_time_seconds = time.time()
     return int(current_time_seconds * 1000)
+
+
+def find_duplicates(lst: str):
+    counts = Counter(lst)
+    duplicates = [value for value, count in counts.items() if count > 1]
+    return duplicates
