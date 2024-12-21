@@ -1,5 +1,6 @@
+from functools import reduce
 from random import choices
-from typing import Callable, List, Union
+from typing import Callable, List, Set, Union
 import json
 
 from diffuse.randomizer import Randomizer
@@ -16,15 +17,14 @@ class TemplateConsumer:
     Consumes all downstream templates and returns 1 final dictionary.
     Works with any depths -- i.e. nested template references.
     """
-    templates: dict
-    _resolve: Callable
+    template_dict: dict
+    resolve_saved_prompts: Callable
 
     def __init__(self, templates: dict, resolve: Callable) -> None:
-        self.templates = templates or dict()
-        self._resolve = resolve
+        self.template_dict = templates or dict()
+        self.resolve_saved_prompts = resolve
 
-    @staticmethod
-    def _get_templates(preset: dict) -> List[Union[str, dict]]:
+    def _get_referenced_templates(self, preset: dict) -> List[Union[str, dict]]:
         templates = preset.get("templates", [])
 
         if isinstance(templates, dict) and "one_of" in templates:
@@ -46,17 +46,79 @@ class TemplateConsumer:
         for key in ("prompt_elements", "loras"):
             preset[key] = preset.get(key, list())
 
-        assert isinstance(preset["prompt_elements"],
-                          list), "prompt_elements must be a list"
+        prompt_elements = preset["prompt_elements"]
+        assert isinstance(
+            prompt_elements, list), f"prompt_elements must be a list {prompt_elements=}"
 
         return preset
 
-    def _merge(self, target: dict, acc: dict) -> dict:
+    def handle_string_ref(self, template_ref: str):
+        template_ref = TemplateConsumer.randomize(template_ref)
+        return self.template_dict.get(template_ref, dict())
+
+    def handle_tag_selectors(self, template_ref: dict):
+        def select(candidates: Set[str], selector: dict):
+            if isinstance(selector, str):
+                selector = dict(add=selector)
+
+            ops = dict(
+                add=candidates.update,
+                subtract=candidates.difference_update,
+                intersect=candidates.intersection_update
+            )
+
+            for op, func in ops.items():
+                if op in selector:
+                    func(self.template_dict.get(f"#{selector[op]}", []))
+
+            return candidates
+
+        selectors = template_ref["selectors"]
+        candidates: set = reduce(select, selectors, set())
+
+        if len(candidates) == 0:
+            return dict()
+
+        template_ref = choices(list(candidates), k=1)[0]
+        return self.get_template(template_ref)
+
+    def handle_one_of(self, template_ref: dict):
+        candidates: List[Union[str, dict]] = template_ref["one_of"]
+        assert len(candidates) > 0, "at least 1 candidate is required."
+        weights = [_get_template_weight(c) for c in candidates]
+        template_ref = choices(candidates, weights, k=1)[0]
+        return self.get_template(template_ref)
+
+    def get_template_ref_resolver(self, template_ref: Union[str, dict]) -> Callable:
+        if isinstance(template_ref, str):
+            return self.handle_string_ref
+
+        if isinstance(template_ref, dict):
+            if "selectors" in template_ref:
+                msg = f"Only one of 'selectors' and 'templates' can exist in a template reference {template_ref=}"
+                assert "templates" not in template_ref, msg
+                return self.handle_tag_selectors
+            if "one_of" in template_ref:
+                return self.handle_one_of
+
+            # This is the case where the template ref itself is a template body.
+            return lambda _: _
+
+        msg = f"a template reference must be Union[str, dict] {template_ref=}"
+        raise AssertionError(msg)
+
+    def get_template(self, template_ref: Union[str, dict]) -> dict:
+        resolve: Callable = self.get_template_ref_resolver(template_ref)
+        return resolve(template_ref)
+
+    def _merge(self, target: dict, acc: dict = None) -> dict:
+        acc = acc or dict(prompt="", negative_prompt="",
+                          prompt_elements=[], loras=[])
         target = {**target}
 
         for key in ("prompt", "negative_prompt"):
-            resolved_target = self._resolve(target[key])
-            resolved_acc = self._resolve(acc[key])
+            resolved_target = self.resolve_saved_prompts(target[key])
+            resolved_acc = self.resolve_saved_prompts(acc[key])
             combined_values = [s for s in [resolved_target, resolved_acc] if s]
             target[key] = ",".join(combined_values)
 
@@ -65,30 +127,12 @@ class TemplateConsumer:
 
         return {**acc, **target}
 
-    def get_template(self, template_ref: Union[str, dict]) -> dict:
-        if isinstance(template_ref, str):
-            template_ref = TemplateConsumer.randomize(template_ref)
-            return self.templates.get(template_ref, dict())
-        elif isinstance(template_ref, dict):
-            if "one_of" not in template_ref:
-                # This is the template definition.
-                return template_ref
-
-            candidates: List[Union[str, dict]] = template_ref["one_of"]
-            assert len(candidates) > 0, "at least 1 candidate is required."
-            weights = [_get_template_weight(c) for c in candidates]
-            template_ref = choices(candidates, weights, k=1)[0]
-            return self.get_template(template_ref)
-
-        msg = "a template reference must be either a string or a dict"
-        raise RuntimeError(msg)
-
     def consume(self, preset: dict) -> dict:
         preset = TemplateConsumer._validate_and_sanitize(preset)
-        templates = TemplateConsumer._get_templates(preset)
-        acc = dict(prompt="", negative_prompt="", prompt_elements=[], loras=[])
+        template_refs = self._get_referenced_templates(preset)
+        acc = None
 
-        for template_ref in templates:
+        for template_ref in template_refs:
             template = self.get_template(template_ref)
             template = self.consume(template)
             acc = self._merge(template, acc=acc)

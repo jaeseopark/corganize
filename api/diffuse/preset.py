@@ -34,11 +34,11 @@ def _get_req_body(preset: dict, conf: dict) -> dict:
     allowed_keys = conf.get("allowed_keys")
     resolve = get_resolve_func(conf.get("saved_prompts"))
     template_consumer = TemplateConsumer(conf.get("templates"), resolve)
-    prompt_concatenator = PromptConcatenator(resolve)
     preset = template_consumer.consume(preset)
 
     assert preset.get("model"), "'model' must be set"
 
+    prompt_concatenator = PromptConcatenator(resolve)
     preset["prompt"] = prompt_concatenator.concatenate(
         preset.get("prompt_elements"),
         preset.get("prompt"),
@@ -66,7 +66,6 @@ class DiffusePreset:
 
         # In the order of descreasing importance
         # The latter 2 are just for inheritance purposes, so they can be put at the end.
-        # TODO support dictionary here, for now just put an assert statement
         templates = preset.get("templates", [])
         assert isinstance(templates, list), "'templates' must be a list"
         preset["templates"] = templates + ["default"]

@@ -1,3 +1,4 @@
+from collections import defaultdict
 from random import choices
 from typing import List
 import json
@@ -5,9 +6,28 @@ import json
 from diffuse.preset import DiffusePreset
 
 
+def _get_tag_dictionary(templates: dict) -> dict:
+    tag_dict = defaultdict(set)
+    for template_name, template_body in templates.items():
+        for tag in template_body.get("tags", []):
+            tag_dict[f"#{tag}"].add(template_name)
+
+    return tag_dict
+
+
 class DiffusePresetCollection:
     def __init__(self, preset_root: dict):
         self.preset_root = preset_root
+
+        conf = self.preset_root.get("config", dict())
+        templates = conf.get("templates", dict())
+
+        conf["templates"] = {
+            **templates,
+            **_get_tag_dictionary(templates)
+        }
+
+        self.preset_root["config"] = conf
 
     def select(self, count: int) -> List[DiffusePreset]:
         conf = self.preset_root.get("config", dict())

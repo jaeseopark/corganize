@@ -1,7 +1,6 @@
 import json
 from typing import Callable, List, Union
 from random import choices, uniform
-from typing import List
 
 from utils import find_duplicates
 
@@ -11,7 +10,7 @@ def _randomize_lora(loras: List[dict]) -> List[dict]:
     for lora in loras:
         if "one_of" in lora:
             candidates: List[dict] = lora["one_of"]
-            lora = choices(candidates, k=1)
+            lora = choices(candidates, k=1)[0]
         assert isinstance(lora, dict), f"lora must be a dictionary, {lora=}"
         ret_loras.append({**lora})
     return ret_loras
@@ -63,7 +62,7 @@ class PromptConcatenator:
         def select():
             if isinstance(kw, dict):
                 assert "one_of" in kw, f"'one_of' needs to be present {kw=}"
-                return choices(kw["one_of"], k=1)
+                return choices(kw["one_of"], k=1)[0]
             return kw
 
         return self.resolve(select())
