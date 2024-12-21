@@ -67,7 +67,7 @@ class DiffusePreset:
         # In the order of descreasing importance
         # The latter 2 are just for inheritance purposes, so they can be put at the end.
         templates = preset.get("templates", [])
-        assert isinstance(templates, list), "'templates' must be a list"
+        assert isinstance(templates, list), f"'templates' must be a list {templates=}"
         preset["templates"] = templates + ["default"]
 
         msg = "'loras' must be a list"
