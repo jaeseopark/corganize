@@ -2,12 +2,37 @@ from functools import reduce
 from random import choices
 from typing import Callable, List, Set, Union
 import json
+import re
 
 from diffuse.randomizer import Randomizer
 
 
 def _get_template_weight(c):
     return c.get("_weight", 1) if isinstance(c, dict) else 1
+
+
+def _parse_selector(selector: str) -> List[dict]:
+    operators = {
+        "+": "add",
+        "-": "subtract",
+        "^": "intersect"
+    }
+
+    selectors = []
+    op = "+"
+    next = selector
+    while next:
+        match = re.findall("^([^\^\-\+]+)(.*)$", next)
+        assert len(match) > 0, f"selector should be of valid syntax {selector=}"
+        
+        tag, next = match[0]
+        
+        selectors.append({operators[op]: tag})
+        if len(next) > 1:
+            op = next[0]
+            next = next[1:]
+
+    return selectors
 
 
 class TemplateConsumer:
@@ -31,7 +56,8 @@ class TemplateConsumer:
             templates = [dict(
                 one_of=templates["one_of"]
             )]
-        assert isinstance(templates, list), "'templates' must be a list"
+        assert isinstance(
+            templates, list), f"'templates' must be a list {templates=}"
 
         return list(reversed(templates))
 
@@ -56,7 +82,7 @@ class TemplateConsumer:
         template_ref = TemplateConsumer.randomize(template_ref)
         return self.template_dict.get(template_ref, dict())
 
-    def handle_tag_selectors(self, template_ref: dict):
+    def handle_tag_selector(self, template_ref: dict):
         def select(candidates: Set[str], selector: dict):
             if isinstance(selector, str):
                 selector = dict(add=selector)
@@ -73,7 +99,7 @@ class TemplateConsumer:
 
             return candidates
 
-        selectors = template_ref["selectors"]
+        selectors = _parse_selector(template_ref["selector"])
         candidates: set = reduce(select, selectors, set())
 
         if len(candidates) == 0:
@@ -94,10 +120,10 @@ class TemplateConsumer:
             return self.handle_string_ref
 
         if isinstance(template_ref, dict):
-            if "selectors" in template_ref:
-                msg = f"Only one of 'selectors' and 'templates' can exist in a template reference {template_ref=}"
+            if "selector" in template_ref:
+                msg = f"Only one of 'selector' and 'templates' can exist in a template reference {template_ref=}"
                 assert "templates" not in template_ref, msg
-                return self.handle_tag_selectors
+                return self.handle_tag_selector
             if "one_of" in template_ref:
                 return self.handle_one_of
 

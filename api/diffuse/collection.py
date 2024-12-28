@@ -1,5 +1,6 @@
 from collections import defaultdict
 from random import choices
+import re
 from typing import List
 import json
 
@@ -10,6 +11,7 @@ def _get_tag_dictionary(templates: dict) -> dict:
     tag_dict = defaultdict(set)
     for template_name, template_body in templates.items():
         for tag in template_body.get("tags", []):
+            assert not re.findall("[\^\-\+]+", tag), f"tag should not contain -, +, or ^. {tag=}"
             tag_dict[f"#{tag}"].add(template_name)
 
     return tag_dict
