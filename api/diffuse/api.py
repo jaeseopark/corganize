@@ -147,14 +147,6 @@ def _set_model_checkpoint(base_url: str, desired_model_name: str):
     r.raise_for_status()
 
 
-def refresh_loras(base_url: str):
-    url = urljoin(base_url, REFESH_LORAS_PATH)
-    r = requests.post(url)
-    if r.status_code >= 400:
-        logger.error(r.text)
-    r.raise_for_status()
-
-
 def diffuse(base_url: str, api_payload: DiffuseApiPayload):
     basename = api_payload.basename
     req_body = api_payload.req_body

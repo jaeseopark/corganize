@@ -9,7 +9,7 @@ from conf import get_config
 from models import ConfigSaveRequest
 from utils import get_old_files
 
-from diffuse.api import DiffuseApiPayload, diffuse, refresh_loras
+from diffuse.api import DiffuseApiPayload, diffuse
 from diffuse.collection import DiffusePreset, DiffusePresetCollection
 
 os.makedirs(IMG_DIR, exist_ok=True)
@@ -72,11 +72,8 @@ class Corganize:
                 )
             ))
             return
-        
-        # SD does not recognize newly added files. Need a manual refresh.
-        base_url = self.envvars["diffusion_url"]
-        refresh_loras(base_url)
 
+        base_url = self.envvars["diffusion_url"]
         sample_size = self.envvars["diffusion_sample_size"]
         for _ in range(sample_size):
             # Doing this in a for loop because the # of presets may be lower than sample_size
