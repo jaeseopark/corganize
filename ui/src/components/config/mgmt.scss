@@ -1,0 +1,22 @@
+.monospace {
+  font-family: monospace;
+}
+
+.small {
+  font-size: small;
+}
+
+.xsmall {
+  font-size: x-small;
+}
+
+tr.ignored {
+  background-color: gainsboro;
+}
+
+.template-name {
+  width: 350px;
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: hidden; /* Hide overflowing content */
+  text-overflow: ellipsis; /* Add "..." to indicate truncation */
+}

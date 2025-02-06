@@ -1,33 +1,23 @@
 import { axios, subscribe, unsubscribe } from "@/api";
 import { Button } from "@/components/ui/button";
 import { toaster } from "@/components/ui/toaster";
-import { Flex, Textarea } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
+import { JsonEditor as Editor } from "jsoneditor-react";
 import { useCallback, useEffect, useState } from "preact/hooks";
 
 const Admin = () => {
-  const [envvars, setEnvvars] = useState<string>("");
+  const [envvars, setEnvvars] = useState<any>();
   const [isReady, setReady] = useState(false);
 
   const handleSave = useCallback(() => {
-    let parsedEnvvars;
-    try {
-      parsedEnvvars = JSON.parse(envvars);
-    } catch (e) {
-      toaster.create({
-        title: "Invalid JSON format",
-        type: "error",
-      });
-      return;
-    }
-
     axios
-      .put("/api/envvars", parsedEnvvars, {
+      .put("/api/envvars", envvars, {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
       })
-      .then((r) => {
+      .then(() => {
         toaster.create({
           title: "Saved",
           type: "success",
@@ -43,16 +33,12 @@ const Admin = () => {
       });
   }, [envvars]);
 
-  const handleChangeNotes = useCallback((event) => {
-    setEnvvars(event.target.value);
-  }, []);
-
   useEffect(() => {
     axios
       .get("/api/envvars")
       .then((r) => r.data)
       .then((value) => {
-        setEnvvars(JSON.stringify(value, null, 2));
+        setEnvvars(value);
         setReady(true);
       });
 
@@ -72,11 +58,13 @@ const Admin = () => {
     };
   }, []);
 
+  if (!isReady) {
+    return <Box>Loading...</Box>
+  }
+
   return (
     <Flex direction="column" width="100%" height="100%" gap="4" padding="1em">
-      <Textarea disabled={!isReady} onChange={handleChangeNotes} height="100%">
-        {envvars}
-      </Textarea>
+      <Editor value={envvars} onChange={setEnvvars} />
       <Button onClick={handleSave} disabled={!isReady}>
         Save
       </Button>

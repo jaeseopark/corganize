@@ -1,12 +1,16 @@
-import { Box, Button } from "@chakra-ui/react";
+import { Box, Button, Flex, Span, VStack } from "@chakra-ui/react";
 import { JsonEditor as Editor } from "jsoneditor-react";
-import { useRef, useState } from "preact/hooks";
+import { useRef } from "preact/hooks";
 
-import "jsoneditor-react/es/editor.min.css";
+type EditProps = {
+  preset: any;
+  templates: { [key: string]: any };
+  onSave: (any) => void;
+  onCancel: () => void;
+  onDelete: () => void;
+};
 
-type EditProps = { preset: any; onSave: (any) => void; onCancel: () => void; onDelete: () => void };
-
-const PresetEditView = ({ preset, onSave, onCancel: handleCancel, onDelete: handleDelete }: EditProps) => {
+const PresetEditView = ({ preset, templates, onSave, onCancel: handleCancel, onDelete: handleDelete }: EditProps) => {
   const jsonRef = useRef(preset);
 
   const handleChange = (updatedPreset) => {
@@ -22,12 +26,19 @@ const PresetEditView = ({ preset, onSave, onCancel: handleCancel, onDelete: hand
   }
 
   return (
-    <Box>
-      <Editor value={preset} onChange={handleChange} />
-      <Button onClick={handleCancel}>Cancel</Button>
-      <Button onClick={handleDelete}>Delete</Button>
-      <Button onClick={handleSave}>Save</Button>
-    </Box>
+    <VStack>
+      <Box width="100%">
+        <Editor value={preset} onChange={handleChange} />
+        <Button onClick={handleCancel}>Cancel</Button>
+        <Button onClick={handleDelete}>Delete</Button>
+        <Button onClick={handleSave}>Save</Button>
+      </Box>
+      <Flex gap="4" wrap="wrap" maxW="100%">
+        {Object.keys(templates).map((name) => (
+          <Span key={name}>{name}</Span>
+        ))}
+      </Flex>
+    </VStack>
   );
 };
 

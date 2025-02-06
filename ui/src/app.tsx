@@ -1,13 +1,11 @@
 import { axios } from "@/api";
-import Admin from "@/components/admin";
-import Config from "@/components/config";
-import Gallery from "@/components/gallery";
 import Login from "@/components/login";
 import { AUTHENTICATED_ROUTES } from "@/routes";
 import { useEffect, useState } from "preact/hooks";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import "./app.css";
+import "jsoneditor-react/es/editor.min.css";
 
 const App = () => {
   const [attempted, setAttempted] = useState(false);
