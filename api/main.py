@@ -139,6 +139,18 @@ def get_recent_images(_: dict = Depends(verify_jwt_token)):
     logger.info(f"{len(filenames)=}")
     return dict(filenames=filenames[:FETCH_LIMIT])
 
+@fastapi_app.get("/images/{filename}/metadata")
+def get_image_metadata(filename: str):
+    metadata = corganize.get_metadata_by_filename(filename)
+    
+    if metadata:
+        return metadata
+    
+    return JSONResponse(
+        status_code=404,
+        content=dict(message="Filename not found")
+    )
+
 
 @fastapi_app.delete("/images")
 def delete_images(body: DeleteRequest, _: dict = Depends(verify_jwt_token)):

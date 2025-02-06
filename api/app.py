@@ -1,5 +1,7 @@
+import json
 import logging
 import os
+import re
 import threading
 from typing import Callable, List, Set
 
@@ -95,6 +97,25 @@ class Corganize:
 
     def override_envvars(self, config: ConfigSaveRequest):
         self.envvars = config.__dict__
+
+    def get_metadata_by_filename(self, filename: str):
+        def _get():
+            matches = re.findall("^(.+)\-[0-9]\.crgimg$", filename)
+            assert matches, "filename must be "
+
+            json_filename = matches[0] + ".json"
+            json_fullpath = os.path.join(IMG_DIR, json_filename)
+
+            with open(json_fullpath) as fp:
+                return json.load(fp)
+
+        try:
+            return _get()
+        except Exception as e:
+            logger.error("Failed to get metadata by filename", e)
+
+        return None
+
 
     def delete(self, filenames: List[str]):
         lock.acquire()
